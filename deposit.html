@@ -4,44 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MetaMint | Deposit USDT</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        /* --- Base Styles --- */
         body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-
-        /* --- Header --- */
-        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; }
+        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; transition: 0.3s; }
-        .back-btn:active { transform: scale(0.8); }
-
-        /* --- Containers --- */
         .deposit-container { padding: 20px; margin-bottom: 120px; }
-        
-        /* --- Instruction Box --- */
         .info-box { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin-bottom: 25px; }
         .info-box h4 { color: #38bdf8; margin: 0 0 10px 0; font-size: 0.95rem; }
         .info-box ul { padding-left: 18px; margin: 0; font-size: 0.75rem; color: #cbd5e1; line-height: 1.7; }
         .warning-text { color: #ef4444; font-size: 0.75rem; font-weight: bold; margin-top: 10px; display: block; }
-
-        /* --- Deposit Cards --- */
         .dep-card { background: #1e293b; border-radius: 15px; padding: 20px; border: 1px solid #334155; margin-bottom: 20px; text-align: center; }
         .address-box { background: #0f172a; padding: 15px; border-radius: 10px; margin: 15px 0; word-break: break-all; color: #38bdf8; font-family: 'monospace'; font-size: 0.9rem; border: 1px solid #1e40af; }
-        
-        /* --- Inputs & Buttons --- */
         .input-group { text-align: left; margin-bottom: 15px; }
         .input-group label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; }
         input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; box-sizing: border-box; }
-        input:focus { border-color: #38bdf8; }
-
         .main-btn { width: 100%; padding: 15px; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; transition: 0.3s; }
         .copy-btn { background: #38bdf8; color: #0f172a; width: auto; padding: 10px 25px; margin: 0 auto; }
         .submit-btn { background: #22c55e; margin-top: 10px; }
-        .submit-btn:hover { background: #16a34a; }
-
-        /* --- Bottom Nav --- */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
@@ -52,20 +33,18 @@
 
     <header class="dash-header">
         <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
-        <h2 style="margin: 0; font-size: 1.2rem;">Deposit USDT</h2>
+        <h2 style="margin: 0; font-size: 1.2rem; color: #38bdf8;">Deposit USDT</h2>
     </header>
 
     <div class="deposit-container">
-        
         <div class="info-box">
             <h4><i class="fas fa-info-circle"></i> Recharge Guide</h4>
             <ul>
                 <li>Niche diye gaye <b>USDT (TRC20)</b> address ko copy karein.</li>
-                <li>Apne crypto wallet (Binance, OKX, TrustWallet) se payment bhejein.</li>
-                <li>Payment mukammal hone ke baad <b>Screenshot</b> le lein.</li>
-                <li>Amount aur Screenshot upload karke request submit karein.</li>
+                <li>Payment bhejne ke baad <b>Transaction ID (TXID)</b> copy karein.</li>
+                <li>Amount aur TXID niche likh kar submit karein.</li>
             </ul>
-            <span class="warning-text">⚠️ Ghalat network (jaise ERC20 ya BEP20) par bheje gaye funds wapis nahi milenge.</span>
+            <span class="warning-text">⚠️ Ghalat network use karne par funds zaya ho sakte hain.</span>
         </div>
 
         <div class="dep-card">
@@ -81,17 +60,14 @@
                 <label>Deposit Amount ($)</label>
                 <input type="number" id="depAmount" placeholder="Minimum $20">
             </div>
-
             <div class="input-group">
-                <label>Payment Proof (Screenshot)</label>
-                <input type="file" id="depSlip" accept="image/*" style="padding: 10px;">
+                <label>Transaction ID (TXID)</label>
+                <input type="text" id="txidInput" placeholder="Enter Transaction Hash">
             </div>
-
             <button id="submitDeposit" class="main-btn submit-btn">
                 <i class="fas fa-check-circle"></i> Submit Deposit Request
             </button>
         </div>
-
     </div>
 
     <nav class="bottom-nav">
@@ -99,16 +75,14 @@
         <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
         <a href="deposit.html" class="nav-item active"><i class="fas fa-wallet"></i><span>Deposit</span></a>
         <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+        <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref as dbRef, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Config (Same as index/dashboard)
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -122,9 +96,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
-        const storage = getStorage(app);
 
-        // Copy Address Function
         window.copyAddress = function() {
             const addr = document.getElementById('walletAddr').innerText;
             navigator.clipboard.writeText(addr).then(() => {
@@ -132,47 +104,55 @@
             });
         };
 
-        // Submit Logic
         document.getElementById('submitDeposit').onclick = async () => {
             const amount = document.getElementById('depAmount').value;
-            const slipFile = document.getElementById('depSlip').files[0];
+            const txid = document.getElementById('txidInput').value.trim();
             const user = auth.currentUser;
 
             if (!user) return Swal.fire('Error', 'Session expired. Login again.', 'error');
             if (!amount || amount < 20) return Swal.fire('Error', 'Minimum deposit is $20', 'warning');
-            if (!slipFile) return Swal.fire('Error', 'Please upload payment screenshot', 'warning');
+            if (!txid) return Swal.fire('Error', 'Please enter Transaction ID', 'warning');
 
-            // Show Loading
-            Swal.fire({ title: 'Uploading...', text: 'Please wait while we process your proof.', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            Swal.fire({ title: 'Submitting...', text: 'Connecting to server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
 
             try {
-                // 1. Upload Slip to Storage
-                const storagePath = `slips/${user.uid}/${Date.now()}_${slipFile.name}`;
-                const storageRef = sRef(storage, storagePath);
-                const snapshot = await uploadBytes(storageRef, slipFile);
-                const downloadURL = await getDownloadURL(snapshot.ref);
+                // Generate a unique ID for this transaction to link Admin & User
+                const depositRef = push(ref(db, 'depositRequests'));
+                const trxKey = depositRef.key;
 
-                // 2. Save Request to Database
-                const newReqRef = push(dbRef(db, 'depositRequests'));
-                await set(newReqRef, {
+                // 1. Data for Admin
+                const adminData = {
                     uid: user.uid,
                     amount: parseFloat(amount),
-                    slipUrl: downloadURL,
+                    txid: txid,
                     status: 'pending',
-                    timestamp: Date.now()
-                });
+                    timestamp: Date.now(),
+                    trxKey: trxKey 
+                };
 
-                Swal.fire('Success', 'Request submitted! It will be verified soon.', 'success').then(() => {
-                    window.location.href = 'dashboard.html';
+                // 2. Data for User History
+                const userHistoryData = {
+                    type: 'deposit',
+                    amount: parseFloat(amount),
+                    status: 'PENDING',
+                    timestamp: Date.now(),
+                    title: 'Deposit Request'
+                };
+
+                // Dono entries aik sath update karein
+                await set(depositRef, adminData);
+                await set(ref(db, `users/${user.uid}/transactions/${trxKey}`), userHistoryData);
+
+                Swal.fire('Success', 'Deposit request submitted. Check History!', 'success').then(() => {
+                    window.location.href = 'history.html';
                 });
 
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', 'Submission failed. Please try again.', 'error');
+                Swal.fire('Error', 'Submission failed.', 'error');
             }
         };
 
-        // Auth Check
         onAuthStateChanged(auth, (user) => { if (!user) window.location.href = 'index.html'; });
     </script>
 </body>

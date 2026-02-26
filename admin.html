@@ -14,10 +14,10 @@
         .search-box input { flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 1rem; }
         .section-title { color: var(--primary); font-size: 0.9rem; font-weight: bold; text-transform: uppercase; margin: 25px 0 15px 5px; display: flex; align-items: center; gap: 10px; }
         .data-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .txid-text { font-size: 0.65rem; color: #38bdf8; word-break: break-all; margin-top: 5px; display: block; background: #0f172a; padding: 5px; border-radius: 4px; }
         .btn-manage { background: #38bdf8; color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .swal2-input, .swal2-select { background: #0f172a !important; color: white !important; margin: 10px auto !important; width: 90% !important; border-radius: 8px !important; border: 1px solid #334155 !important; }
-        .swal2-label { color: #94a3b8 !important; text-align: left; display: block; width: 90%; margin: 5px auto 0 auto; font-size: 0.8rem; }
-        .empty-msg { color: #475569; text-align: center; padding: 20px; font-style: italic; font-size: 0.9rem; }
+        .swal-label { display: block; text-align: left; color: #94a3b8; font-size: 0.75rem; margin-top: 10px; margin-left: 10%; }
+        .swal-input-custom { background: #0f172a !important; color: white !important; width: 80% !important; padding: 10px !important; border-radius: 8px !important; border: 1px solid #334155 !important; margin-bottom: 5px !important; }
     </style>
 </head>
 <body>
@@ -27,18 +27,18 @@
     </header>
 
     <div class="search-box">
-        <input type="number" id="searchUID" placeholder="Enter User UID (e.g. 2749)">
+        <input type="number" id="searchUID" placeholder="Enter User UID">
         <button onclick="window.searchUser()" style="background:var(--primary); border:none; color:white; padding:10px 18px; border-radius:8px;"><i class="fas fa-search"></i></button>
     </div>
 
     <div class="section-title"><i class="fas fa-wallet"></i> Pending Deposits</div>
-    <div id="depositList"><div class="empty-msg">Syncing...</div></div>
+    <div id="depositList"></div>
 
     <div class="section-title"><i class="fas fa-hand-holding-usd"></i> Pending Withdrawals</div>
-    <div id="withdrawList"><div class="empty-msg">Syncing...</div></div>
+    <div id="withdrawList"></div>
 
     <div class="section-title"><i class="fas fa-users"></i> All Users</div>
-    <div id="userList"><div class="empty-msg">Loading users...</div></div>
+    <div id="userList"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -61,124 +61,140 @@
         onAuthStateChanged(auth, (user) => {
             if (user && user.email === "dreamsagweb@gmail.com") {
                 document.body.style.display = "block";
-                const mailDiv = document.getElementById('adminMail');
-                if(mailDiv) mailDiv.innerText = user.email; // Error handling
+                document.getElementById('adminMail').innerText = user.email;
                 loadData();
-            } else { 
-                window.location.href = 'dashboard.html'; 
-            }
+            } else { window.location.href = 'dashboard.html'; }
         });
 
         function loadData() {
-            // Load Deposits
-            onValue(ref(db, 'deposits'), snap => {
+            // Deposits Fetching
+            onValue(ref(db, 'depositRequests'), snap => {
                 const div = document.getElementById('depositList');
-                if(!div) return;
                 div.innerHTML = '';
-                if(!snap.exists()) { div.innerHTML = '<div class="empty-msg">No pending deposits</div>'; return; }
+                if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending deposits</p>'; return; }
                 snap.forEach(child => {
                     const d = child.val();
-                    div.innerHTML += `<div class="data-card"><div><b>$${d.amount}</b><br><small>UID: ${d.uid}</small></div>
+                    div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${d.amount}</b><br><small>UID: ${d.uid}</small><span class="txid-text">TXID: ${d.txid}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="approveTransaction('deposits', '${child.key}', '${d.userUid}', ${d.amount}, '${d.historyKey}')" style="background:#22c55e; border:none; padding:8px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="deleteReq('deposits', '${child.key}')" style="background:#ef4444; border:none; padding:8px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${d.trxKey || ''}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="rejectDeposit('${child.key}', '${d.uid}', '${d.trxKey || ''}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // Load Withdrawals
-            onValue(ref(db, 'withdrawals'), snap => {
+            // Withdrawals Fetching
+            onValue(ref(db, 'admin/withdrawals'), snap => {
                 const div = document.getElementById('withdrawList');
-                if(!div) return;
                 div.innerHTML = '';
-                if(!snap.exists()) { div.innerHTML = '<div class="empty-msg">No pending withdrawals</div>'; return; }
+                if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending withdrawals</p>'; return; }
                 snap.forEach(child => {
                     const w = child.val();
-                    div.innerHTML += `<div class="data-card"><div><b>$${w.amount}</b><br><small>UID: ${w.uid}</small></div>
+                    div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${w.username} (UID: ${w.uid})</small><span class="txid-text">Addr: ${w.address}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="approveWithdrawal('${child.key}', '${w.userUid}', ${w.amount}, '${w.historyKey}')" style="background:#22c55e; border:none; padding:8px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="deleteReq('withdrawals', '${child.key}')" style="background:#ef4444; border:none; padding:8px; border-radius:5px; color:white;"><i class="fas fa-trash"></i></button>
+                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${w.trxKey || ''}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${w.trxKey || ''}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // Load Users
+            // Users List Fetching
             onValue(ref(db, 'users'), snap => {
                 const list = document.getElementById('userList');
-                if(!list) return;
                 list.innerHTML = '';
                 snap.forEach(c => {
                     const u = c.val();
-                    list.innerHTML += `<div class="data-card"><div><b>${u.username}</b><br><small>UID: ${u.uid || 'undefined'}</small></div>
+                    list.innerHTML += `<div class="data-card"><div><b>${u.username}</b><br><small>UID: ${u.uid}</small></div>
                     <button onclick="window.openManager('${c.key}')" class="btn-manage">Manage</button></div>`;
                 });
             });
         }
 
-        window.searchUser = async () => {
-            const inputUID = document.getElementById('searchUID').value;
-            if(!inputUID) return;
-            const snap = await get(ref(db, 'users'));
-            let foundKey = null;
-            snap.forEach(c => { if(String(c.val().uid) === String(inputUID)) foundKey = c.key; });
-            if(foundKey) window.openManager(foundKey);
-            else Swal.fire('Error', 'User not found', 'error');
+        // Fix 1: Deposit Approval with History Sync
+        window.approveDeposit = async (key, uid, amount, trxKey) => {
+            const userRef = ref(db, `users/${uid}`);
+            const uSnap = await get(userRef);
+            if(uSnap.exists()){
+                const currentBal = uSnap.val().totalBalance || 0;
+                await update(userRef, { totalBalance: currentBal + amount });
+                
+                // User ki history mein status 'SUCCESS' karo
+                if(trxKey) {
+                    await update(ref(db, `users/${uid}/transactions/${trxKey}`), { status: 'SUCCESS' });
+                }
+                
+                await remove(ref(db, `depositRequests/${key}`));
+                Swal.fire('Approved!', 'User balance updated and history synced.', 'success');
+            }
         };
 
+        // Fix 2: Deposit Rejection with History Sync
+        window.rejectDeposit = async (key, uid, trxKey) => {
+            if(trxKey) {
+                await update(ref(db, `users/${uid}/transactions/${trxKey}`), { status: 'REJECTED' });
+            }
+            await remove(ref(db, `depositRequests/${key}`));
+            Swal.fire('Rejected', 'Deposit request rejected and history updated.', 'error');
+        };
+
+        // Fix 3: Withdrawal Processing with History Sync
+        window.processWithdraw = async (key, uid, amount, status, trxKey) => {
+            const userRef = ref(db, `users/${uid}`);
+            
+            // Refund logic for rejected withdrawals
+            if(status === 'rejected') {
+                const uSnap = await get(userRef);
+                if(uSnap.exists()) {
+                    const currentWith = uSnap.val().withdrawable || 0;
+                    await update(userRef, { withdrawable: currentWith + amount });
+                }
+            }
+
+            // User ki history mein status update karo (APPROVED/REJECTED)
+            if(trxKey) {
+                await update(ref(db, `users/${uid}/transactions/${trxKey}`), { 
+                    status: status.toUpperCase() 
+                });
+            }
+
+            await update(userRef, { 
+                notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected and funds returned.`,
+                lastNotifSeen: false
+            });
+
+            await remove(ref(db, `admin/withdrawals/${key}`));
+            Swal.fire('Success', `Withdrawal ${status.toUpperCase()} and history synced.`, 'success');
+        };
+
+        // User Management Popup
         window.openManager = async (userKey) => {
             const u = (await get(ref(db, `users/${userKey}`))).val();
             const { value: form } = await Swal.fire({
                 title: `Manage: ${u.username}`,
                 html: `
-                    <label class="swal2-label">Deposit Balance ($)</label><input id="m-dep" class="swal2-input" type="number" value="${u.totalBalance || 0}">
-                    <label class="swal2-label">Withdrawable Balance ($)</label><input id="m-with" class="swal2-input" type="number" value="${u.withdrawable || 0}">
-                    <label class="swal2-label">Team Members (Count)</label><input id="m-team" class="swal2-input" type="number" value="${u.teamCount || 0}">
-                    <label class="swal2-label">Team Reward ($)</label><input id="m-trew" class="swal2-input" type="number" value="${u.teamReward || 0}">
-                    <label class="swal2-label">Account Status</label>
-                    <select id="m-status" class="swal2-select">
-                        <option value="Active" ${u.status === 'Active' ? 'selected' : ''}>Active</option>
-                        <option value="Blocked" ${u.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
-                    </select>
-                    <label class="swal2-label">Push Notification</label><input id="m-note" class="swal2-input" value="${u.notification || ''}">
+                    <label class="swal-label">Deposit Balance ($)</label><input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
+                    <label class="swal-label">Withdrawable Balance ($)</label><input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
+                    <label class="swal-label">Team Members</label><input id="m-team" class="swal2-input swal-input-custom" type="number" value="${u.teamCount || 0}">
+                    <label class="swal-label">Push Notification</label><input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
                 `,
-                confirmButtonText: 'Update User',
+                confirmButtonText: 'Save Changes',
                 preConfirm: () => ({
                     totalBalance: parseFloat(document.getElementById('m-dep').value),
                     withdrawable: parseFloat(document.getElementById('m-with').value),
                     teamCount: parseInt(document.getElementById('m-team').value),
-                    teamReward: parseFloat(document.getElementById('m-trew').value),
-                    status: document.getElementById('m-status').value,
                     notification: document.getElementById('m-note').value,
                     lastNotifSeen: false
                 })
             });
-            if(form) { await update(ref(db, `users/${userKey}`), form); Swal.fire('Success', 'User data updated', 'success'); }
+            if(form) { await update(ref(db, `users/${userKey}`), form); Swal.fire('Updated!', 'All data saved.', 'success'); }
         };
 
-        window.approveTransaction = async (path, key, userUid, amount, historyKey) => {
-            const userRef = ref(db, `users/${userUid}`);
-            const uSnap = await get(userRef);
-            if(uSnap.exists()){
-                const currentBal = uSnap.val().totalBalance || 0;
-                await update(userRef, { totalBalance: currentBal + amount });
-                if(historyKey) await update(ref(db, `user_history/${userUid}/${historyKey}`), { status: 'COMPLETED' });
-                await remove(ref(db, `${path}/${key}`));
-                Swal.fire('Approved!', 'Deposit completed', 'success');
-            }
-        };
-
-        window.approveWithdrawal = async (key, userUid, amount, historyKey) => {
-            if(historyKey) await update(ref(db, `user_history/${userUid}/${historyKey}`), { status: 'COMPLETED' });
-            await remove(ref(db, `withdrawals/${key}`));
-            Swal.fire('Withdrawn!', 'Withdrawal marked as completed', 'success');
-        };
-
-        window.deleteReq = async (path, key) => {
-            const result = await Swal.fire({ title: 'Are you sure?', text: "Do you want to delete this request?", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Yes, delete it!' });
-            if (result.isConfirmed) {
-                await remove(ref(db, `${path}/${key}`));
-                Swal.fire('Deleted!', 'Request has been removed.', 'success');
-            }
+        window.searchUser = async () => {
+            const inputUID = document.getElementById('searchUID').value;
+            const snap = await get(ref(db, 'users'));
+            let foundKey = null;
+            snap.forEach(c => { if(String(c.val().uid) === String(inputUID)) foundKey = c.key; });
+            if(foundKey) window.openManager(foundKey);
+            else Swal.fire('Error', 'User not found', 'error');
         };
     </script>
 </body>

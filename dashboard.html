@@ -4,60 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MetaMint Gold | Dashboard</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        /* --- Base & Layout --- */
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; overflow-x: hidden; width: 100%; touch-action: pan-y; }
-
-        /* --- Header --- */
-        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; }
-        .user-info { display: flex; align-items: center; gap: 12px; }
-        .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; }
         
-        /* Notification Dot */
+        /* Header */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; }
         #notifBadge { display: none; position: absolute; top: -5px; right: 35px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #1e293b; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
-        /* --- 3D GOLD BRANDING --- */
-        .brand-section { text-align: center; padding: 30px 10px; perspective: 1000px; background: radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 70%); }
-        .main-logo-3d { font-size: 2.6rem; font-weight: 900; margin: 0; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; text-shadow: 0 1px 0 #999, 0 2px 0 #888, 0 3px 0 #777, 0 4px 0 #666, 0 5px 0 #555, 0 6px 1px rgba(0,0,0,.1), 0 0 5px rgba(0,0,0,.1), 0 1px 3px rgba(0,0,0,.3), 0 3px 5px rgba(0,0,0,.2), 0 5px 10px rgba(0,0,0,.25); animation: floatGold 4s ease-in-out infinite; }
-        .sub-tagline { display: block; font-size: 0.75rem; color: #fbbf24; margin-top: 8px; letter-spacing: 4px; font-weight: bold; text-transform: uppercase; opacity: 0.9; }
-        @keyframes floatGold { 0%, 100% { transform: translateY(0) rotateX(5deg); } 50% { transform: translateY(-12px) rotateX(-5deg); } }
+        /* Branding */
+        .brand-section { text-align: center; padding: 30px 10px; }
+        .main-logo-3d { font-size: 2.6rem; font-weight: 900; margin: 0; color: #d4af37; text-transform: uppercase; text-shadow: 0 4px 0 #666, 0 8px 10px rgba(0,0,0,0.5); }
+        .sub-tagline { color: #fbbf24; font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 5px; text-transform: uppercase; }
 
-        /* --- Cards & Buttons --- */
+        /* Balance Cards - Fixed Colors */
         .balance-cards { display: flex; gap: 15px; padding: 0 20px; margin-top: 10px; }
         .card { flex: 1; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .main-card { background: linear-gradient(135deg, #38bdf8, #1e40af); }
         .secondary-card { background: #1e293b; border: 1px solid #334155; }
-        .main-btn { padding: 14px; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; border: none; }
 
-        /* --- Daily Check-in UI --- */
+        /* Daily Bonus */
         .checkin-section { background: #1e293b; margin: 20px; border-radius: 20px; padding: 20px; border: 1px solid #334155; text-align: center; }
         .streak-container { display: flex; justify-content: space-between; margin: 15px 0; }
-        .day-box { flex: 1; text-align: center; font-size: 0.65rem; color: #94a3b8; }
-        .day-circle { width: 30px; height: 30px; border-radius: 50%; background: #0f172a; border: 2px solid #334155; margin: 0 auto 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.3s; }
+        .day-circle { width: 32px; height: 32px; border-radius: 50%; background: #0f172a; border: 2px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; }
         .day-circle.completed { background: #38bdf8; border-color: #38bdf8; color: #0f172a; }
         .day-circle.current { border-color: #fbbf24; color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
-        .checkin-btn { background: #38bdf8; color: #0f172a; border: none; padding: 12px 25px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.3s; }
-        .checkin-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
 
-        /* --- UID & Admin --- */
-        .uid-container { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.05); padding: 2px 8px; border-radius: 6px; width: fit-content; margin-top: 4px; }
-        #dashUID { font-family: 'monospace'; color: #38bdf8; font-weight: bold; font-size: 0.85rem; }
-        #adminAccessBtn { display: none; padding: 0 20px; margin-top: 5px; margin-bottom: 15px; }
-        .admin-btn-style { background: linear-gradient(135deg, #ef4444, #991b1b); color: white; width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); cursor: pointer; }
+        /* Buttons */
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: 20px; }
+        .btn { padding: 14px; border-radius: 12px; color: white; font-weight: bold; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 
-        /* --- Security & About --- */
-        .security-note { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin: 25px 20px 0 20px; }
+        /* Admin Section */
+        #adminAccessBtn { display: none; padding: 0 20px; margin-bottom: 15px; }
+        .admin-btn { background: linear-gradient(135deg, #ef4444, #991b1b); width: 100%; padding: 14px; border-radius: 12px; border: none; color: white; font-weight: bold; }
+
+        /* Footers & Notes */
+        .security-note { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin: 25px 20px; }
         .about-box { background: #1e293b; border-radius: 15px; padding: 25px; margin: 25px 20px; border: 1px solid #334155; }
-        .cert-tag { background: #fbbf24; color: #000; font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; display: inline-block; }
         
-        /* --- Footer & Nav --- */
-        .footer-locked { margin-top: 50px; padding: 50px 20px 120px 20px; background: #0a0f1d; text-align: center; border-top: 1px solid #1e293b; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 100; }
+        /* LONG FOOTER - Extra Space [As requested] */
+        .footer-locked { text-align: center; padding: 60px 20px 150px 20px; background: #0a0f1d; border-top: 1px solid #1e293b; user-select: none; pointer-events: none; }
+
+        /* Navigation */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.75rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.3rem; margin-bottom: 4px; }
         .nav-item.active { color: #38bdf8; }
@@ -66,32 +58,29 @@
 <body>
 
     <header class="dash-header">
-        <div class="user-info">
-            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User" class="user-avatar">
+        <div class="user-info" style="display:flex; align-items:center; gap:12px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar" alt="Avatar">
             <div>
-                <h3 id="dashUsername" style="font-size: 1.1rem; margin-bottom: 2px; margin-top: 0;">Loading...</h3>
-                <div class="uid-container">
-                    <span id="dashUID">####</span>
-                    <i class="fas fa-copy" onclick="copyUID()" style="cursor:pointer; color:#94a3b8; margin-left:5px;"></i>
-                </div>
+                <h3 id="dashUsername" style="margin:0; font-size:1.1rem;">Loading...</h3>
+                <small style="color:#38bdf8; font-weight:bold;">UID: <span id="dashUID">####</span></small>
             </div>
         </div>
-        <div class="header-icons" style="position: relative; display: flex; align-items: center;">
-            <i class="fas fa-bell" id="notifBtn" style="margin-right: 20px; cursor: pointer; font-size: 1.2rem;"></i>
-            <span id="notifBadge"></span>
+        <div style="position: relative; display:flex; gap:20px;">
+            <div style="position:relative;">
+                <i class="fas fa-bell" id="notifBtn" style="cursor: pointer; font-size: 1.2rem;"></i>
+                <span id="notifBadge"></span>
+            </div>
             <i class="fas fa-sign-out-alt" id="logoutBtn" style="cursor: pointer; font-size: 1.2rem;"></i>
         </div>
     </header>
 
     <div class="brand-section">
         <h1 class="main-logo-3d">MetaMint Gold</h1>
-        <span class="sub-tagline">Cloud Mining Revolution</span>
+        <div class="sub-tagline">Cloud Mining Revolution</div>
     </div>
 
     <div id="adminAccessBtn">
-        <button onclick="window.location.href='admin.html'" class="admin-btn-style">
-            <i class="fas fa-user-shield"></i> MASTER CONTROL PANEL
-        </button>
+        <button onclick="window.location.href='admin.html'" class="admin-btn"><i class="fas fa-user-shield"></i> MASTER CONTROL PANEL</button>
     </div>
 
     <section class="balance-cards">
@@ -106,49 +95,44 @@
     </section>
 
     <div class="checkin-section">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h4 style="margin:0; font-size: 0.9rem; color: #38bdf8;"><i class="fas fa-calendar-check"></i> Daily Bonus</h4>
-            <span style="font-size: 0.7rem; color: #94a3b8;">Total $1.00 / Week</span>
-        </div>
+        <h4 style="color: #38bdf8; margin:0; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Bonus</h4>
         <div class="streak-container">
-            <div class="day-box"><div class="day-circle" id="d1">1</div>D1</div>
-            <div class="day-box"><div class="day-circle" id="d2">2</div>D2</div>
-            <div class="day-box"><div class="day-circle" id="d3">3</div>D3</div>
-            <div class="day-box"><div class="day-circle" id="d4">4</div>D4</div>
-            <div class="day-box"><div class="day-circle" id="d5">5</div>D5</div>
-            <div class="day-box"><div class="day-circle" id="d6">6</div>D6</div>
-            <div class="day-box"><div class="day-circle" id="d7">7</div>D7</div>
+            <div id="d1" class="day-circle">1</div>
+            <div id="d2" class="day-circle">2</div>
+            <div id="d3" class="day-circle">3</div>
+            <div id="d4" class="day-circle">4</div>
+            <div id="d5" class="day-circle">5</div>
+            <div id="d6" class="day-circle">6</div>
+            <div id="d7" class="day-circle">7</div>
         </div>
-        <button id="checkinBtn" class="checkin-btn">Claim Daily Reward</button>
+        <button id="checkinBtn" style="background: #38bdf8; color: #0f172a; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer;">Claim Daily Reward</button>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px;">
-        <button onclick="window.location.href='deposit.html'" class="main-btn" style="background: #22c55e;"><i class="fas fa-wallet"></i> Deposit</button>
-        <button onclick="window.location.href='withdraw.html'" class="main-btn" style="background: #e11d48;"><i class="fas fa-hand-holding-usd"></i> Withdraw</button>
+    <div class="action-btns">
+        <button onclick="window.location.href='deposit.html'" class="btn" style="background: #22c55e;"><i class="fas fa-wallet"></i> Deposit</button>
+        <button onclick="window.location.href='withdraw.html'" class="btn" style="background: #e11d48;"><i class="fas fa-hand-holding-usd"></i> Withdraw</button>
     </div>
 
     <div class="security-note">
         <h4 style="color: #38bdf8; font-size: 0.9rem; margin: 0 0 8px 0;"><i class="fas fa-shield-check"></i> Security & Compliance</h4>
         <p style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.5; margin: 0;">
-            All transactions are encrypted via SSL protocol. Please use only <b>USDT-TRC20</b> for deposits. Withdrawal requests are processed within 1-24 business hours.
+            All transactions are encrypted. Please use only <b>USDT-TRC20</b> for deposits. Withdrawal requests are processed manually within 24 hours.
         </p>
     </div>
 
     <div class="about-box">
-        <span class="cert-tag">CERTIFIED MINING PROVIDER</span>
-        <h4 style="color: #fff; font-size: 1.1rem; margin: 5px 0 12px 0;">MetaMint Gold Group Ltd.</h4>
-        <p style="font-size: 0.78rem; color: #94a3b8; line-height: 1.7; margin-bottom: 15px;">
-            Globally recognized cloud mining corporation specializing in high-yield ASIC computing power. Registered and regulated in the United Kingdom.
+        <h4 style="color: #fff; font-size: 1.1rem; margin: 0 0 12px 0;">MetaMint Gold Group Ltd.</h4>
+        <p style="font-size: 0.75rem; color: #94a3b8; line-height: 1.7; margin-bottom: 15px;">
+            Globally recognized cloud mining corporation specializing in high-yield computing power. Registered in the United Kingdom.
         </p>
         <div style="font-size: 0.75rem; color: #cbd5e1; border-top: 1px solid #334155; padding-top: 15px;">
-            <p style="margin-bottom: 8px;"><i class="fas fa-map-marker-alt" style="color: #38bdf8; width: 20px;"></i> 20-22 Wenlock Road, London, UK</p>
-            <p><i class="fas fa-check-circle" style="color: #38bdf8; width: 20px;"></i> <b>License:</b> #UK-7749201-B</p>
+            <p style="margin-bottom: 8px;"><i class="fas fa-check-circle" style="color: #38bdf8;"></i> <b>License:</b> #UK-7749201-B</p>
         </div>
     </div>
 
     <footer class="footer-locked">
         <h2 style="color: #38bdf8; letter-spacing: 2px; margin-bottom: 10px;">METAMINT GOLD</h2>
-        <p style="font-size: 0.65rem; color: #475569;">© 2024-2026 MetaMint Gold Group Ltd. All Rights Reserved.</p>
+        <p style="font-size: 0.7rem; color: #475569;">© 2024-2026 MetaMint Gold Group Ltd.<br>All Rights Reserved. Content Locked.</p>
     </footer>
 
     <nav class="bottom-nav">
@@ -180,127 +164,76 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // Admin Check
                 if (user.email === "dreamsagweb@gmail.com") {
-                    document.getElementById('adminAccessBtn').style.display = 'block';
+                    const adminDiv = document.getElementById('adminAccessBtn');
+                    if(adminDiv) adminDiv.style.display = 'block';
                 }
 
+                // Data Fetching
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        document.getElementById('dashUsername').innerText = data.username;
-                        document.getElementById('dashUID').innerText = data.uid || "####";
-                        document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
-                        document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
+                        const userEl = document.getElementById('dashUsername');
+                        const uidEl = document.getElementById('dashUID');
+                        const depEl = document.getElementById('totalBalance');
+                        const withEl = document.getElementById('withdrawableBalance');
+
+                        if(userEl) userEl.innerText = data.username || "User";
+                        if(uidEl) uidEl.innerText = data.uid || "####";
+                        if(depEl) depEl.innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
+                        if(withEl) withEl.innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
                         
-                        updateCheckInUI(data);
-
-                        // Notification Alert & Badge
-                        const badge = document.getElementById('notifBadge');
-                        if(data.lastNotifSeen === false) {
-                            badge.style.display = 'block';
-                        } else {
-                            badge.style.display = 'none';
-                        }
-
-                        document.getElementById('notifBtn').onclick = () => {
-                            Swal.fire({
-                                title: 'Admin Notification',
-                                text: data.notification || "No new messages from admin.",
-                                icon: 'info',
-                                confirmButtonColor: '#38bdf8'
-                            });
-                            update(ref(db, 'users/' + user.uid), { lastNotifSeen: true });
-                            badge.style.display = 'none';
-                        };
+                        updateBonusUI(data, user.uid);
                     }
                 });
-
-                // Check-in Button Click Handler
-                document.getElementById('checkinBtn').onclick = async () => {
-                    const snap = await get(ref(db, 'users/' + user.uid));
-                    const data = snap.val();
-                    handleDailyCheckIn(user.uid, data);
-                };
-
             } else { window.location.href = 'index.html'; }
         });
 
-        // --- Daily Check-in Logic ---
-        function updateCheckInUI(data) {
+        function updateBonusUI(data, uid) {
+            const badge = document.getElementById('notifBadge');
+            if(badge) badge.style.display = (data.lastNotifSeen === false) ? 'block' : 'none';
+
+            const nBtn = document.getElementById('notifBtn');
+            if(nBtn) {
+                nBtn.onclick = () => {
+                    Swal.fire({ title: 'Notification', text: data.notification || "No new messages.", icon: 'info' });
+                    update(ref(db, 'users/' + uid), { lastNotifSeen: true });
+                };
+            }
+
             const streak = data.streakCount || 0;
             const lastCheck = data.lastCheckIn || 0;
-            const now = Date.now();
-            const oneDay = 24 * 60 * 60 * 1000;
+            const isToday = new Date(lastCheck).toDateString() === new Date().toDateString();
 
-            // Update Circles
             for (let i = 1; i <= 7; i++) {
                 const circle = document.getElementById('d' + i);
-                circle.className = 'day-circle';
-                if (i <= streak) circle.classList.add('completed');
-                if (i === streak + 1) circle.classList.add('current');
+                if(circle) {
+                    circle.className = 'day-circle';
+                    if (i <= streak) circle.classList.add('completed');
+                    if (i === streak + 1) circle.classList.add('current');
+                }
             }
 
-            // Disable button if already checked in today
-            const btn = document.getElementById('checkinBtn');
-            const isToday = new Date(lastCheck).toDateString() === new Date(now).toDateString();
-            if (isToday) {
-                btn.innerText = "Already Claimed Today";
-                btn.disabled = true;
-            } else {
-                btn.innerText = "Claim Day " + (streak + 1) + " Reward";
-                btn.disabled = false;
-            }
-        }
-
-        async function handleDailyCheckIn(uid, data) {
-            const now = Date.now();
-            const lastCheck = data.lastCheckIn || 0;
-            const streak = data.streakCount || 0;
-            const oneDay = 24 * 60 * 60 * 1000;
-
-            // Time difference check
-            const isToday = new Date(lastCheck).toDateString() === new Date(now).toDateString();
-            if (isToday) return;
-
-            // Check if streak is broken (missed more than 48 hours)
-            let newStreak = streak;
-            if (now - lastCheck > (oneDay * 2)) {
-                newStreak = 0; // Reset to start
-            }
-
-            // Reward Table (Day 1-7)
-            const rewards = [0.05, 0.08, 0.12, 0.15, 0.18, 0.20, 0.22];
-            const currentReward = rewards[newStreak];
-
-            // Update Database
-            const updates = {};
-            updates['withdrawable'] = (data.withdrawable || 0) + currentReward;
-            updates['lastCheckIn'] = now;
-            updates['streakCount'] = (newStreak + 1 >= 7) ? 0 : newStreak + 1; // Reset to 0 after day 7
-
-            try {
-                await update(ref(db, 'users/' + uid), updates);
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Claimed!',
-                    text: `$${currentReward.toFixed(2)} added to your withdrawable balance.`,
-                    confirmButtonColor: '#38bdf8'
-                });
-            } catch (e) {
-                Swal.fire('Error', 'Something went wrong.', 'error');
+            const cBtn = document.getElementById('checkinBtn');
+            if(cBtn) {
+                cBtn.disabled = isToday;
+                cBtn.innerText = isToday ? "Already Claimed Today" : "Claim Day " + (streak + 1) + " Reward";
+                cBtn.onclick = async () => {
+                    const rewards = [0.05, 0.08, 0.12, 0.15, 0.18, 0.20, 0.22];
+                    const reward = rewards[streak] || 0.05;
+                    await update(ref(db, 'users/' + uid), {
+                        withdrawable: (data.withdrawable || 0) + reward,
+                        lastCheckIn: Date.now(),
+                        streakCount: (streak + 1 >= 7) ? 0 : streak + 1
+                    });
+                    Swal.fire('Success', `$${reward} added to Withdrawable balance!`, 'success');
+                };
             }
         }
 
-        window.copyUID = function() {
-            const uid = document.getElementById('dashUID').innerText;
-            navigator.clipboard.writeText(uid).then(() => {
-                Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'UID Copied!', showConfirmButton: false, timer: 1500 });
-            });
-        };
-
-        document.getElementById('logoutBtn').onclick = () => {
-            signOut(auth).then(() => { window.location.href = 'index.html'; });
-        };
+        const logout = document.getElementById('logoutBtn');
+        if(logout) logout.onclick = () => signOut(auth).then(() => window.location.href='index.html');
     </script>
 </body>
 </html>

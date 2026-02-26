@@ -12,16 +12,15 @@
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; }
         .history-container { padding: 20px; margin-bottom: 100px; }
         .tab-scroll { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .tab-scroll::-webkit-scrollbar { display: none; }
         .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #1e293b; color: #64748b; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.3s; }
         .tab-btn.active { background: #38bdf8; color: #0f172a; }
         .trx-card { background: #1e293b; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
-        .trx-icon { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 1.1rem; }
+        .trx-icon { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 1.1rem; width: 30px; text-align: center; }
         .trx-info h4 { margin: 0; font-size: 0.9rem; color: #f8fafc; }
         .trx-info p { margin: 4px 0 0 0; font-size: 0.7rem; color: #64748b; }
         .trx-amount { text-align: right; }
         .trx-amount h4 { margin: 0; font-size: 1rem; }
-        .trx-amount p { margin: 4px 0 0 0; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; }
+        .trx-amount p { margin: 4px 0 0 0; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
@@ -42,12 +41,8 @@
             <button class="tab-btn" onclick="filterTrx('withdraw', this)">Withdrawals</button>
             <button class="tab-btn" onclick="filterTrx('reward', this)">Rewards</button>
         </div>
-
         <div id="historyList">
-            <div style="text-align: center; margin-top: 50px;">
-                <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: #38bdf8;"></i>
-                <p style="color: #94a3b8; margin-top: 10px;">Syncing transactions...</p>
-            </div>
+            <p style="text-align:center; color:#64748b; margin-top:50px;">Loading history...</p>
         </div>
     </div>
 
@@ -73,7 +68,6 @@
             messagingSenderId: "756801996954",
             appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
         };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
@@ -82,14 +76,19 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Pointing to user_history as used in Admin Panel
-                const trxRef = ref(db, 'user_history/' + user.uid);
-                onValue(trxRef, (snapshot) => {
+                // User ki transactions listen karein
+                onValue(ref(db, `users/${user.uid}/transactions`), (snapshot) => {
+                    const list = document.getElementById('historyList');
                     if (snapshot.exists()) {
-                        allTransactions = Object.values(snapshot.val()).sort((a, b) => b.timestamp - a.timestamp);
+                        const data = snapshot.val();
+                        // Object ko array mein badlein aur latest pehle rakhein
+                        allTransactions = Object.keys(data).map(key => ({ 
+                            ...data[key], 
+                            id: key 
+                        })).sort((a, b) => b.timestamp - a.timestamp);
                         renderHistory(allTransactions);
                     } else {
-                        document.getElementById('historyList').innerHTML = `<div style="text-align:center; margin-top:50px;"><i class="fas fa-receipt" style="font-size:3.5rem; color:#1e293b; margin-bottom:15px;"></i><p style="color:#64748b;">No records found.</p></div>`;
+                        list.innerHTML = '<div style="text-align:center; margin-top:50px; color:#64748b;"><i class="fas fa-receipt" style="font-size:3rem; margin-bottom:10px; opacity:0.3;"></i><p>No transactions found.</p></div>';
                     }
                 });
             } else { window.location.href = 'index.html'; }
@@ -98,38 +97,60 @@
         function renderHistory(data) {
             const list = document.getElementById('historyList');
             let html = '';
+            
             data.forEach(trx => {
-                let icon = 'fa-gift', color = '#fbbf24', statusColor = '#fbbf24';
-                if (trx.type === 'deposit') { icon = 'fa-arrow-down'; color = '#22c55e'; }
-                else if (trx.type === 'withdraw') { icon = 'fa-arrow-up'; color = '#f87171'; }
-
+                const type = (trx.type || 'reward').toLowerCase();
                 const status = (trx.status || 'PENDING').toUpperCase();
-                if (status === 'COMPLETED' || status === 'SUCCESS') statusColor = '#22c55e';
-                else if (status === 'REJECTED' || status === 'FAILED') statusColor = '#ef4444';
+                
+                let icon = 'fa-gift';
+                let color = '#fbbf24'; // Reward color
+                let statusColor = '#fbbf24'; // Pending color
+
+                // Icon and Main Color based on Type
+                if (type === 'deposit') { 
+                    icon = 'fa-arrow-down'; 
+                    color = '#22c55e'; 
+                } else if (type === 'withdraw') { 
+                    icon = 'fa-arrow-up'; 
+                    color = '#f87171'; 
+                }
+
+                // Status Logic
+                if (status === 'APPROVED' || status === 'SUCCESS') {
+                    statusColor = '#22c55e'; // Green
+                } else if (status === 'REJECTED' || status === 'FAILED') {
+                    statusColor = '#ef4444'; // Red
+                }
 
                 html += `
                 <div class="trx-card">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div class="trx-icon" style="color: ${color};"><i class="fas ${icon}"></i></div>
                         <div class="trx-info">
-                            <h4>${trx.title || trx.type.toUpperCase()}</h4>
+                            <h4>${trx.title || type.toUpperCase()}</h4>
                             <p>${new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
                         </div>
                     </div>
                     <div class="trx-amount">
-                        <h4 style="color: ${color};">${trx.type === 'withdraw' ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
-                        <p style="color: ${statusColor};">${status}</p>
+                        <h4 style="color: ${color};">${type === 'withdraw' ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
+                        <p style="color: ${statusColor}; font-weight: 800;">${status}</p>
                     </div>
                 </div>`;
             });
-            list.innerHTML = html || '<p style="text-align:center; color:#64748b;">No matching records.</p>';
+            list.innerHTML = html || '<p style="text-align:center; color:#64748b;">No matching records found.</p>';
         }
 
         window.filterTrx = (type, btn) => {
+            // Active class handle karein
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            if (type === 'all') renderHistory(allTransactions);
-            else renderHistory(allTransactions.filter(t => t.type === type));
+
+            if (type === 'all') {
+                renderHistory(allTransactions);
+            } else {
+                const filtered = allTransactions.filter(t => (t.type || '').toLowerCase() === type.toLowerCase());
+                renderHistory(filtered);
+            }
         };
     </script>
 </body>
