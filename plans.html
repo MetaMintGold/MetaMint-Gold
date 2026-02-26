@@ -11,13 +11,13 @@
         .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .wallet-display { background: rgba(56, 189, 248, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid #38bdf8; font-size: 0.85rem; color: #38bdf8; font-weight: bold; }
         .plans-container { padding: 20px; margin-bottom: 100px; }
-        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; }
-        .plan-card.active-plan { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
+        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; transition: 0.3s; }
+        .plan-card.active-plan { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
         .plan-info h3 { margin: 0; color: #94a3b8; font-size: 1rem; text-transform: uppercase; }
         .plan-info p { margin: 10px 0; color: #38bdf8; font-weight: bold; font-size: 1.1rem; }
         .plan-info h2 { margin: 10px 0; font-size: 2.2rem; color: #fff; }
-        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; }
-        .buy-btn:disabled { background: #334155; color: #64748b; }
+        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
+        .cancel-btn { width: 100%; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
         .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
@@ -36,19 +36,25 @@
         <div class="plan-card" id="cardPlan1">
             <div id="badge1"></div>
             <div class="plan-info"><h3>Level 1</h3><p>Daily 2.0% Profit</p><h2>$20.00</h2></div>
-            <button class="buy-btn" id="btnPlan1" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button>
+            <div id="action1">
+                <button class="buy-btn" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button>
+            </div>
         </div>
 
         <div class="plan-card" id="cardPlan2">
             <div id="badge2"></div>
             <div class="plan-info"><h3>Level 2</h3><p>Daily 3.0% Profit</p><h2>$60.00</h2></div>
-            <button class="buy-btn" id="btnPlan2" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button>
+            <div id="action2">
+                <button class="buy-btn" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button>
+            </div>
         </div>
 
         <div class="plan-card" id="cardPlan3">
             <div id="badge3"></div>
             <div class="plan-info"><h3>Level 3</h3><p>Daily 3.5% Profit</p><h2>$120.00</h2></div>
-            <button class="buy-btn" id="btnPlan3" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button>
+            <div id="action3">
+                <button class="buy-btn" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button>
+            </div>
         </div>
     </div>
 
@@ -80,7 +86,6 @@
         const db = getDatabase(app);
 
         let currentBalance = 0;
-        let activePlanId = null;
         let userData = null;
 
         onAuthStateChanged(auth, (user) => {
@@ -89,7 +94,6 @@
                     userData = snapshot.val();
                     if (userData) {
                         currentBalance = userData.totalBalance || 0;
-                        activePlanId = userData.activePlan || null;
                         document.getElementById('userWallet').innerText = "$" + currentBalance.toFixed(2);
                         updateUI();
                     }
@@ -98,64 +102,104 @@
         });
 
         function updateUI() {
+            const activePlans = userData.activePlans || {}; 
+            
             [1, 2, 3].forEach(id => {
-                const btn = document.getElementById(`btnPlan${id}`);
+                const actionDiv = document.getElementById(`action${id}`);
                 const card = document.getElementById(`cardPlan${id}`);
                 const badge = document.getElementById(`badge${id}`);
-                if (activePlanId == id) {
-                    btn.innerText = "Plan Active"; btn.disabled = true;
+                const prices = { 1: 20, 2: 60, 3: 120 };
+
+                if (activePlans[id]) {
                     card.classList.add('active-plan');
                     badge.innerHTML = `<span class="active-badge">ACTIVE</span>`;
+                    actionDiv.innerHTML = `
+                        <button class="buy-btn" disabled style="background:#1e293b; color:#64748b; border:1px solid #334155;">Plan Active</button>
+                        <button class="cancel-btn" onclick="cancelPlan(${id}, ${prices[id]})">Cancel Plan (10% Fee)</button>
+                    `;
                 } else {
-                    btn.innerText = "Activate Plan"; btn.disabled = activePlanId !== null;
-                    card.classList.remove('active-plan'); badge.innerHTML = "";
+                    card.classList.remove('active-plan');
+                    badge.innerHTML = "";
+                    actionDiv.innerHTML = `<button class="buy-btn" onclick="handlePlan(${id}, ${prices[id]}, ${id==1?0.2:id==2?0.25:0.3})">Activate Plan</button>`;
                 }
             });
         }
 
         window.handlePlan = async (planId, price, rewardPercent) => {
-            const user = auth.currentUser;
             if (currentBalance < price) return Swal.fire('Insufficient Balance', 'Deposit first.', 'warning');
 
             const confirm = await Swal.fire({
                 title: 'Activate Plan?',
                 text: `Confirm $${price} investment for Level ${planId}`,
-                icon: 'question', showCancelButton: true, confirmButtonText: 'Yes, Activate!'
+                icon: 'question', showCancelButton: true, confirmButtonColor: '#38bdf8'
             });
 
             if (confirm.isConfirmed) {
-                Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
-                
+                const user = auth.currentUser;
                 try {
-                    // 1. Update User Plan
-                    await update(ref(db, 'users/' + user.uid), {
-                        totalBalance: currentBalance - price,
-                        activePlan: planId,
-                        planActivationDate: Date.now()
-                    });
+                    const updates = {};
+                    updates[`users/${user.uid}/totalBalance`] = currentBalance - price;
+                    updates[`users/${user.uid}/activePlans/${planId}`] = true;
+                    updates[`users/${user.uid}/miningStatus`] = 'active'; 
 
-                    // 2. Reward to Upliner
+                    await update(ref(db), updates);
+
                     if (userData.referredBy && userData.referredBy !== "none") {
                         const rewardAmount = price * rewardPercent;
                         const usersRef = ref(db, 'users');
-                        const uplinerQuery = query(usersRef, orderByChild('uid'), equalTo(parseInt(userData.referredBy)));
+                        const uplinerQuery = query(usersRef, orderByChild('referralCode'), equalTo(userData.referredBy));
                         
                         const uplinerSnap = await get(uplinerQuery);
                         if (uplinerSnap.exists()) {
-                            const uplinerUID = Object.keys(uplinerSnap.val())[0];
-                            const currentRewards = uplinerSnap.val()[uplinerUID].teamRewards || 0;
+                            const upliners = uplinerSnap.val();
+                            const uplinerUID = Object.keys(upliners)[0];
+                            const currentRewards = upliners[uplinerUID].teamRewards || 0;
                             
-                            // Update Upliner's Rewards
                             await update(ref(db, 'users/' + uplinerUID), {
                                 teamRewards: currentRewards + rewardAmount
                             });
                         }
                     }
 
-                    Swal.fire('Activated!', 'Mining started and reward sent to upliner.', 'success');
-                } catch (e) { 
-                    console.error(e);
-                    Swal.fire('Error', 'Transaction failed.', 'error'); 
+                    Swal.fire('Success!', `Level ${planId} is now active.`, 'success');
+                } catch (e) {
+                    Swal.fire('Error', 'Transaction failed.', 'error');
+                }
+            }
+        };
+
+        window.cancelPlan = async (planId, price) => {
+            // 10% Fee logic
+            const fee = price * 0.10;
+            const refund = price - fee;
+
+            const confirm = await Swal.fire({
+                title: 'Cancel Plan?',
+                text: `Cancellation fee is 10% ($${fee.toFixed(2)}). You will get $${refund.toFixed(2)} back in your wallet.`,
+                icon: 'warning', 
+                showCancelButton: true, 
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, Cancel Plan'
+            });
+
+            if (confirm.isConfirmed) {
+                const user = auth.currentUser;
+                try {
+                    const updates = {};
+                    updates[`users/${user.uid}/totalBalance`] = currentBalance + refund;
+                    updates[`users/${user.uid}/activePlans/${planId}`] = null; 
+                    
+                    const activePlansAfter = userData.activePlans || {};
+                    delete activePlansAfter[planId];
+                    
+                    if (Object.keys(activePlansAfter).length === 0) {
+                        updates[`users/${user.uid}/miningStatus`] = 'inactive';
+                    }
+
+                    await update(ref(db), updates);
+                    Swal.fire('Cancelled', `$${refund.toFixed(2)} returned after 10% fee.`, 'success');
+                } catch (e) {
+                    Swal.fire('Error', 'Could not cancel plan.', 'error');
                 }
             }
         };
