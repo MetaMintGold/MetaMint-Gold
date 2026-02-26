@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaMint | Login & Register</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* CSS yahan merge kar di gayi hai */
+        body {
+            background-color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        .auth-container {
+            width: 90%;
+            max-width: 400px;
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .tab-group { margin-bottom: 25px; border-bottom: 1px solid #334155; }
+        .tab-btn {
+            background: none; border: none; color: #64748b;
+            font-size: 1rem; cursor: pointer; padding: 10px 20px;
+            transition: 0.3s; font-weight: bold;
+        }
+        .tab-btn.active { color: #38bdf8; border-bottom: 3px solid #38bdf8; }
+        
+        input {
+            width: 100%; padding: 14px; margin: 10px 0;
+            border-radius: 10px; border: 1px solid #334155;
+            background: #0f172a; color: white; outline: none;
+            box-sizing: border-box; transition: 0.3s;
+        }
+        input:focus { border-color: #38bdf8; box-shadow: 0 0 5px #38bdf8; }
+        
+        .main-btn {
+            width: 100%; padding: 15px; background: #38bdf8;
+            border: none; border-radius: 10px; color: #0f172a;
+            font-weight: bold; cursor: pointer; margin-top: 15px;
+            font-size: 1rem; transition: 0.3s;
+        }
+        .main-btn:hover { background: #0ea5e9; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h1 style="margin-bottom: 5px;">Meta<span style="color: #38bdf8;">Mint</span></h1>
+        <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 25px;">Your Gateway to Passive Income</p>
+
+        <div class="tab-group">
+            <button class="tab-btn active" id="loginTab">Login</button>
+            <button class="tab-btn" id="registerTab">Register</button>
+        </div>
+
+        <div id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email Address">
+            <input type="password" id="loginPass" placeholder="Password">
+            <button class="main-btn" id="loginBtn">Login to Dashboard</button>
+        </div>
+
+        <div id="registerForm" style="display: none;">
+            <input type="text" id="regUser" placeholder="Full Name">
+            <input type="email" id="regEmail" placeholder="Email Address">
+            <input type="number" id="regWhatsapp" placeholder="WhatsApp Number">
+            <input type="text" id="regCity" placeholder="Your City">
+            <input type="password" id="regPass" placeholder="Create Password">
+            <button class="main-btn" id="regBtn">Create Account</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // UI Tabs Switching Logic
+        const lTab = document.getElementById('loginTab');
+        const rTab = document.getElementById('registerTab');
+        const lForm = document.getElementById('loginForm');
+        const rForm = document.getElementById('registerForm');
+
+        rTab.onclick = () => {
+            rTab.classList.add('active'); lTab.classList.remove('active');
+            rForm.style.display = 'block'; lForm.style.display = 'none';
+        };
+        lTab.onclick = () => {
+            lTab.classList.add('active'); rTab.classList.remove('active');
+            lForm.style.display = 'block'; rForm.style.display = 'none';
+        };
+
+        // --- REGISTER FUNCTION ---
+        document.getElementById('regBtn').onclick = async () => {
+            const name = document.getElementById('regUser').value;
+            const email = document.getElementById('regEmail').value;
+            const whatsapp = document.getElementById('regWhatsapp').value;
+            const city = document.getElementById('regCity').value;
+            const pass = document.getElementById('regPass').value;
+
+            if(!name || !email || !whatsapp || !city || !pass) {
+                return Swal.fire('Error', 'Please fill all fields', 'error');
+            }
+
+            // Show Loading
+            Swal.fire({ title: 'Creating Account...', allowOutsideClick: false, didOpen: () => { Swal.showLoading() } });
+
+            try {
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                await set(ref(db, 'users/' + res.user.uid), {
+                    username: name,
+                    email: email,
+                    whatsapp: whatsapp,
+                    city: city,
+                    uid: Math.floor(1000 + Math.random() * 9000),
+                    totalBalance: 0,
+                    withdrawable: 0,
+                    role: 'user',
+                    specialReward: 0,
+                    notification: "Welcome to MetaMint!"
+                });
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Account Created!',
+                    text: 'Welcome to MetaMint, ' + name,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = 'dashboard.html';
+                });
+            } catch (err) {
+                Swal.fire('Registration Failed', err.message, 'error');
+            }
+        };
+
+        // --- LOGIN FUNCTION ---
+        document.getElementById('loginBtn').onclick = async () => {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+
+            if(!email || !pass) {
+                return Swal.fire('Error', 'Please enter email and password', 'info');
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Successful',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = 'dashboard.html';
+                });
+            } catch (err) {
+                Swal.fire('Failed', 'Invalid email or password', 'error');
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => { if (user) console.log("User is logged in"); });
+    </script>
+</body>
+</html>

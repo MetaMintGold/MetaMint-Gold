@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint | Withdraw</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- Base Styles --- */
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; touch-action: pan-y; }
+
+        /* --- Header --- */
+        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
+        .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; }
+
+        /* --- Withdrawal Container --- */
+        .withdraw-container { padding: 20px; margin-bottom: 100px; }
+
+        /* --- Balance Card --- */
+        .balance-card {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(217, 119, 6, 0.2);
+            margin-bottom: 25px;
+        }
+        .balance-card p { margin: 0; font-size: 0.9rem; opacity: 0.9; font-weight: 500; }
+        .balance-card h2 { margin: 10px 0 0 0; font-size: 2.5rem; font-weight: 800; }
+
+        /* --- Form Styling --- */
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #94a3b8; padding-left: 5px; }
+        .input-group input {
+            width: 100%; padding: 15px; background: #1e293b; border: 1px solid #334155;
+            border-radius: 12px; color: white; font-size: 16px !important; box-sizing: border-box;
+            outline: none; transition: 0.3s;
+        }
+        .input-group input:focus { border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.1); }
+
+        /* --- Buttons --- */
+        .main-btn {
+            width: 100%; padding: 16px; background: #f59e0b; border: none; border-radius: 12px;
+            color: white; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .main-btn:active { transform: scale(0.98); }
+
+        /* --- Notice Box --- */
+        .notice-box {
+            background: rgba(245, 158, 11, 0.05); border: 1px dashed #f59e0b;
+            padding: 15px; border-radius: 12px; margin-top: 30px; text-align: center;
+        }
+        .notice-box p { font-size: 0.75rem; color: #fbbf24; line-height: 1.6; margin: 0; }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
+        .nav-item.active { color: #f59e0b; }
+    </style>
+</head>
+<body>
+
+    <header class="dash-header">
+        <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
+        <h2 style="margin: 0; font-size: 1.1rem; color: #f59e0b;">Withdraw Funds</h2>
+    </header>
+
+    <div class="withdraw-container">
+        <div class="balance-card">
+            <p>Withdrawable Balance</p>
+            <h2 id="drawBal">$0.00</h2>
+        </div>
+
+        <form id="withdrawForm">
+            <div class="input-group">
+                <label>Amount to Withdraw (USD)</label>
+                <input type="number" id="drawAmount" placeholder="Minimum $10" required min="10">
+            </div>
+            
+            <div class="input-group">
+                <label>USDT TRC20 Wallet Address</label>
+                <input type="text" id="drawAddress" placeholder="Paste your USDT-TRC20 address" required>
+            </div>
+            
+            <button type="submit" class="main-btn" id="submitBtn">
+                <i class="fas fa-paper-plane"></i> Submit Withdrawal Request
+            </button>
+        </form>
+
+        <div class="notice-box">
+             <p>
+                <i class="fas fa-shield-alt"></i> <b>Security Notice:</b><br>
+                Withdrawals are processed manually within 24-48 hours. 
+                Double-check your TRC20 address; MetaMint is not responsible for funds sent to wrong addresses.
+            </p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
+        <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
+        <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentBalance = 0;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Real-time balance sync
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        currentBalance = data.totalBalance || 0;
+                        document.getElementById('drawBal').innerText = "$" + currentBalance.toFixed(2);
+                    }
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Form Submission Logic
+        document.getElementById('withdrawForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            const amount = parseFloat(document.getElementById('drawAmount').value);
+            const address = document.getElementById('drawAddress').value.trim();
+            const btn = document.getElementById('submitBtn');
+
+            // 1. Minimum Amount Validation
+            if (amount < 10) {
+                return Swal.fire('Error', 'Minimum withdrawal is $10', 'error');
+            }
+
+            // 2. Insufficient Balance Validation
+            if (amount > currentBalance) {
+                return Swal.fire('Insufficient Funds', 'You do not have enough balance.', 'warning');
+            }
+
+            // 3. Confirm Request
+            const confirm = await Swal.fire({
+                title: 'Confirm Withdrawal',
+                text: `Are you sure you want to withdraw $${amount}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f59e0b',
+                confirmButtonText: 'Yes, Submit'
+            });
+
+            if (confirm.isConfirmed) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                try {
+                    // Update main balance (deduct immediately)
+                    const newBalance = currentBalance - amount;
+                    await update(ref(db, 'users/' + user.uid), { totalBalance: newBalance });
+
+                    // Log in user's transactions
+                    const trxRef = push(ref(db, 'users/' + user.uid + '/transactions'));
+                    await set(trxRef, {
+                        type: 'withdraw',
+                        amount: amount,
+                        address: address,
+                        status: 'pending',
+                        title: 'Withdrawal Request',
+                        timestamp: Date.now()
+                    });
+
+                    // Log in Admin's global withdrawal pool
+                    const adminRef = push(ref(db, 'admin/withdrawals'));
+                    await set(adminRef, {
+                        uid: user.uid,
+                        email: user.email,
+                        amount: amount,
+                        address: address,
+                        status: 'pending',
+                        timestamp: Date.now()
+                    });
+
+                    Swal.fire({
+                        title: 'Request Sent!',
+                        text: 'Your withdrawal request has been submitted and is under review.',
+                        icon: 'success',
+                        confirmButtonColor: '#f59e0b'
+                    }).then(() => {
+                        document.getElementById('withdrawForm').reset();
+                        window.location.href = 'history.html';
+                    });
+
+                } catch (error) {
+                    Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+                }
+            }
+        };
+    </script>
+</body>
+</html>

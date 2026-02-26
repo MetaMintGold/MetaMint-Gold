@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint | My Profile</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- Base Styles --- */
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- Header --- */
+        .dash-header { padding: 25px 20px; background: #1e293b; text-align: center; border-bottom: 1px solid #334155; }
+        .profile-header-img { width: 90px; height: 90px; border: 3px solid #38bdf8; border-radius: 50%; padding: 3px; background: #0f172a; }
+
+        /* --- Profile Info --- */
+        .profile-container { padding: 20px; margin-bottom: 100px; }
+        
+        .user-meta { text-align: center; margin-bottom: 25px; }
+        .user-meta h2 { margin: 10px 0 5px 0; font-size: 1.4rem; color: #fff; }
+        .user-meta p { margin: 0; font-size: 0.85rem; color: #94a3b8; }
+
+        /* --- Info List Card --- */
+        .info-card { background: #1e293b; border-radius: 15px; border: 1px solid #334155; overflow: hidden; margin-bottom: 20px; }
+        .info-item { padding: 16px 20px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .info-item:last-child { border-bottom: none; }
+        .info-label { font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 10px; }
+        .info-value { font-size: 0.9rem; color: #f8fafc; font-weight: 500; }
+
+        /* --- Buttons --- */
+        .btn-group { display: flex; flex-direction: column; gap: 12px; }
+        .main-btn {
+            width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold;
+            display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; font-size: 0.95rem; transition: 0.3s;
+        }
+        .support-btn { background: #128c7e; color: white; box-shadow: 0 4px 15px rgba(18, 140, 126, 0.2); }
+        .logout-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
+        .nav-item.active { color: #38bdf8; }
+    </style>
+</head>
+<body>
+
+    <header class="dash-header">
+        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="User" class="profile-header-img">
+        <div class="user-meta">
+            <h2 id="profName">Loading...</h2>
+            <p id="profEmail">---</p>
+        </div>
+    </header>
+
+    <div class="profile-container">
+        <div class="info-card">
+            <div class="info-item">
+                <span class="info-label"><i class="fas fa-fingerprint"></i> User ID</span>
+                <span class="info-value" id="profUID" style="color: #38bdf8; font-family: monospace;">####</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label"><i class="fab fa-whatsapp"></i> WhatsApp</span>
+                <span class="info-value" id="profWA">---</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label"><i class="fas fa-shield-alt"></i> Account Status</span>
+                <span class="info-value" id="profStatus" style="color: #fbbf24;">Checking...</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="main-btn support-btn" onclick="contactSupport()">
+                <i class="fab fa-whatsapp"></i> Contact Customer Support
+            </button>
+            <button class="main-btn logout-btn" id="profLogout">
+                <i class="fas fa-sign-out-alt"></i> Logout Account
+            </button>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
+        <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
+        <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
+        <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    const data = snapshot.val();
+                    if(data) {
+                        document.getElementById('profName').innerText = data.username || "Investor";
+                        document.getElementById('profEmail').innerText = data.email || "---";
+                        document.getElementById('profUID').innerText = data.uid || "---";
+                        document.getElementById('profWA').innerText = data.whatsapp || "---";
+                        
+                        // Dynamic Status Styling
+                        const status = data.status || 'Inactive';
+                        const statusEl = document.getElementById('profStatus');
+                        statusEl.innerText = status;
+                        statusEl.style.color = status === 'Active' ? '#22c55e' : '#fbbf24';
+                    }
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+
+        // WhatsApp Support
+        window.contactSupport = () => {
+            const waNumber = "923067342115"; 
+            const message = "Hello MetaMint Support, I need assistance regarding my account.";
+            const whatsappURL = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`;
+            window.location.href = whatsappURL;
+        }
+
+        // Logout with SweetAlert
+        document.getElementById('profLogout').onclick = () => {
+            Swal.fire({
+                title: 'Logout?',
+                text: "Are you sure you want to sign out?",
+                icon: 'warning',
+                background: '#1e293b',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'Yes, Logout'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    signOut(auth).then(() => window.location.href = 'index.html');
+                }
+            });
+        };
+    </script>
+</body>
+</html>

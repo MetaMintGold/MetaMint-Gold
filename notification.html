@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint | Notifications</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- Base Styles --- */
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- Header --- */
+        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
+        .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; transition: 0.3s; }
+        .back-btn:active { transform: scale(0.8); }
+
+        /* --- Notification Container --- */
+        .notif-container { padding: 20px; margin-bottom: 50px; }
+
+        /* --- Notification Cards --- */
+        .notif-card { 
+            background: #1e293b; 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-left: 4px solid #38bdf8;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+        .notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .notif-title { font-size: 0.95rem; color: #38bdf8; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .notif-time { font-size: 0.65rem; color: #64748b; font-weight: 500; }
+        .notif-msg { font-size: 0.8rem; color: #cbd5e1; line-height: 1.5; margin: 0; }
+
+        /* --- Empty State --- */
+        .empty-state { text-align: center; margin-top: 80px; }
+        .empty-state i { font-size: 3.5rem; color: #1e293b; margin-bottom: 15px; }
+        .empty-state p { color: #64748b; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <header class="dash-header">
+        <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
+        <h2 style="margin: 0; font-size: 1.1rem; color: #38bdf8;">System Notifications</h2>
+    </header>
+
+    <div class="notif-container" id="notifList">
+        <div style="text-align: center; margin-top: 50px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #38bdf8;"></i>
+            <p style="color: #64748b; margin-top: 10px; font-size: 0.8rem;">Checking for updates...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const notifList = document.getElementById('notifList');
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Fetch Global Notifications
+                onValue(ref(db, 'notifications'), (snapshot) => {
+                    let html = '';
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        // Latest notification first
+                        const notifications = Object.values(data).sort((a, b) => b.time - a.time);
+
+                        notifications.forEach(notif => {
+                            html += `
+                            <div class="notif-card">
+                                <div class="notif-header">
+                                    <div class="notif-title"><i class="fas fa-bullhorn"></i> ${notif.title}</div>
+                                    <div class="notif-time">${new Date(notif.time).toLocaleDateString([], {day:'2-digit', month:'short'})}</div>
+                                </div>
+                                <p class="notif-msg">${notif.message}</p>
+                            </div>`;
+                        });
+                        notifList.innerHTML = html;
+                    } else {
+                        notifList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No new notifications at the moment.<br><span style="font-size:0.7rem;">Stay tuned for MetaMint updates!</span></p>
+                        </div>`;
+                    }
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

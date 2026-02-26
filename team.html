@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint | My Team & Rewards</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- Base Styles --- */
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- Header --- */
+        .dash-header { padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
+        .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; margin-right: 15px; }
+
+        /* --- Team Container --- */
+        .team-container { padding: 20px; margin-bottom: 120px; }
+
+        /* --- Referral Card --- */
+        .ref-card { background: #1e293b; border-radius: 20px; padding: 25px; text-align: center; border: 1px solid #334155; margin-bottom: 20px; }
+        .ref-code { color: #38bdf8; font-size: 2.5rem; margin: 10px 0; letter-spacing: 3px; font-weight: 800; font-family: 'monospace'; }
+        
+        /* --- Stats Grid --- */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .stat-box { background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; text-align: center; }
+        .stat-box h2 { margin: 5px 0; font-size: 1.5rem; color: #fff; }
+        .stat-box p { margin: 0; font-size: 0.75rem; color: #94a3b8; }
+
+        /* --- Reward Claim Box --- */
+        .claim-card { background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 25px; }
+        .claim-card h2 { color: #22c55e; font-size: 2rem; margin: 10px 0; }
+        
+        /* --- Table Styling --- */
+        .team-table-card { background: #1e293b; border-radius: 15px; border: 1px solid #334155; overflow: hidden; }
+        .team-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .team-table th { text-align: left; color: #64748b; padding: 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid #334155; }
+        .team-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .status-active { color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.1); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; }
+        .status-inactive { color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; }
+
+        /* --- Buttons --- */
+        .main-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        .copy-btn { background: #38bdf8; color: #0f172a; }
+        .claim-btn { background: #22c55e; color: white; margin-top: 10px; }
+        .claim-btn:disabled { background: #334155; opacity: 0.6; }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
+        .nav-item.active { color: #38bdf8; }
+    </style>
+</head>
+<body>
+
+    <header class="dash-header">
+        <div style="display: flex; align-items: center;">
+            <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
+            <h2 style="margin: 0; font-size: 1.1rem; color: #38bdf8;">My Team Network</h2>
+        </div>
+    </header>
+
+    <div class="team-container">
+        
+        <div class="ref-card">
+            <p style="font-size: 0.85rem; color: #94a3b8; margin: 0;">Your Personal Referral ID</p>
+            <h1 id="myReferralCode" class="ref-code">----</h1>
+            <button class="main-btn copy-btn" onclick="copyReferral()">
+                <i class="fas fa-link"></i> Copy Referral Link
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-box">
+                <p>Total Members</p>
+                <h2 id="totalTeamCount">0</h2>
+            </div>
+            <div class="stat-box">
+                <p>Active Mining</p>
+                <h2 id="activeCount" style="color: #22c55e;">0</h2>
+            </div>
+        </div>
+
+        <div class="claim-card">
+            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Unclaimed Network Commission</p>
+            <h2 id="unclaimedReward">$0.00</h2>
+            <button id="claimBtn" class="main-btn claim-btn">
+                <i class="fas fa-hand-holding-usd"></i> Claim to Main Balance
+            </button>
+        </div>
+
+        <div class="team-table-card">
+            <h3 style="padding: 15px; margin: 0; font-size: 0.95rem; border-bottom: 1px solid #334155;">
+                <i class="fas fa-users" style="color: #38bdf8;"></i> Team Composition
+            </h3>
+            <div style="overflow-x: auto;">
+                <table class="team-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamListBody">
+                        <tr><td colspan="3" style="text-align: center; color: #64748b; padding: 30px;">Loading network...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
+        <a href="team.html" class="nav-item active"><i class="fas fa-users"></i><span>Team</span></a>
+        <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const userRef = ref(db, 'users/' + user.uid);
+                
+                onValue(userRef, (snapshot) => {
+                    const data = snapshot.val();
+                    if(data) {
+                        const myID = data.uid || '----';
+                        document.getElementById('myReferralCode').innerText = myID;
+                        document.getElementById('unclaimedReward').innerText = `$${(data.teamRewards || 0).toFixed(2)}`;
+                        fetchTeamMembers(myID);
+                    }
+                });
+
+                async function fetchTeamMembers(referrerID) {
+                    const usersRef = ref(db, 'users');
+                    const teamQuery = query(usersRef, orderByChild('referredBy'), equalTo(referrerID.toString()));
+                    
+                    onValue(teamQuery, (snapshot) => {
+                        const listBody = document.getElementById('teamListBody');
+                        const totalCountDisp = document.getElementById('totalTeamCount');
+                        const activeCountDisp = document.getElementById('activeCount');
+                        
+                        listBody.innerHTML = '';
+                        let totalCount = 0;
+                        let activeCount = 0;
+
+                        if (snapshot.exists()) {
+                            snapshot.forEach((child) => {
+                                totalCount++;
+                                const member = child.val();
+                                const isPlanActive = member.activePlan !== null && member.activePlan !== undefined;
+                                if (isPlanActive) activeCount++;
+
+                                const statusHTML = isPlanActive 
+                                    ? `<span class="status-active">Active</span>` 
+                                    : `<span class="status-inactive">Inactive</span>`;
+                                
+                                listBody.innerHTML += `
+                                    <tr>
+                                        <td style="font-family: monospace; color: #38bdf8;">#${member.uid}</td>
+                                        <td>${statusHTML}</td>
+                                        <td style="text-align: right; color: #64748b; font-size: 0.75rem;">${new Date(member.timestamp || Date.now()).toLocaleDateString([], {day:'2-digit', month:'short'})}</td>
+                                    </tr>
+                                `;
+                            });
+                            totalCountDisp.innerText = totalCount;
+                            activeCountDisp.innerText = activeCount;
+                        } else {
+                            totalCountDisp.innerText = "0";
+                            activeCountDisp.innerText = "0";
+                            listBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#64748b; padding:30px;">No network members found yet.</td></tr>';
+                        }
+                    });
+                }
+
+                document.getElementById('claimBtn').onclick = async () => {
+                    const snap = await get(userRef);
+                    const userData = snap.val();
+                    const reward = userData.teamRewards || 0;
+                    
+                    if (reward > 0) {
+                        Swal.fire({ title: 'Claiming...', didOpen: () => Swal.showLoading() });
+                        const newBalance = (userData.totalBalance || 0) + reward;
+                        await update(userRef, { totalBalance: newBalance, teamRewards: 0 });
+                        Swal.fire('Success!', `$${reward.toFixed(2)} added to balance.`, 'success');
+                    } else {
+                        Swal.fire('Notice', 'No rewards available to claim.', 'info');
+                    }
+                };
+            } else { window.location.href = 'index.html'; }
+        });
+
+        window.copyReferral = function() {
+            const code = document.getElementById('myReferralCode').innerText;
+            const link = window.location.origin + "/index.html?ref=" + code;
+            navigator.clipboard.writeText(link).then(() => {
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'Referral Link Copied!', showConfirmButton: false, timer: 1500 });
+            });
+        }
+    </script>
+</body>
+</html>

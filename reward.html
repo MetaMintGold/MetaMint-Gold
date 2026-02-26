@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint | Special Rewards</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* --- Base Styles --- */
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+
+        /* --- Header --- */
+        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
+        .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; }
+
+        /* --- Rewards Container --- */
+        .rewards-container { padding: 20px; margin-bottom: 100px; }
+
+        /* --- Reward Card Design --- */
+        .reward-card { 
+            background: #1e293b; 
+            border-radius: 15px; 
+            padding: 18px; 
+            margin-bottom: 15px; 
+            border-top: 4px solid #fbbf24; /* Golden Top Border */
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.1);
+            transition: 0.3s;
+        }
+        .reward-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .reward-title { color: #fbbf24; font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .reward-amount { color: #22c55e; font-weight: 800; font-size: 1.1rem; }
+        
+        .reward-msg { font-size: 0.8rem; color: #cbd5e1; margin: 10px 0; line-height: 1.5; }
+        .reward-date { font-size: 0.65rem; color: #64748b; font-weight: 500; display: block; }
+
+        /* --- Empty State --- */
+        .empty-rewards { text-align: center; margin-top: 80px; padding: 0 40px; }
+        .empty-rewards i { font-size: 4rem; color: #1e293b; margin-bottom: 20px; }
+        .empty-rewards p { color: #64748b; font-size: 0.9rem; }
+
+        /* --- Bottom Nav --- */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
+        .nav-item.active { color: #38bdf8; }
+    </style>
+</head>
+<body>
+
+    <header class="dash-header">
+        <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
+        <h2 style="margin: 0; font-size: 1.1rem; color: #fbbf24;"><i class="fas fa-medal"></i> Special Rewards</h2>
+    </header>
+
+    <div class="rewards-container" id="adminRewardsList">
+        <div style="text-align: center; margin-top: 50px;">
+            <i class="fas fa-gift fa-spin" style="font-size: 2rem; color: #fbbf24;"></i>
+            <p style="color: #64748b; margin-top: 10px; font-size: 0.8rem;">Checking for bonuses...</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
+        <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
+        <a href="withdraw.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Withdraw</span></a>
+        <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                const list = document.getElementById('adminRewardsList');
+                
+                // Fetch rewards from user's specific node
+                const rewardRef = ref(db, 'users/' + user.uid + '/rewards');
+                onValue(rewardRef, (snapshot) => {
+                    let html = '';
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        // Latest rewards first
+                        const rewards = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+
+                        rewards.forEach(reward => {
+                            html += `
+                            <div class="reward-card">
+                                <div class="reward-header">
+                                    <div class="reward-title"><i class="fas fa-gift"></i> ${reward.title}</div>
+                                    <div class="reward-amount">+$${parseFloat(reward.amount).toFixed(2)}</div>
+                                </div>
+                                <p class="reward-msg">${reward.message}</p>
+                                <span class="reward-date"><i class="far fa-calendar-alt"></i> Received: ${new Date(reward.timestamp).toLocaleDateString([], {day:'2-digit', month:'short', year:'numeric'})}</span>
+                            </div>`;
+                        });
+                        list.innerHTML = html;
+                    } else {
+                        list.innerHTML = `
+                        <div class="empty-rewards">
+                            <i class="fas fa-trophy"></i>
+                            <p>No rewards yet!<br><span style="font-size:0.7rem;">Complete missions or participate in events to earn MetaMint Gold bonuses.</span></p>
+                        </div>`;
+                    }
+                });
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

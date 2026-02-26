@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint | Master Admin Control</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root { --primary: #ef4444; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --green: #22c55e; --blue: #38bdf8; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; display: none; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--card); border-bottom: 2px solid var(--primary); border-radius: 10px; margin-bottom: 20px; }
+        
+        /* Search Bar */
+        .search-container { display: flex; gap: 10px; margin-bottom: 25px; }
+        .search-container input { flex: 1; background: var(--card); border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; outline: none; font-size: 16px; }
+        .btn-search { background: var(--primary); border: none; color: white; padding: 0 20px; border-radius: 10px; cursor: pointer; }
+
+        .section-title { font-size: 11px; text-transform: uppercase; color: var(--primary); font-weight: 800; margin: 25px 0 10px; display: flex; align-items: center; gap: 8px; }
+        .req-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+        
+        .btn { padding: 8px 12px; border-radius: 6px; font-weight: bold; border: none; font-size: 12px; cursor: pointer; }
+        .btn-manage { background: var(--blue); color: white; }
+        
+        /* Modal Customization */
+        .swal2-input { background: #0f172a !important; color: white !important; border: 1px solid #334155 !important; }
+        .swal2-label { color: #94a3b8 !important; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h2><i class="fas fa-user-shield"></i> MASTER CONTROL</h2>
+        <div id="adminMail" style="font-size: 0.7rem; color: #94a3b8;"></div>
+    </header>
+
+    <div class="search-container">
+        <input type="number" id="searchUID" placeholder="Enter User UID to Manage...">
+        <button class="btn-search" onclick="searchUser()"><i class="fas fa-search"></i></button>
+    </div>
+
+    <div class="section-title"><i class="fas fa-wallet"></i> Pending Deposits</div>
+    <div id="depositList"></div>
+
+    <div class="section-title"><i class="fas fa-money-bill-wave"></i> Pending Withdrawals</div>
+    <div id="withdrawList"></div>
+
+    <div class="section-title"><i class="fas fa-users"></i> Fast User List</div>
+    <div id="userList"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === "dreamsagweb@gmail.com") {
+                document.body.style.display = "block";
+                document.getElementById('adminMail').innerText = user.email;
+                initAdmin();
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        function initAdmin() {
+            // Real-time Lists
+            onValue(ref(db, 'admin/deposits'), s => renderReq(s, 'depositList', 'approveDep'));
+            onValue(ref(db, 'admin/withdrawals'), s => renderReq(s, 'withdrawList', 'finishWin'));
+            onValue(ref(db, 'users'), s => {
+                const list = document.getElementById('userList');
+                list.innerHTML = '';
+                s.forEach(c => {
+                    const u = c.val();
+                    list.innerHTML += `<div class="req-card">
+                        <div><b>${u.username}</b><br><small>UID: ${u.uid}</small></div>
+                        <button class="btn btn-manage" onclick="window.openManager('${u.uid}')">Manage</button>
+                    </div>`;
+                });
+            });
+        }
+
+        function renderReq(snap, elementId, actionName) {
+            const list = document.getElementById(elementId);
+            list.innerHTML = snap.exists() ? '' : '<p style="font-size:0.8rem; color:#475569;">No pending tasks.</p>';
+            snap.forEach(c => {
+                const d = c.val();
+                list.innerHTML += `<div class="req-card">
+                    <div><b>$${d.amount}</b><br><small>UID: ${d.uid}</small></div>
+                    <button class="btn btn-approve" style="background:var(--green); color:white;" onclick="window.${actionName}('${c.key}', '${d.uid}', ${d.amount})">Verify</button>
+                </div>`;
+            });
+        }
+
+        // --- THE MASTER MANAGER ---
+        window.openManager = async (uid) => {
+            const userRef = ref(db, `users/${uid}`);
+            const snap = await get(userRef);
+            if(!snap.exists()) return Swal.fire('Error', 'User not found', 'error');
+            const u = snap.val();
+
+            const { value: formValues } = await Swal.fire({
+                title: `Manage: ${u.username}`,
+                html: `
+                    <label class="swal2-label">Total Balance ($)</label>
+                    <input id="m-bal" class="swal2-input" value="${u.totalBalance || 0}">
+                    <label class="swal2-label">Team Rewards ($)</label>
+                    <input id="m-rew" class="swal2-input" value="${u.teamRewards || 0}">
+                    <label class="swal2-label">Account Status</label>
+                    <select id="m-status" class="swal2-input">
+                        <option value="Active" ${u.status==='Active'?'selected':''}>Active</option>
+                        <option value="Blocked" ${u.status==='Blocked'?'selected':''}>Blocked</option>
+                    </select>
+                    <label class="swal2-label">Send Notification Message</label>
+                    <input id="m-note" class="swal2-input" placeholder="Enter message for user...">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Save Changes',
+                preConfirm: () => {
+                    return {
+                        totalBalance: parseFloat(document.getElementById('m-bal').value),
+                        teamRewards: parseFloat(document.getElementById('m-rew').value),
+                        status: document.getElementById('m-status').value,
+                        notification: document.getElementById('m-note').value
+                    }
+                }
+            });
+
+            if (formValues) {
+                await update(userRef, formValues);
+                Swal.fire('Updated!', 'User data has been modified.', 'success');
+            }
+        };
+
+        window.searchUser = () => {
+            const uid = document.getElementById('searchUID').value;
+            if(uid) window.openManager(uid);
+        };
+
+        window.approveDep = async (key, uid, amt) => {
+            const uRef = ref(db, `users/${uid}`);
+            const s = await get(uRef);
+            if(s.exists()){
+                await update(uRef, { totalBalance: (s.val().totalBalance || 0) + amt, status: 'Active' });
+                await remove(ref(db, `admin/deposits/${key}`));
+                Swal.fire('Success', 'Deposit Approved', 'success');
+            }
+        };
+
+        window.finishWin = (key) => remove(ref(db, `admin/withdrawals/${key}`));
+    </script>
+</body>
+</html>
