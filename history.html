@@ -4,48 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MetaMint | History</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
-        /* --- Base Styles --- */
         body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-
-        /* --- Header --- */
-        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; }
+        .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; }
-
-        /* --- History Container --- */
         .history-container { padding: 20px; margin-bottom: 100px; }
-
-        /* --- Tab System --- */
         .tab-scroll { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
         .tab-scroll::-webkit-scrollbar { display: none; }
-        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #1e293b; color: #64748b; font-weight: 600; white-space: nowrap; cursor: pointer; }
+        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #1e293b; color: #64748b; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.3s; }
         .tab-btn.active { background: #38bdf8; color: #0f172a; }
-
-        /* --- Transaction Cards --- */
-        .trx-card { 
-            background: #1e293b; 
-            border-radius: 15px; 
-            padding: 15px; 
-            margin-bottom: 12px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border: 1px solid #334155;
-            transition: 0.3s;
-        }
+        .trx-card { background: #1e293b; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
         .trx-icon { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 1.1rem; }
         .trx-info h4 { margin: 0; font-size: 0.9rem; color: #f8fafc; }
         .trx-info p { margin: 4px 0 0 0; font-size: 0.7rem; color: #64748b; }
-        
         .trx-amount { text-align: right; }
         .trx-amount h4 { margin: 0; font-size: 1rem; }
         .trx-amount p { margin: 4px 0 0 0; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; }
-
-        /* --- Bottom Nav --- */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
@@ -61,16 +37,16 @@
 
     <div class="history-container">
         <div class="tab-scroll">
-            <button class="tab-btn active">All Records</button>
-            <button class="tab-btn" onclick="Swal.fire('Info','Filters will be available soon','info')">Deposits</button>
-            <button class="tab-btn" onclick="Swal.fire('Info','Filters will be available soon','info')">Withdrawals</button>
-            <button class="tab-btn" onclick="Swal.fire('Info','Filters will be available soon','info')">Rewards</button>
+            <button class="tab-btn active" onclick="filterTrx('all', this)">All Records</button>
+            <button class="tab-btn" onclick="filterTrx('deposit', this)">Deposits</button>
+            <button class="tab-btn" onclick="filterTrx('withdraw', this)">Withdrawals</button>
+            <button class="tab-btn" onclick="filterTrx('reward', this)">Rewards</button>
         </div>
 
         <div id="historyList">
             <div style="text-align: center; margin-top: 50px;">
                 <i class="fas fa-circle-notch fa-spin" style="font-size: 2rem; color: #38bdf8;"></i>
-                <p style="color: #94a3b8; margin-top: 10px;">Syncing with blockchain...</p>
+                <p style="color: #94a3b8; margin-top: 10px;">Syncing transactions...</p>
             </div>
         </div>
     </div>
@@ -88,7 +64,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -103,66 +78,59 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        let allTransactions = [];
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const historyList = document.getElementById('historyList');
-                
-                // Fetching transactions from user's specific transaction node
-                const trxRef = ref(db, 'users/' + user.uid + '/transactions');
+                // Pointing to user_history as used in Admin Panel
+                const trxRef = ref(db, 'user_history/' + user.uid);
                 onValue(trxRef, (snapshot) => {
-                    let html = '';
                     if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        // Sort by latest first
-                        const sortedItems = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
-
-                        sortedItems.forEach(trx => {
-                            let icon, color, statusColor;
-                            
-                            // Define Icon and Color based on type
-                            if (trx.type === 'deposit') {
-                                icon = 'fa-arrow-down'; color = '#22c55e';
-                            } else if (trx.type === 'withdraw') {
-                                icon = 'fa-arrow-up'; color = '#f87171';
-                            } else {
-                                icon = 'fa-gift'; color = '#fbbf24';
-                            }
-
-                            // Define status color
-                            if (trx.status === 'pending') statusColor = '#fbbf24';
-                            else if (trx.status === 'completed' || trx.status === 'success') statusColor = '#22c55e';
-                            else statusColor = '#ef4444';
-
-                            html += `
-                            <div class="trx-card">
-                                <div style="display: flex; align-items: center; gap: 15px;">
-                                    <div class="trx-icon" style="color: ${color};">
-                                        <i class="fas ${icon}"></i>
-                                    </div>
-                                    <div class="trx-info">
-                                        <h4>${trx.title || trx.type.toUpperCase()}</h4>
-                                        <p>${new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
-                                    </div>
-                                </div>
-                                <div class="trx-amount">
-                                    <h4 style="color: ${color};">${trx.type === 'withdraw' ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
-                                    <p style="color: ${statusColor};">${trx.status}</p>
-                                </div>
-                            </div>`;
-                        });
-                        historyList.innerHTML = html;
+                        allTransactions = Object.values(snapshot.val()).sort((a, b) => b.timestamp - a.timestamp);
+                        renderHistory(allTransactions);
                     } else {
-                        historyList.innerHTML = `
-                        <div style="text-align:center; margin-top:50px;">
-                            <i class="fas fa-receipt" style="font-size:3.5rem; color:#1e293b; margin-bottom:15px;"></i>
-                            <p style="color:#64748b;">No transaction history found.<br><span style="font-size:0.7rem;">Your activities will appear here.</span></p>
-                        </div>`;
+                        document.getElementById('historyList').innerHTML = `<div style="text-align:center; margin-top:50px;"><i class="fas fa-receipt" style="font-size:3.5rem; color:#1e293b; margin-bottom:15px;"></i><p style="color:#64748b;">No records found.</p></div>`;
                     }
                 });
-            } else {
-                window.location.href = 'index.html';
-            }
+            } else { window.location.href = 'index.html'; }
         });
+
+        function renderHistory(data) {
+            const list = document.getElementById('historyList');
+            let html = '';
+            data.forEach(trx => {
+                let icon = 'fa-gift', color = '#fbbf24', statusColor = '#fbbf24';
+                if (trx.type === 'deposit') { icon = 'fa-arrow-down'; color = '#22c55e'; }
+                else if (trx.type === 'withdraw') { icon = 'fa-arrow-up'; color = '#f87171'; }
+
+                const status = (trx.status || 'PENDING').toUpperCase();
+                if (status === 'COMPLETED' || status === 'SUCCESS') statusColor = '#22c55e';
+                else if (status === 'REJECTED' || status === 'FAILED') statusColor = '#ef4444';
+
+                html += `
+                <div class="trx-card">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="trx-icon" style="color: ${color};"><i class="fas ${icon}"></i></div>
+                        <div class="trx-info">
+                            <h4>${trx.title || trx.type.toUpperCase()}</h4>
+                            <p>${new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
+                        </div>
+                    </div>
+                    <div class="trx-amount">
+                        <h4 style="color: ${color};">${trx.type === 'withdraw' ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
+                        <p style="color: ${statusColor};">${status}</p>
+                    </div>
+                </div>`;
+            });
+            list.innerHTML = html || '<p style="text-align:center; color:#64748b;">No matching records.</p>';
+        }
+
+        window.filterTrx = (type, btn) => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            if (type === 'all') renderHistory(allTransactions);
+            else renderHistory(allTransactions.filter(t => t.type === type));
+        };
     </script>
 </body>
 </html>
