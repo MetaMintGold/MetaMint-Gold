@@ -17,11 +17,12 @@
         .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; }
         .plan-info h2 { margin: 10px 0; font-size: 2.2rem; }
         .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .claim-btn { width: 100%; padding: 12px; background: #22c55e; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .claim-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
         .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; font-weight: bold; }
         
         .cancel-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.85rem; }
 
-        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 4px; }
@@ -41,30 +42,30 @@
             <div id="badge1"></div>
             <div class="plan-info">
                 <h3>Level 1</h3>
-                <p style="color:#38bdf8">Daily 2.0% Profit</p>
+                <p style="color:#38bdf8">Daily $0.40 Profit (2%)</p>
                 <h2>$20.00</h2>
             </div>
-            <div id="action1"><button class="buy-btn" onclick="handlePlan(1, 20)">Activate Plan</button></div>
+            <div id="action1"></div>
         </div>
 
         <div class="plan-card" id="cardPlan2">
             <div id="badge2"></div>
             <div class="plan-info">
                 <h3>Level 2</h3>
-                <p style="color:#38bdf8">Daily 3.0% Profit</p>
+                <p style="color:#38bdf8">Daily $1.80 Profit (3%)</p>
                 <h2>$60.00</h2>
             </div>
-            <div id="action2"><button class="buy-btn" onclick="handlePlan(2, 60)">Activate Plan</button></div>
+            <div id="action2"></div>
         </div>
 
         <div class="plan-card" id="cardPlan3">
             <div id="badge3"></div>
             <div class="plan-info">
                 <h3>Level 3</h3>
-                <p style="color:#38bdf8">Daily 3.5% Profit</p>
+                <p style="color:#38bdf8">Daily $4.20 Profit (3.5%)</p>
                 <h2>$120.00</h2>
             </div>
-            <div id="action3"><button class="buy-btn" onclick="handlePlan(3, 120)">Activate Plan</button></div>
+            <div id="action3"></div>
         </div>
     </div>
 
@@ -79,7 +80,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -104,8 +105,7 @@
                     userData = snapshot.val();
                     if (userData) {
                         currentBalance = parseFloat(userData.totalBalance || 0);
-                        const walletEl = document.getElementById('userWallet');
-                        if(walletEl) walletEl.innerText = "$" + currentBalance.toFixed(2);
+                        document.getElementById('userWallet').innerText = "$" + currentBalance.toFixed(2);
                         updateUI();
                     }
                 });
@@ -115,6 +115,9 @@
         function updateUI() {
             if (!userData) return;
             const activePlans = userData.activePlans || {};
+            const lastClaims = userData.lastClaims || {};
+            const now = Date.now();
+
             [1, 2, 3].forEach(id => {
                 const actionDiv = document.getElementById(`action${id}`);
                 const card = document.getElementById(`cardPlan${id}`);
@@ -122,10 +125,17 @@
                 
                 if (activePlans[id]) {
                     card.classList.add('active-plan');
-                    badge.innerHTML = `<span class="active-badge">ACTIVE</span>`;
+                    badge.innerHTML = `<span class="active-badge">MINING</span>`;
+                    
+                    // Check if 24 hours passed
+                    const lastClaim = lastClaims[id] || 0;
+                    const canClaim = (now - lastClaim) >= 24 * 60 * 60 * 1000;
+
                     actionDiv.innerHTML = `
-                        <button class="buy-btn" style="background:#334155; color:#64748b;" disabled>Mining...</button>
-                        <button class="cancel-btn" onclick="window.cancelPlan(${id})"><i class="fas fa-times-circle"></i> Cancel Plan (10% Fee)</button>
+                        <button class="claim-btn" ${canClaim ? '' : 'disabled'} onclick="window.claimProfit(${id})">
+                            <i class="fas fa-coins"></i> ${canClaim ? 'Claim Daily Profit' : 'Profit Collected'}
+                        </button>
+                        <button class="cancel-btn" onclick="window.cancelPlan(${id})">Cancel Plan</button>
                     `;
                 } else {
                     card.classList.remove('active-plan');
@@ -136,6 +146,35 @@
             });
         }
 
+        window.claimProfit = async (planId) => {
+            const user = auth.currentUser;
+            let profit = planId === 1 ? 0.40 : (planId === 2 ? 1.80 : 4.20);
+            
+            Swal.fire({ title: 'Claiming...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const currentWithdrawable = parseFloat(userData.withdrawable || 0);
+                const newWithdrawable = (currentWithdrawable + profit).toFixed(2);
+
+                await update(ref(db, 'users/' + user.uid), {
+                    withdrawable: parseFloat(newWithdrawable),
+                    [`lastClaims/${planId}`]: Date.now()
+                });
+
+                // Add to History
+                const trxKey = Date.now();
+                await set(ref(db, `transactions/${user.uid}/${trxKey}`), {
+                    type: 'reward',
+                    amount: profit,
+                    status: 'SUCCESS',
+                    timestamp: Date.now(),
+                    title: `Level ${planId} Daily Profit`
+                });
+
+                Swal.fire('Success!', `$${profit.toFixed(2)} added to withdrawable balance.`, 'success');
+            } catch (err) { Swal.fire('Error', 'Claim failed.', 'error'); }
+        };
+
         window.handlePlan = async (planId, price) => {
             if (currentBalance < price) {
                 return Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: 'Please deposit funds first.' });
@@ -143,36 +182,35 @@
             const user = auth.currentUser;
             const result = await Swal.fire({
                 title: 'Activate Plan?',
-                text: `Do you want to start Level ${planId} for $${price}?`,
+                text: `Start Level ${planId} for $${price}?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#38bdf8',
-                confirmButtonText: 'Yes, Start Mining'
+                confirmButtonText: 'Start Mining'
             });
 
             if (!result.isConfirmed) return;
-            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Activating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
                 await update(ref(db, 'users/' + user.uid), {
                     totalBalance: (currentBalance - price).toFixed(2),
                     [`activePlans/${planId}`]: true,
-                    miningStatus: 'active'
+                    [`lastClaims/${planId}`]: Date.now() // Start timer from now
                 });
 
-                if (userData.referredBy && userData.referredBy !== "none") {
-                    const uplineQuery = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(userData.referredBy));
-                    const snap = await get(uplineQuery);
-                    if (snap.exists()) {
-                        const uplineUID = Object.keys(snap.val())[0];
-                        const uplineData = snap.val()[uplineUID];
-                        let reward = planId === 1 ? 4 : (planId === 2 ? 15 : 36);
-                        const newReward = (parseFloat(uplineData.teamReward || 0) + reward).toFixed(2);
-                        await update(ref(db, 'users/' + uplineUID), { teamReward: parseFloat(newReward) });
-                    }
-                }
-                Swal.fire('Activated!', `Level ${planId} active ho gaya hai.`, 'success');
-            } catch (err) { Swal.fire('Error', 'Transaction failed.', 'error'); }
+                // History record
+                const trxKey = Date.now();
+                await set(ref(db, `transactions/${user.uid}/${trxKey}`), {
+                    type: 'plan purchase',
+                    amount: price,
+                    status: 'SUCCESS',
+                    timestamp: Date.now(),
+                    title: `Level ${planId} Activated`
+                });
+
+                Swal.fire('Activated!', 'Mining has started.', 'success');
+            } catch (err) { Swal.fire('Error', 'Failed to activate.', 'error'); }
         };
 
         window.cancelPlan = async (planId) => {
@@ -180,22 +218,21 @@
             let refundAmount = price - (price * 0.10);
             const result = await Swal.fire({
                 title: 'Cancel Plan?',
-                text: `10% ($${(price * 0.10).toFixed(2)}) fee kategi. Refund: $${refundAmount.toFixed(2)}`,
+                text: `10% fee will be deducted. Refund: $${refundAmount.toFixed(2)}`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Yes, Cancel Plan'
+                confirmButtonText: 'Cancel & Refund'
             });
 
             if (!result.isConfirmed) return;
-            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
             try {
                 await update(ref(db, 'users/' + auth.currentUser.uid), {
                     totalBalance: (currentBalance + refundAmount).toFixed(2),
-                    [`activePlans/${planId}`]: null
+                    [`activePlans/${planId}`]: null,
+                    [`lastClaims/${planId}`]: null
                 });
-                Swal.fire('Cancelled!', 'Balance refund ho gaya.', 'success');
+                Swal.fire('Cancelled!', 'Plan stopped and balance refunded.', 'success');
             } catch (err) { Swal.fire('Error', 'Failed to cancel.', 'error'); }
         };
     </script>
