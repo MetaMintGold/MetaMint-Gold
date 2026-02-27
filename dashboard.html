@@ -26,7 +26,7 @@
         .main-card { background: linear-gradient(135deg, #38bdf8, #1e40af); }
         .secondary-card { background: #1e293b; border: 1px solid #334155; }
 
-        /* NEW: Gold Reward Card */
+        /* Gold Reward Card */
         .reward-gold-card {
             background: linear-gradient(135deg, #d4af37, #f1c40f, #9a7d0a);
             margin: 20px;
@@ -74,6 +74,9 @@
         
         .security-note { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin: 25px 20px; }
         .footer-locked { text-align: center; padding: 60px 20px 150px 20px; background: #0a0f1d; border-top: 1px solid #1e293b; }
+
+        /* ADMIN BOX STYLE */
+        #adminBox { display: none; margin: 20px; padding: 20px; background: #ef444415; border: 1px dashed #ef4444; border-radius: 15px; text-align: center; }
     </style>
 </head>
 <body>
@@ -98,6 +101,11 @@
     <div class="brand-section">
         <h1 class="main-logo-3d">MetaMint Gold</h1>
         <div class="sub-tagline">Cloud Mining Revolution</div>
+    </div>
+
+    <div id="adminBox">
+        <h4 style="color:#ef4444; margin:0 0 10px 0;"><i class="fas fa-user-shield"></i> ADMIN PANEL</h4>
+        <button onclick="window.location.href='admin.html'" style="background:#ef4444; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Manage Requests</button>
     </div>
 
     <section class="balance-cards">
@@ -177,8 +185,12 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                // Admin check
+                if (user.email === "dreamsagweb@gmail.com") {
+                    document.getElementById('adminBox').style.display = 'block';
+                }
+
                 const userRef = ref(db, 'users/' + user.uid);
-                
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -186,35 +198,26 @@
                         document.getElementById('dashUID').innerText = data.uid || "####";
                         document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
-                        
-                        // Show Team Reward from Database
-                        const rewardAmt = parseFloat(data.teamReward || 0);
-                        document.getElementById('teamRewardDisplay').innerText = "$" + rewardAmt.toFixed(2);
-
-                        updateBonusUI(data, user.uid);
+                        document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.teamReward || 0).toFixed(2);
+                        updateBonusUI(data);
                     }
                 });
 
-                // CLAIM TEAM REWARD LOGIC
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
                     const snap = await get(userRef);
                     const userData = snap.val();
                     const reward = parseFloat(userData.teamReward || 0);
-
                     if (reward > 0) {
-                        try {
-                            Swal.fire({ title: 'Processing Reward...', didOpen: () => Swal.showLoading() });
-                            const newWithdrawable = (parseFloat(userData.withdrawable || 0) + reward).toFixed(2);
-                            await update(userRef, { withdrawable: parseFloat(newWithdrawable), teamReward: 0 });
-                            Swal.fire('Success!', `$${reward.toFixed(2)} moved to Withdrawable!`, 'success');
-                        } catch (err) { Swal.fire('Error', 'Failed to claim.', 'error'); }
-                    } else { Swal.fire('Empty', 'No rewards to claim.', 'info'); }
+                        Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+                        const newWithdrawable = (parseFloat(userData.withdrawable || 0) + reward).toFixed(2);
+                        await update(userRef, { withdrawable: parseFloat(newWithdrawable), teamReward: 0 });
+                        Swal.fire('Success!', `$${reward.toFixed(2)} moved!`, 'success');
+                    } else { Swal.fire('No Rewards', '', 'info'); }
                 };
-
             } else { window.location.href = 'index.html'; }
         });
 
-        function updateBonusUI(data, uid) {
+        function updateBonusUI(data) {
             const streak = data.streakCount || 0;
             for (let i = 1; i <= 7; i++) {
                 const circle = document.getElementById('d' + i);
@@ -224,9 +227,7 @@
                     if (i === streak + 1) circle.classList.add('current');
                 }
             }
-            // Logic for Check-in Button can go here...
         }
-
         document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => window.location.href='index.html');
     </script>
 </body>
