@@ -11,16 +11,16 @@
         .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; }
         .history-container { padding: 20px; margin-bottom: 100px; }
-        .tab-scroll { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
-        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #1e293b; color: #64748b; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.3s; }
+        .tab-scroll { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; border-bottom: 1px solid #334155; }
+        .tab-btn { padding: 8px 20px; border-radius: 20px; border: none; background: #1e293b; color: #64748b; font-weight: 600; white-space: nowrap; cursor: pointer; transition: 0.3s; font-size: 0.8rem; }
         .tab-btn.active { background: #38bdf8; color: #0f172a; }
         .trx-card { background: #1e293b; border-radius: 15px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
-        .trx-icon { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 1.1rem; width: 30px; text-align: center; }
+        .trx-icon { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; font-size: 1.1rem; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; }
         .trx-info h4 { margin: 0; font-size: 0.9rem; color: #f8fafc; }
         .trx-info p { margin: 4px 0 0 0; font-size: 0.7rem; color: #64748b; }
         .trx-amount { text-align: right; }
         .trx-amount h4 { margin: 0; font-size: 1rem; }
-        .trx-amount p { margin: 4px 0 0 0; font-size: 0.6rem; font-weight: bold; text-transform: uppercase; }
+        .trx-amount p { margin: 4px 0 0 0; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
@@ -36,13 +36,13 @@
 
     <div class="history-container">
         <div class="tab-scroll">
-            <button class="tab-btn active" onclick="filterTrx('all', this)">All Records</button>
+            <button class="tab-btn active" onclick="filterTrx('all', this)">All History</button>
             <button class="tab-btn" onclick="filterTrx('deposit', this)">Deposits</button>
             <button class="tab-btn" onclick="filterTrx('withdraw', this)">Withdrawals</button>
-            <button class="tab-btn" onclick="filterTrx('reward', this)">Rewards</button>
+            <button class="tab-btn" onclick="filterTrx('reward', this)">Team Rewards</button>
         </div>
         <div id="historyList">
-            <p style="text-align:center; color:#64748b; margin-top:50px;">Loading history...</p>
+            <p style="text-align:center; color:#64748b; margin-top:50px;">Fetching records...</p>
         </div>
     </div>
 
@@ -76,19 +76,24 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User ki transactions listen karein
-                onValue(ref(db, `users/${user.uid}/transactions`), (snapshot) => {
+                // FIXED: Listening to the correct node for Rewards and Transactions
+                const trxRef = ref(db, `transactions/${user.uid}`);
+                
+                onValue(trxRef, (snapshot) => {
                     const list = document.getElementById('historyList');
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        // Object ko array mein badlein aur latest pehle rakhein
                         allTransactions = Object.keys(data).map(key => ({ 
                             ...data[key], 
                             id: key 
                         })).sort((a, b) => b.timestamp - a.timestamp);
                         renderHistory(allTransactions);
                     } else {
-                        list.innerHTML = '<div style="text-align:center; margin-top:50px; color:#64748b;"><i class="fas fa-receipt" style="font-size:3rem; margin-bottom:10px; opacity:0.3;"></i><p>No transactions found.</p></div>';
+                        list.innerHTML = `
+                        <div style="text-align:center; margin-top:50px; color:#64748b;">
+                            <i class="fas fa-receipt" style="font-size:3rem; margin-bottom:10px; opacity:0.3;"></i>
+                            <p>No transactions yet.</p>
+                        </div>`;
                     }
                 });
             } else { window.location.href = 'index.html'; }
@@ -99,14 +104,13 @@
             let html = '';
             
             data.forEach(trx => {
-                const type = (trx.type || 'reward').toLowerCase();
-                const status = (trx.status || 'PENDING').toUpperCase();
+                const type = String(trx.type || 'reward').toLowerCase();
+                const status = String(trx.status || 'Success').toUpperCase();
                 
                 let icon = 'fa-gift';
                 let color = '#fbbf24'; // Reward color
-                let statusColor = '#fbbf24'; // Pending color
+                let statusColor = '#22c55e'; // Default Success
 
-                // Icon and Main Color based on Type
                 if (type === 'deposit') { 
                     icon = 'fa-arrow-down'; 
                     color = '#22c55e'; 
@@ -115,40 +119,38 @@
                     color = '#f87171'; 
                 }
 
-                // Status Logic
-                if (status === 'APPROVED' || status === 'SUCCESS') {
-                    statusColor = '#22c55e'; // Green
-                } else if (status === 'REJECTED' || status === 'FAILED') {
-                    statusColor = '#ef4444'; // Red
-                }
+                if (status === 'PENDING') statusColor = '#fbbf24';
+                if (status === 'REJECTED' || status === 'FAILED') statusColor = '#ef4444';
+
+                // Display formatting for Rewards
+                const title = type === 'reward' ? `Team Reward (#${trx.from || 'User'})` : (trx.title || type.toUpperCase());
 
                 html += `
                 <div class="trx-card">
-                    <div style="display: flex; align-items: center; gap: 15px;">
-                        <div class="trx-icon" style="color: ${color};"><i class="fas ${icon}"></i></div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="trx-icon" style="color: ${color}; background: ${color}15;"><i class="fas ${icon}"></i></div>
                         <div class="trx-info">
-                            <h4>${trx.title || type.toUpperCase()}</h4>
+                            <h4>${title}</h4>
                             <p>${new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
                         </div>
                     </div>
                     <div class="trx-amount">
                         <h4 style="color: ${color};">${type === 'withdraw' ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
-                        <p style="color: ${statusColor}; font-weight: 800;">${status}</p>
+                        <p style="color: ${statusColor};">${status}</p>
                     </div>
                 </div>`;
             });
-            list.innerHTML = html || '<p style="text-align:center; color:#64748b;">No matching records found.</p>';
+            list.innerHTML = html || '<p style="text-align:center; color:#64748b;">Nothing to show.</p>';
         }
 
         window.filterTrx = (type, btn) => {
-            // Active class handle karein
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             if (type === 'all') {
                 renderHistory(allTransactions);
             } else {
-                const filtered = allTransactions.filter(t => (t.type || '').toLowerCase() === type.toLowerCase());
+                const filtered = allTransactions.filter(t => String(t.type).toLowerCase() === type.toLowerCase());
                 renderHistory(filtered);
             }
         };

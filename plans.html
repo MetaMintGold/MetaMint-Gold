@@ -32,29 +32,21 @@
         <div class="wallet-display"><i class="fas fa-wallet"></i> <span id="userWallet">$0.00</span></div>
     </header>
 
-    <div class="plans-container">
+    <div class="plans-container" id="plansDiv">
         <div class="plan-card" id="cardPlan1">
             <div id="badge1"></div>
             <div class="plan-info"><h3>Level 1</h3><p>Daily 2.0% Profit</p><h2>$20.00</h2></div>
-            <div id="action1">
-                <button class="buy-btn" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button>
-            </div>
+            <div id="action1"><button class="buy-btn" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button></div>
         </div>
-
         <div class="plan-card" id="cardPlan2">
             <div id="badge2"></div>
             <div class="plan-info"><h3>Level 2</h3><p>Daily 3.0% Profit</p><h2>$60.00</h2></div>
-            <div id="action2">
-                <button class="buy-btn" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button>
-            </div>
+            <div id="action2"><button class="buy-btn" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button></div>
         </div>
-
         <div class="plan-card" id="cardPlan3">
             <div id="badge3"></div>
             <div class="plan-info"><h3>Level 3</h3><p>Daily 3.5% Profit</p><h2>$120.00</h2></div>
-            <div id="action3">
-                <button class="buy-btn" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button>
-            </div>
+            <div id="action3"><button class="buy-btn" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button></div>
         </div>
     </div>
 
@@ -69,7 +61,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -93,7 +85,7 @@
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     userData = snapshot.val();
                     if (userData) {
-                        currentBalance = userData.totalBalance || 0;
+                        currentBalance = Number(userData.totalBalance) || 0;
                         document.getElementById('userWallet').innerText = "$" + currentBalance.toFixed(2);
                         updateUI();
                     }
@@ -102,8 +94,7 @@
         });
 
         function updateUI() {
-            const activePlans = userData.activePlans || {}; 
-            
+            const activePlans = userData.activePlans || {};
             [1, 2, 3].forEach(id => {
                 const actionDiv = document.getElementById(`action${id}`);
                 const card = document.getElementById(`cardPlan${id}`);
@@ -115,8 +106,7 @@
                     badge.innerHTML = `<span class="active-badge">ACTIVE</span>`;
                     actionDiv.innerHTML = `
                         <button class="buy-btn" disabled style="background:#1e293b; color:#64748b; border:1px solid #334155;">Plan Active</button>
-                        <button class="cancel-btn" onclick="cancelPlan(${id}, ${prices[id]})">Cancel Plan (10% Fee)</button>
-                    `;
+                        <button class="cancel-btn" onclick="cancelPlan(${id}, ${prices[id]})">Cancel Plan (10% Fee)</button>`;
                 } else {
                     card.classList.remove('active-plan');
                     badge.innerHTML = "";
@@ -136,70 +126,82 @@
 
             if (confirm.isConfirmed) {
                 const user = auth.currentUser;
+                Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+
                 try {
+                    const userRef = ref(db, 'users/' + user.uid);
+                    
+                    // 1. Update User Data
                     const updates = {};
-                    updates[`users/${user.uid}/totalBalance`] = currentBalance - price;
-                    updates[`users/${user.uid}/activePlans/${planId}`] = true;
-                    updates[`users/${user.uid}/miningStatus`] = 'active'; 
+                    updates['totalBalance'] = currentBalance - price;
+                    updates[`activePlans/${planId}`] = true;
+                    updates['miningStatus'] = 'active';
+                    await update(userRef, updates);
 
-                    await update(ref(db), updates);
-
+                    // 2. Reward Upliner Logic
                     if (userData.referredBy && userData.referredBy !== "none") {
                         const rewardAmount = price * rewardPercent;
                         const usersRef = ref(db, 'users');
                         const uplinerQuery = query(usersRef, orderByChild('referralCode'), equalTo(userData.referredBy));
-                        
                         const uplinerSnap = await get(uplinerQuery);
+
                         if (uplinerSnap.exists()) {
                             const upliners = uplinerSnap.val();
                             const uplinerUID = Object.keys(upliners)[0];
-                            const currentRewards = upliners[uplinerUID].teamRewards || 0;
-                            
+                            const currentUplinerRewards = Number(upliners[uplinerUID].teamRewards) || 0;
+
+                            // Add reward to upliner
                             await update(ref(db, 'users/' + uplinerUID), {
-                                teamRewards: currentRewards + rewardAmount
+                                teamRewards: currentUplinerRewards + rewardAmount
+                            });
+
+                            // Add entry to History for Upliner
+                            const historyRef = ref(db, 'transactions/' + uplinerUID);
+                            const newHistoryRef = push(historyRef);
+                            await set(newHistoryRef, {
+                                type: 'Reward',
+                                amount: rewardAmount,
+                                plan: 'Level ' + planId,
+                                from: userData.uid.substring(0,6),
+                                timestamp: Date.now(),
+                                status: 'Success'
                             });
                         }
                     }
 
-                    Swal.fire('Success!', `Level ${planId} is now active.`, 'success');
+                    Swal.fire('Success!', `Level ${planId} activated. Reward sent to upliner.`, 'success');
                 } catch (e) {
-                    Swal.fire('Error', 'Transaction failed.', 'error');
+                    console.error(e);
+                    Swal.fire('Error', 'Transaction failed. Check connection.', 'error');
                 }
             }
         };
 
         window.cancelPlan = async (planId, price) => {
-            // 10% Fee logic
             const fee = price * 0.10;
             const refund = price - fee;
-
             const confirm = await Swal.fire({
                 title: 'Cancel Plan?',
-                text: `Cancellation fee is 10% ($${fee.toFixed(2)}). You will get $${refund.toFixed(2)} back in your wallet.`,
-                icon: 'warning', 
-                showCancelButton: true, 
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Yes, Cancel Plan'
+                text: `10% fee ($${fee.toFixed(2)}) will be deducted.`,
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444'
             });
 
             if (confirm.isConfirmed) {
-                const user = auth.currentUser;
                 try {
+                    const user = auth.currentUser;
+                    const activePlans = { ...userData.activePlans };
+                    delete activePlans[planId];
+                    
                     const updates = {};
                     updates[`users/${user.uid}/totalBalance`] = currentBalance + refund;
-                    updates[`users/${user.uid}/activePlans/${planId}`] = null; 
-                    
-                    const activePlansAfter = userData.activePlans || {};
-                    delete activePlansAfter[planId];
-                    
-                    if (Object.keys(activePlansAfter).length === 0) {
+                    updates[`users/${user.uid}/activePlans/${planId}`] = null;
+                    if (Object.keys(activePlans).length === 0) {
                         updates[`users/${user.uid}/miningStatus`] = 'inactive';
                     }
-
                     await update(ref(db), updates);
-                    Swal.fire('Cancelled', `$${refund.toFixed(2)} returned after 10% fee.`, 'success');
+                    Swal.fire('Cancelled', `$${refund.toFixed(2)} refunded.`, 'success');
                 } catch (e) {
-                    Swal.fire('Error', 'Could not cancel plan.', 'error');
+                    Swal.fire('Error', 'Cancellation failed.', 'error');
                 }
             }
         };
