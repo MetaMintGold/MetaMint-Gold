@@ -3,49 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MetaMint | Investment Plans</title>
+    <title>MetaMint | Testing Mode</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
-        .wallet-display { background: rgba(56, 189, 248, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid #38bdf8; font-size: 0.85rem; color: #38bdf8; font-weight: bold; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        .dash-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
+        .test-badge { background: #22c55e; color: #0f172a; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-bottom: 5px; display: inline-block; }
+        .wallet-display { float: right; background: rgba(56, 189, 248, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid #38bdf8; font-size: 0.85rem; color: #38bdf8; }
         .plans-container { padding: 20px; margin-bottom: 100px; }
-        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; transition: 0.3s; }
-        .plan-card.active-plan { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
-        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 1rem; text-transform: uppercase; }
-        .plan-info p { margin: 10px 0; color: #38bdf8; font-weight: bold; font-size: 1.1rem; }
-        .plan-info h2 { margin: 10px 0; font-size: 2.2rem; color: #fff; }
-        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; margin-bottom: 10px; }
-        .cancel-btn { width: 100%; padding: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 12px; color: #ef4444; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; }
+        .plan-card.active-plan { border-color: #22c55e; }
+        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; }
+        .plan-info h2 { margin: 10px 0; font-size: 2.2rem; }
+        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; }
+        .buy-btn:disabled { background: #334155; color: #64748b; }
         .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
-        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
         .nav-item.active { color: #38bdf8; }
     </style>
 </head>
 <body>
 
     <header class="dash-header">
-        <h2 style="margin: 0; font-size: 1.2rem; color: #38bdf8;">Mining Plans</h2>
         <div class="wallet-display"><i class="fas fa-wallet"></i> <span id="userWallet">$0.00</span></div>
+        <span class="test-badge">LIVE SYSTEM: SECURE</span>
+        <h2 style="margin: 0; font-size: 1.3rem; color: #38bdf8;">Premium Mining Hub</h2>
     </header>
 
     <div class="plans-container" id="plansDiv">
         <div class="plan-card" id="cardPlan1">
             <div id="badge1"></div>
-            <div class="plan-info"><h3>Level 1</h3><p>Daily 2.0% Profit</p><h2>$20.00</h2></div>
+            <div class="plan-info"><h3>Level 1</h3><p style="color:#38bdf8">Daily 2.0% Profit</p><h2>$20.00</h2></div>
             <div id="action1"><button class="buy-btn" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button></div>
         </div>
+
         <div class="plan-card" id="cardPlan2">
             <div id="badge2"></div>
-            <div class="plan-info"><h3>Level 2</h3><p>Daily 3.0% Profit</p><h2>$60.00</h2></div>
+            <div class="plan-info"><h3>Level 2</h3><p style="color:#38bdf8">Daily 3.0% Profit</p><h2>$60.00</h2></div>
             <div id="action2"><button class="buy-btn" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button></div>
         </div>
+
         <div class="plan-card" id="cardPlan3">
             <div id="badge3"></div>
-            <div class="plan-info"><h3>Level 3</h3><p>Daily 3.5% Profit</p><h2>$120.00</h2></div>
+            <div class="plan-info"><h3>Level 3</h3><p style="color:#38bdf8">Daily 3.5% Profit</p><h2>$120.00</h2></div>
             <div id="action3"><button class="buy-btn" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button></div>
         </div>
     </div>
@@ -55,7 +57,7 @@
         <a href="plans.html" class="nav-item active"><i class="fas fa-gem"></i><span>Plans</span></a>
         <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
         <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+        <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
     </nav>
 
     <script type="module">
@@ -85,7 +87,7 @@
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     userData = snapshot.val();
                     if (userData) {
-                        currentBalance = Number(userData.totalBalance) || 0;
+                        currentBalance = parseFloat(userData.totalBalance || 0);
                         document.getElementById('userWallet').innerText = "$" + currentBalance.toFixed(2);
                         updateUI();
                     }
@@ -94,116 +96,58 @@
         });
 
         function updateUI() {
+            if (!userData) return;
             const activePlans = userData.activePlans || {};
             [1, 2, 3].forEach(id => {
                 const actionDiv = document.getElementById(`action${id}`);
                 const card = document.getElementById(`cardPlan${id}`);
                 const badge = document.getElementById(`badge${id}`);
-                const prices = { 1: 20, 2: 60, 3: 120 };
-
                 if (activePlans[id]) {
                     card.classList.add('active-plan');
                     badge.innerHTML = `<span class="active-badge">ACTIVE</span>`;
-                    actionDiv.innerHTML = `
-                        <button class="buy-btn" disabled style="background:#1e293b; color:#64748b; border:1px solid #334155;">Plan Active</button>
-                        <button class="cancel-btn" onclick="cancelPlan(${id}, ${prices[id]})">Cancel Plan (10% Fee)</button>`;
-                } else {
-                    card.classList.remove('active-plan');
-                    badge.innerHTML = "";
-                    actionDiv.innerHTML = `<button class="buy-btn" onclick="handlePlan(${id}, ${prices[id]}, ${id==1?0.2:id==2?0.25:0.3})">Activate Plan</button>`;
+                    actionDiv.innerHTML = `<button class="buy-btn" disabled>Already Mining</button>`;
                 }
             });
         }
 
         window.handlePlan = async (planId, price, rewardPercent) => {
-            if (currentBalance < price) return Swal.fire('Insufficient Balance', 'Deposit first.', 'warning');
+            if (currentBalance < price) return Swal.fire('Error', 'Insufficient Balance', 'error');
+            
+            const user = auth.currentUser;
+            const userRef = ref(db, 'users/' + user.uid);
+            
+            Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
 
-            const confirm = await Swal.fire({
-                title: 'Activate Plan?',
-                text: `Confirm $${price} investment for Level ${planId}`,
-                icon: 'question', showCancelButton: true, confirmButtonColor: '#38bdf8'
-            });
+            try {
+                // 1. User ki balance update aur plan activate
+                await update(userRef, {
+                    totalBalance: currentBalance - price,
+                    [`activePlans/${planId}`]: true,
+                    miningStatus: 'active'
+                });
 
-            if (confirm.isConfirmed) {
-                const user = auth.currentUser;
-                Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
-
-                try {
-                    const userRef = ref(db, 'users/' + user.uid);
-                    
-                    // 1. Update User Data
-                    const updates = {};
-                    updates['totalBalance'] = currentBalance - price;
-                    updates[`activePlans/${planId}`] = true;
-                    updates['miningStatus'] = 'active';
-                    await update(userRef, updates);
-
-                    // 2. Reward Upliner Logic
-                    if (userData.referredBy && userData.referredBy !== "none") {
-                        const rewardAmount = price * rewardPercent;
-                        const usersRef = ref(db, 'users');
-                        const uplinerQuery = query(usersRef, orderByChild('referralCode'), equalTo(userData.referredBy));
-                        const uplinerSnap = await get(uplinerQuery);
-
-                        if (uplinerSnap.exists()) {
-                            const upliners = uplinerSnap.val();
-                            const uplinerUID = Object.keys(upliners)[0];
-                            const currentUplinerRewards = Number(upliners[uplinerUID].teamRewards) || 0;
-
-                            // Add reward to upliner
-                            await update(ref(db, 'users/' + uplinerUID), {
-                                teamRewards: currentUplinerRewards + rewardAmount
-                            });
-
-                            // Add entry to History for Upliner
-                            const historyRef = ref(db, 'transactions/' + uplinerUID);
-                            const newHistoryRef = push(historyRef);
-                            await set(newHistoryRef, {
-                                type: 'Reward',
-                                amount: rewardAmount,
-                                plan: 'Level ' + planId,
-                                from: userData.uid.substring(0,6),
-                                timestamp: Date.now(),
-                                status: 'Success'
-                            });
-                        }
+                // 2. Upliner reward logic
+                if (userData.referredBy && userData.referredBy !== "none") {
+                    const uplinerQuery = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(userData.referredBy));
+                    const snap = await get(uplinerQuery);
+                    if (snap.exists()) {
+                        const uplinerUID = Object.keys(snap.val())[0];
+                        const reward = price * rewardPercent;
+                        const currentReward = parseFloat(snap.val()[uplinerUID].teamRewards || 0);
+                        
+                        await update(ref(db, 'users/' + uplinerUID), { teamRewards: currentReward + reward });
+                        
+                        const uTrx = push(ref(db, 'transactions/' + uplinerUID));
+                        await set(uTrx, { type: 'reward', amount: reward, title: 'Team Commission', from: String(user.uid).substring(0,6), timestamp: Date.now(), status: 'SUCCESS' });
                     }
-
-                    Swal.fire('Success!', `Level ${planId} activated. Reward sent to upliner.`, 'success');
-                } catch (e) {
-                    console.error(e);
-                    Swal.fire('Error', 'Transaction failed. Check connection.', 'error');
                 }
-            }
-        };
 
-        window.cancelPlan = async (planId, price) => {
-            const fee = price * 0.10;
-            const refund = price - fee;
-            const confirm = await Swal.fire({
-                title: 'Cancel Plan?',
-                text: `10% fee ($${fee.toFixed(2)}) will be deducted.`,
-                icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444'
-            });
+                // 3. User history entry
+                const myTrx = push(ref(db, 'transactions/' + user.uid));
+                await set(myTrx, { type: 'withdraw', amount: price, title: `Lvl ${planId} Activated`, timestamp: Date.now(), status: 'SUCCESS' });
 
-            if (confirm.isConfirmed) {
-                try {
-                    const user = auth.currentUser;
-                    const activePlans = { ...userData.activePlans };
-                    delete activePlans[planId];
-                    
-                    const updates = {};
-                    updates[`users/${user.uid}/totalBalance`] = currentBalance + refund;
-                    updates[`users/${user.uid}/activePlans/${planId}`] = null;
-                    if (Object.keys(activePlans).length === 0) {
-                        updates[`users/${user.uid}/miningStatus`] = 'inactive';
-                    }
-                    await update(ref(db), updates);
-                    Swal.fire('Cancelled', `$${refund.toFixed(2)} refunded.`, 'success');
-                } catch (e) {
-                    Swal.fire('Error', 'Cancellation failed.', 'error');
-                }
-            }
+                Swal.fire('Success!', 'Plan Activated', 'success');
+            } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
         };
     </script>
 </body>
