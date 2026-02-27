@@ -8,22 +8,38 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        
+        /* Header */
         .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; transition: 0.3s; }
+        
+        /* Content Container */
         .deposit-container { padding: 20px; margin-bottom: 120px; }
+        
+        /* Info Box */
         .info-box { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin-bottom: 25px; }
         .info-box h4 { color: #38bdf8; margin: 0 0 10px 0; font-size: 0.95rem; }
         .info-box ul { padding-left: 18px; margin: 0; font-size: 0.75rem; color: #cbd5e1; line-height: 1.7; }
         .warning-text { color: #ef4444; font-size: 0.75rem; font-weight: bold; margin-top: 10px; display: block; }
+        
+        /* Cards */
         .dep-card { background: #1e293b; border-radius: 15px; padding: 20px; border: 1px solid #334155; margin-bottom: 20px; text-align: center; }
         .address-box { background: #0f172a; padding: 15px; border-radius: 10px; margin: 15px 0; word-break: break-all; color: #38bdf8; font-family: 'monospace'; font-size: 0.9rem; border: 1px solid #1e40af; }
+        
+        /* Form Inputs */
         .input-group { text-align: left; margin-bottom: 15px; }
         .input-group label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; }
-        input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; box-sizing: border-box; }
+        input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; box-sizing: border-box; font-size: 1rem; }
+        input:focus { border-color: #38bdf8; }
+
+        /* Buttons */
         .main-btn { width: 100%; padding: 15px; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; transition: 0.3s; }
         .copy-btn { background: #38bdf8; color: #0f172a; width: auto; padding: 10px 25px; margin: 0 auto; }
         .submit-btn { background: #22c55e; margin-top: 10px; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+        .submit-btn:active { transform: scale(0.98); }
+
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
         .nav-item.active { color: #38bdf8; }
@@ -41,10 +57,10 @@
             <h4><i class="fas fa-info-circle"></i> Recharge Guide</h4>
             <ul>
                 <li>Niche diye gaye <b>USDT (TRC20)</b> address ko copy karein.</li>
-                <li>Payment bhejne ke baad <b>Transaction ID (TXID)</b> copy karein.</li>
-                <li>Amount aur TXID niche likh kar submit karein.</li>
+                <li>Apne wallet (Binance, TrustWallet) se payment bhejain.</li>
+                <li>Payment ke baad <b>Transaction ID (TXID)</b> yahan paste karein.</li>
             </ul>
-            <span class="warning-text">⚠️ Ghalat network use karne par funds zaya ho sakte hain.</span>
+            <span class="warning-text">⚠️ Only send USDT via TRC20 network.</span>
         </div>
 
         <div class="dep-card">
@@ -58,7 +74,7 @@
         <div class="dep-card">
             <div class="input-group">
                 <label>Deposit Amount ($)</label>
-                <input type="number" id="depAmount" placeholder="Minimum $20">
+                <input type="number" id="depAmount" placeholder="Minimum $20" min="20">
             </div>
             <div class="input-group">
                 <label>Transaction ID (TXID)</label>
@@ -83,6 +99,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -97,63 +114,98 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // Copy Function
         window.copyAddress = function() {
             const addr = document.getElementById('walletAddr').innerText;
             navigator.clipboard.writeText(addr).then(() => {
-                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'Address Copied!', showConfirmButton: false, timer: 1500 });
+                Swal.fire({ 
+                    toast: true, 
+                    position: 'top', 
+                    icon: 'success', 
+                    title: 'Address Copied!', 
+                    showConfirmButton: false, 
+                    timer: 1500,
+                    background: '#1e293b',
+                    color: '#fff'
+                });
             });
         };
 
+        // Submit Function
         document.getElementById('submitDeposit').onclick = async () => {
             const amount = document.getElementById('depAmount').value;
             const txid = document.getElementById('txidInput').value.trim();
             const user = auth.currentUser;
 
-            if (!user) return Swal.fire('Error', 'Session expired. Login again.', 'error');
-            if (!amount || amount < 20) return Swal.fire('Error', 'Minimum deposit is $20', 'warning');
-            if (!txid) return Swal.fire('Error', 'Please enter Transaction ID', 'warning');
+            if (!user) {
+                return Swal.fire('Error', 'Session expired. Please login again.', 'error');
+            }
+            if (!amount || amount < 20) {
+                return Swal.fire('Error', 'Minimum deposit is $20', 'warning');
+            }
+            if (!txid) {
+                return Swal.fire('Error', 'Please enter your Transaction ID (TXID)', 'warning');
+            }
 
-            Swal.fire({ title: 'Submitting...', text: 'Connecting to server...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); }});
+            // Loading state
+            Swal.fire({ 
+                title: 'Submitting...', 
+                text: 'Please wait while we record your request.',
+                allowOutsideClick: false, 
+                didOpen: () => { Swal.showLoading(); }
+            });
 
             try {
-                // Generate a unique ID for this transaction to link Admin & User
-                const depositRef = push(ref(db, 'depositRequests'));
-                const trxKey = depositRef.key;
+                // Unique key generate karein
+                const trxKey = push(ref(db, 'depositRequests')).key;
 
-                // 1. Data for Admin
+                // 1. Admin Folder: Isse aap admin panel mein approve karenge
+                const adminRequestRef = ref(db, `depositRequests/${trxKey}`);
                 const adminData = {
                     uid: user.uid,
                     amount: parseFloat(amount),
                     txid: txid,
                     status: 'pending',
                     timestamp: Date.now(),
-                    trxKey: trxKey 
+                    id: trxKey
                 };
 
-                // 2. Data for User History
+                // 2. User History Folder: Isse user ko History page par dikhayi dega
+                const userHistoryRef = ref(db, `transactions/${user.uid}/${trxKey}`);
                 const userHistoryData = {
                     type: 'deposit',
                     amount: parseFloat(amount),
                     status: 'PENDING',
                     timestamp: Date.now(),
-                    title: 'Deposit Request'
+                    title: 'USDT Deposit'
                 };
 
-                // Dono entries aik sath update karein
-                await set(depositRef, adminData);
-                await set(ref(db, `users/${user.uid}/transactions/${trxKey}`), userHistoryData);
+                // Dono jagah data save karein
+                await set(adminRequestRef, adminData);
+                await set(userHistoryRef, userHistoryData);
 
-                Swal.fire('Success', 'Deposit request submitted. Check History!', 'success').then(() => {
+                // Success Message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Request Submitted!',
+                    text: 'Aapki deposit request bhej di gayi hai. Approval ke baad balance add ho jayega.',
+                    confirmButtonColor: '#22c55e',
+                    background: '#1e293b',
+                    color: '#fff'
+                }).then(() => {
                     window.location.href = 'history.html';
                 });
 
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', 'Submission failed.', 'error');
+                Swal.fire('Error', 'Database connection error. Try again.', 'error');
             }
         };
 
-        onAuthStateChanged(auth, (user) => { if (!user) window.location.href = 'index.html'; });
+        // Check Login Status
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = 'index.html';
+        });
     </script>
 </body>
 </html>

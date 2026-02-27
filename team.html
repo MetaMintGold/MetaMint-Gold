@@ -11,23 +11,42 @@
         .dash-header { padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #38bdf8; margin-right: 15px; }
         .team-container { padding: 20px; margin-bottom: 120px; }
+        
+        /* Referral Card */
         .ref-card { background: #1e293b; border-radius: 20px; padding: 25px; text-align: center; border: 1px solid #334155; margin-bottom: 20px; }
         .ref-code { color: #38bdf8; font-size: 2.5rem; margin: 10px 0; letter-spacing: 3px; font-weight: 800; font-family: 'monospace'; }
+        
+        /* Stats Grid */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .stat-box { background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid #334155; text-align: center; }
         .stat-box h2 { margin: 5px 0; font-size: 1.5rem; color: #fff; }
         .stat-box p { margin: 0; font-size: 0.75rem; color: #94a3b8; }
-        .claim-card { background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 20px; padding: 20px; text-align: center; margin-bottom: 25px; }
-        .claim-card h2 { color: #22c55e; font-size: 2rem; margin: 10px 0; }
+
+        /* New Motivational Instruction Box */
+        .reward-info-card { 
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%); 
+            border: 1px solid rgba(56, 189, 248, 0.3); 
+            border-radius: 20px; padding: 20px; margin-bottom: 25px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .reward-info-card h3 { color: #38bdf8; margin: 0 0 10px 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .reward-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 4px solid #38bdf8; }
+        .reward-item span { font-size: 0.85rem; color: #cbd5e1; }
+        .reward-amount { color: #22c55e; font-weight: bold; font-size: 1rem; }
+        .promo-text { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-top: 15px; line-height: 1.4; font-style: italic; }
+
+        /* Table Styles */
         .team-table-card { background: #1e293b; border-radius: 15px; border: 1px solid #334155; overflow: hidden; }
         .team-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         .team-table th { text-align: left; color: #64748b; padding: 15px; background: rgba(255,255,255,0.02); border-bottom: 1px solid #334155; }
         .team-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
         .status-active { color: #22c55e; font-weight: bold; background: rgba(34, 197, 94, 0.1); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; }
         .status-inactive { color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; }
+        
         .main-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         .copy-btn { background: #38bdf8; color: #0f172a; }
-        .claim-btn { background: #22c55e; color: white; margin-top: 10px; }
+        
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
@@ -63,12 +82,27 @@
             </div>
         </div>
 
-        <div class="claim-card">
-            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Unclaimed Network Commission</p>
-            <h2 id="unclaimedReward">$0.00</h2>
-            <button id="claimBtn" class="main-btn claim-btn">
-                <i class="fas fa-hand-holding-usd"></i> Claim to Main Balance
-            </button>
+        <div class="reward-info-card">
+            <h3><i class="fas fa-gift"></i> Referral Rewards</h3>
+            
+            <div class="reward-item">
+                <span>Plan 1 ($20) Activation</span>
+                <span class="reward-amount">+$4.00 Reward</span>
+            </div>
+            
+            <div class="reward-item">
+                <span>Plan 2 ($60) Activation</span>
+                <span class="reward-amount">+$15.00 Reward</span>
+            </div>
+            
+            <div class="reward-item">
+                <span>Plan 3 ($120) Activation</span>
+                <span class="reward-amount">+$36.00 Reward</span>
+            </div>
+
+            <p class="promo-text">
+                "Apna link copy karo aur doston ko share karo! Jitne zeyada log join karenge, utna zeyada reward aapke Dashboard Reward Box mein add hoga jahan se aap claim kar sakte hain."
+            </p>
         </div>
 
         <div class="team-table-card">
@@ -103,7 +137,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -123,17 +157,11 @@
             if (user) {
                 const userRef = ref(db, 'users/' + user.uid);
                 
-                // Real-time update for commission and balance
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
                     if(data) {
                         const myCode = data.referralCode || String(user.uid).substring(0, 6);
                         document.getElementById('myReferralCode').innerText = myCode;
-                        
-                        // Yahan unclaimedCommission use kar rahe hain jo plans.html se update ho raha hai
-                        const commission = Number(data.unclaimedCommission || 0);
-                        document.getElementById('unclaimedReward').innerText = `$${commission.toFixed(2)}`;
-                        
                         fetchTeamMembers(myCode);
                     }
                 });
@@ -152,8 +180,6 @@
                             snapshot.forEach((child) => {
                                 totalCount++;
                                 const member = child.val();
-                                
-                                // Checking if user has at least one active plan or miningStatus is active
                                 const isPlanActive = member.miningStatus === 'active';
                                 if (isPlanActive) activeCount++;
                                 
@@ -174,50 +200,6 @@
                         document.getElementById('activeCount').innerText = activeCount;
                     });
                 }
-
-                // Claim Logic
-                document.getElementById('claimBtn').onclick = async () => {
-                    try {
-                        const snap = await get(userRef);
-                        const userData = snap.val();
-                        const reward = Number(userData.unclaimedCommission) || 0;
-                        
-                        if (reward > 0) {
-                            Swal.fire({ 
-                                title: 'Claiming Commission...', 
-                                text: 'Moving funds to main balance',
-                                allowOutsideClick: false, 
-                                didOpen: () => Swal.showLoading() 
-                            });
-                            
-                            const currentBalance = Number(userData.totalBalance) || 0;
-                            const newBalance = (currentBalance + reward).toFixed(2);
-                            
-                            // 1. Update User Balance and Reset Commission
-                            await update(userRef, { 
-                                totalBalance: newBalance, 
-                                unclaimedCommission: 0 
-                            });
-
-                            // 2. Add to Transaction History
-                            const trxRef = push(ref(db, 'transactions/' + user.uid));
-                            await set(trxRef, {
-                                type: 'reward',
-                                amount: reward,
-                                title: 'Network Commission Claimed',
-                                timestamp: Date.now(),
-                                status: 'SUCCESS'
-                            });
-
-                            Swal.fire('Success!', `$${reward.toFixed(2)} added to your main balance.`, 'success');
-                        } else {
-                            Swal.fire('Notice', 'No rewards available to claim.', 'info');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        Swal.fire('Error', 'Claim failed. Check connection.', 'error');
-                    }
-                };
             } else { window.location.href = 'index.html'; }
         });
 

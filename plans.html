@@ -17,14 +17,14 @@
         .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; }
         .plan-info h2 { margin: 10px 0; font-size: 2.2rem; }
         .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .buy-btn:active { transform: scale(0.98); }
-        .buy-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
         .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; font-weight: bold; }
         
+        .cancel-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.85rem; }
+
         /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
-        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; display: flex; flex-direction: column; align-items: center; }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 4px; }
         .nav-item.active { color: #38bdf8; }
     </style>
 </head>
@@ -44,7 +44,7 @@
                 <p style="color:#38bdf8">Daily 2.0% Profit</p>
                 <h2>$20.00</h2>
             </div>
-            <div id="action1"><button class="buy-btn" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button></div>
+            <div id="action1"><button class="buy-btn" onclick="handlePlan(1, 20)">Activate Plan</button></div>
         </div>
 
         <div class="plan-card" id="cardPlan2">
@@ -54,7 +54,7 @@
                 <p style="color:#38bdf8">Daily 3.0% Profit</p>
                 <h2>$60.00</h2>
             </div>
-            <div id="action2"><button class="buy-btn" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button></div>
+            <div id="action2"><button class="buy-btn" onclick="handlePlan(2, 60)">Activate Plan</button></div>
         </div>
 
         <div class="plan-card" id="cardPlan3">
@@ -64,7 +64,7 @@
                 <p style="color:#38bdf8">Daily 3.5% Profit</p>
                 <h2>$120.00</h2>
             </div>
-            <div id="action3"><button class="buy-btn" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button></div>
+            <div id="action3"><button class="buy-btn" onclick="handlePlan(3, 120)">Activate Plan</button></div>
         </div>
     </div>
 
@@ -98,21 +98,20 @@
         let currentBalance = 0;
         let userData = null;
 
-        // 1. User Ka Data Load Karna
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     userData = snapshot.val();
                     if (userData) {
                         currentBalance = parseFloat(userData.totalBalance || 0);
-                        document.getElementById('userWallet').innerText = "$" + currentBalance.toFixed(2);
+                        const walletEl = document.getElementById('userWallet');
+                        if(walletEl) walletEl.innerText = "$" + currentBalance.toFixed(2);
                         updateUI();
                     }
                 });
             } else { window.location.href = 'index.html'; }
         });
 
-        // 2. UI Update (Active Plans Dikhaana)
         function updateUI() {
             if (!userData) return;
             const activePlans = userData.activePlans || {};
@@ -120,82 +119,84 @@
                 const actionDiv = document.getElementById(`action${id}`);
                 const card = document.getElementById(`cardPlan${id}`);
                 const badge = document.getElementById(`badge${id}`);
+                
                 if (activePlans[id]) {
                     card.classList.add('active-plan');
                     badge.innerHTML = `<span class="active-badge">ACTIVE</span>`;
-                    actionDiv.innerHTML = `<button class="buy-btn" disabled>Already Mining</button>`;
+                    actionDiv.innerHTML = `
+                        <button class="buy-btn" style="background:#334155; color:#64748b;" disabled>Mining...</button>
+                        <button class="cancel-btn" onclick="window.cancelPlan(${id})"><i class="fas fa-times-circle"></i> Cancel Plan (10% Fee)</button>
+                    `;
+                } else {
+                    card.classList.remove('active-plan');
+                    badge.innerHTML = '';
+                    let price = id === 1 ? 20 : (id === 2 ? 60 : 120);
+                    actionDiv.innerHTML = `<button class="buy-btn" onclick="window.handlePlan(${id}, ${price})">Activate Plan</button>`;
                 }
             });
         }
 
-        // 3. Plan Buy Karne Ka Function
-        window.handlePlan = async (planId, price, rewardPercent) => {
+        window.handlePlan = async (planId, price) => {
             if (currentBalance < price) {
                 return Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: 'Please deposit funds first.' });
             }
-            
             const user = auth.currentUser;
-            
             const result = await Swal.fire({
-                title: 'Confirm Purchase',
-                text: `Do you want to activate Level ${planId} for $${price}?`,
+                title: 'Activate Plan?',
+                text: `Do you want to start Level ${planId} for $${price}?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, Activate!',
-                confirmButtonColor: '#38bdf8'
+                confirmButtonColor: '#38bdf8',
+                confirmButtonText: 'Yes, Start Mining'
             });
 
             if (!result.isConfirmed) return;
-
-            Swal.fire({ title: 'Activating Plan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                // A. User ka data update karein
                 await update(ref(db, 'users/' + user.uid), {
                     totalBalance: (currentBalance - price).toFixed(2),
                     [`activePlans/${planId}`]: true,
                     miningStatus: 'active'
                 });
 
-                // B. Upliner ko commission aur status update karein
                 if (userData.referredBy && userData.referredBy !== "none") {
                     const uplineQuery = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(userData.referredBy));
                     const snap = await get(uplineQuery);
-                    
                     if (snap.exists()) {
                         const uplineUID = Object.keys(snap.val())[0];
-                        const commAmount = (price * rewardPercent).toFixed(2);
-                        const oldComm = parseFloat(snap.val()[uplineUID].unclaimedCommission || 0);
-                        
-                        // Upliner ka unclaimed commission update karein
-                        await update(ref(db, 'users/' + uplineUID), {
-                            unclaimedCommission: (oldComm + parseFloat(commAmount)).toFixed(2)
-                        });
-
-                        // User ko upliner ki team list mein "Active" mark karein
-                        // Note: Agar aapne team list 'referrals' folder mein rakhi hai to path check karlein
-                        await update(ref(db, `users/${uplineUID}/myTeam/${user.uid}`), {
-                            status: 'Active'
-                        }).catch(e => console.log("Team status skipped"));
+                        const uplineData = snap.val()[uplineUID];
+                        let reward = planId === 1 ? 4 : (planId === 2 ? 15 : 36);
+                        const newReward = (parseFloat(uplineData.teamReward || 0) + reward).toFixed(2);
+                        await update(ref(db, 'users/' + uplineUID), { teamReward: parseFloat(newReward) });
                     }
                 }
+                Swal.fire('Activated!', `Level ${planId} active ho gaya hai.`, 'success');
+            } catch (err) { Swal.fire('Error', 'Transaction failed.', 'error'); }
+        };
 
-                // C. History mein entry karein (Taake History page par dikhayi de)
-                const trxRef = push(ref(db, 'transactions/' + user.uid));
-                await set(trxRef, {
-                    type: 'Plan Purchase',
-                    amount: price,
-                    title: `Level ${planId} Activated`,
-                    timestamp: Date.now(),
-                    status: 'SUCCESS'
+        window.cancelPlan = async (planId) => {
+            let price = planId === 1 ? 20 : (planId === 2 ? 60 : 120);
+            let refundAmount = price - (price * 0.10);
+            const result = await Swal.fire({
+                title: 'Cancel Plan?',
+                text: `10% ($${(price * 0.10).toFixed(2)}) fee kategi. Refund: $${refundAmount.toFixed(2)}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'Yes, Cancel Plan'
+            });
+
+            if (!result.isConfirmed) return;
+            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                await update(ref(db, 'users/' + auth.currentUser.uid), {
+                    totalBalance: (currentBalance + refundAmount).toFixed(2),
+                    [`activePlans/${planId}`]: null
                 });
-
-                Swal.fire({ icon: 'success', title: 'Success!', text: 'Plan activated and mining started.' });
-
-            } catch (err) {
-                console.error(err);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Try again.' });
-            }
+                Swal.fire('Cancelled!', 'Balance refund ho gaya.', 'success');
+            } catch (err) { Swal.fire('Error', 'Failed to cancel.', 'error'); }
         };
     </script>
 </body>
