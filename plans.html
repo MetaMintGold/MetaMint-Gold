@@ -169,44 +169,57 @@
             try {
                 const uid = auth.currentUser.uid;
                 
-                // 1. Update User Data (Balance + Plan + Status for Upliner)
+                // 1. Calculate Reward based on Plan Level
+                let rewardAmt = 0;
+                if (planId === 1) rewardAmt = 4;        // 20% of 20
+                else if (planId === 2) rewardAmt = 15;  // 25% of 60
+                else if (planId === 3) rewardAmt = 36;  // 30% of 120
+
+                // 2. Update User Data (Status 'active' fixes Upliner view)
                 await update(ref(db, 'users/' + uid), {
                     totalBalance: (currentBalance - price).toFixed(2),
-                    planActive: true, // This fixes Issue #1
+                    miningStatus: 'active', 
                     [`activePlans/${planId}`]: true,
                     [`lastClaims/${planId}`]: Date.now()
                 });
 
-                // 2. Referral Commission Logic (10%) - Fixes Issue #2
+                // 3. Referral Reward Logic (FIXED)
                 if (userData.referredBy) {
-                    const uplinerRef = ref(db, 'users/' + userData.referredBy);
-                    const snap = await get(uplinerRef);
-                    if (snap.exists()) {
-                        const rewardAmt = price * 0.10;
-                        const currentTeamReward = parseFloat(snap.val().teamReward || 0);
+                    const uplinerRef = ref(db, 'users');
+                    const usersSnap = await get(uplinerRef);
+                    
+                    // Find upliner by referralCode
+                    let uplinerKey = null;
+                    usersSnap.forEach((child) => {
+                        if (child.val().referralCode === userData.referredBy) {
+                            uplinerKey = child.key;
+                        }
+                    });
+
+                    if (uplinerKey) {
+                        const uplinerData = usersSnap.val()[uplinerKey];
+                        const currentTeamReward = parseFloat(uplinerData.teamReward || 0);
                         
-                        await update(uplinerRef, {
+                        await update(ref(db, 'users/' + uplinerKey), {
                             teamReward: (currentTeamReward + rewardAmt).toFixed(2),
                             hasNewReward: true
                         });
                     }
                 }
 
-                // 3. Create Transaction Entry for History
-                const trxRef = ref(db, `transactions/${uid}`);
-                const newTrx = {
+                // 4. Transaction Entry
+                await set(ref(db, `transactions/${uid}/${Date.now()}`), {
                     amount: price,
                     type: 'PLAN_PURCHASE',
                     status: 'SUCCESS',
-                    title: `Miner Level ${planId}`,
+                    title: `Miner Level ${planId} Activated`,
                     timestamp: Date.now()
-                };
-                await set(ref(db, `transactions/${uid}/${Date.now()}`), newTrx);
+                });
 
                 Swal.fire('Success', 'Mining Started Successfully!', 'success');
             } catch (e) { 
                 console.error(e);
-                Swal.fire('Error', 'Failed to activate. Please try again.', 'error'); 
+                Swal.fire('Error', 'Activation failed.', 'error'); 
             }
         };
 
@@ -224,7 +237,6 @@
                     [`lastClaims/${planId}`]: Date.now()
                 });
 
-                // Profit Transaction Entry
                 await set(ref(db, `transactions/${uid}/${Date.now()}`), {
                     amount: profit,
                     type: 'PROFIT_CLAIM',
@@ -233,43 +245,39 @@
                     timestamp: Date.now()
                 });
 
-                Swal.fire('Claimed!', `$${profit.toFixed(2)} added to withdrawable balance.`, 'success');
-            } catch (e) { Swal.fire('Error', 'Failed to claim profit.', 'error'); }
+                Swal.fire('Claimed!', `$${profit.toFixed(2)} added to withdrawable.`, 'success');
+            } catch (e) { Swal.fire('Error', 'Failed to claim.', 'error'); }
         };
 
         window.cancelPlan = async (planId) => {
-            let price = planId === 1 ? 20 : (id === 2 ? 60 : 120);
+            let price = planId === 1 ? 20 : (planId === 2 ? 60 : 120);
             let fee = price * 0.10;
             let refund = price - fee;
 
             const result = await Swal.fire({
                 title: 'Cancel Plan?',
-                text: `10% fee ($${fee}) will be deducted. You will get $${refund.toFixed(2)} back.`,
+                text: `10% fee ($${fee}) applies. Refund: $${refund.toFixed(2)}`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Yes, Cancel it'
+                confirmButtonText: 'Yes, Cancel'
             });
 
             if (result.isConfirmed) {
-                Swal.fire({ title: 'Refunding...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+                Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
                 const uid = auth.currentUser.uid;
                 
-                // Get updated plans count to decide if user is still active
                 const snap = await get(ref(db, `users/${uid}/activePlans`));
-                let plansLeft = 0;
-                if(snap.exists()) {
-                    plansLeft = Object.keys(snap.val()).length - 1;
-                }
+                let plansLeft = snap.exists() ? Object.keys(snap.val()).length - 1 : 0;
 
                 await update(ref(db, 'users/' + uid), {
                     totalBalance: (currentBalance + refund).toFixed(2),
-                    planActive: plansLeft > 0 ? true : false,
+                    miningStatus: plansLeft > 0 ? 'active' : 'inactive',
                     [`activePlans/${planId}`]: null,
                     [`lastClaims/${planId}`]: null
                 });
 
-                Swal.fire('Cancelled', 'Refund processed to main balance.', 'success');
+                Swal.fire('Cancelled', 'Plan removed and balance refunded.', 'success');
             }
         };
     </script>

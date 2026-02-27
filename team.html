@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MetaMint | My Team & Rewards</title>
+    <title>MetaMint | My Team Network</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -22,7 +22,7 @@
         .stat-box h2 { margin: 5px 0; font-size: 1.5rem; color: #fff; }
         .stat-box p { margin: 0; font-size: 0.75rem; color: #94a3b8; }
 
-        /* New Motivational Instruction Box */
+        /* Referral Rewards Card */
         .reward-info-card { 
             background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%); 
             border: 1px solid rgba(56, 189, 248, 0.3); 
@@ -47,13 +47,13 @@
         .main-btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
         .copy-btn { background: #38bdf8; color: #0f172a; }
         
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
         .nav-item.active { color: #38bdf8; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <header class="dash-header">
         <div style="display: flex; align-items: center;">
@@ -83,25 +83,21 @@
         </div>
 
         <div class="reward-info-card">
-            <h3><i class="fas fa-gift"></i> Referral Rewards</h3>
-            
+            <h3><i class="fas fa-gift"></i> Achievement Rewards</h3>
             <div class="reward-item">
-                <span>Plan 1 ($20) Activation</span>
-                <span class="reward-amount">+$4.00 Reward</span>
+                <span>Plan Level 1 ($20)</span>
+                <span class="reward-amount">+$4.00 (20%)</span>
             </div>
-            
             <div class="reward-item">
-                <span>Plan 2 ($60) Activation</span>
-                <span class="reward-amount">+$15.00 Reward</span>
+                <span>Plan Level 2 ($60)</span>
+                <span class="reward-amount">+$15.00 (25%)</span>
             </div>
-            
             <div class="reward-item">
-                <span>Plan 3 ($120) Activation</span>
-                <span class="reward-amount">+$36.00 Reward</span>
+                <span>Plan Level 3 ($120)</span>
+                <span class="reward-amount">+$36.00 (30%)</span>
             </div>
-
             <p class="promo-text">
-                "Apna link copy karo aur doston ko share karo! Jitne zeyada log join karenge, utna zeyada reward aapke Dashboard Reward Box mein add hoga jahan se aap claim kar sakte hain."
+                "Apna link share karen. Jab aapka team member plan active karega, reward aapke Achievement Bonus wallet mein add ho jayega."
             </p>
         </div>
 
@@ -129,9 +125,9 @@
     <nav class="bottom-nav">
         <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
         <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
-        <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
         <a href="team.html" class="nav-item active"><i class="fas fa-users"></i><span>Team</span></a>
         <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </nav>
 
     <script type="module">
@@ -156,7 +152,6 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 const userRef = ref(db, 'users/' + user.uid);
-                
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
                     if(data) {
@@ -166,7 +161,7 @@
                     }
                 });
 
-                async function fetchTeamMembers(myCode) {
+                function fetchTeamMembers(myCode) {
                     const usersRef = ref(db, 'users');
                     const teamQuery = query(usersRef, orderByChild('referredBy'), equalTo(myCode));
                     
@@ -180,11 +175,11 @@
                             snapshot.forEach((child) => {
                                 totalCount++;
                                 const member = child.val();
+                                // Checked miningStatus for active/inactive label
                                 const isPlanActive = member.miningStatus === 'active';
                                 if (isPlanActive) activeCount++;
                                 
-                                const rawId = member.uid || child.key || "User";
-                                const displayId = String(rawId).substring(0, 6);
+                                const displayId = member.uid ? String(member.uid).substring(0, 6) : "User";
                                 
                                 listBody.innerHTML += `
                                     <tr>
@@ -206,6 +201,7 @@
         window.copyReferral = function() {
             const code = document.getElementById('myReferralCode').innerText;
             if(code === "----") return;
+            // Assuming your site is hosted on a domain, otherwise window.location.origin works
             const link = window.location.origin + "/index.html?ref=" + code;
             navigator.clipboard.writeText(link).then(() => {
                 Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'Referral Link Copied!', showConfirmButton: false, timer: 1500 });
