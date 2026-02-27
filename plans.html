@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MetaMint | Testing Mode</title>
+    <title>MetaMint | Plans</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .dash-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
         .test-badge { background: #22c55e; color: #0f172a; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-bottom: 5px; display: inline-block; }
         .wallet-display { float: right; background: rgba(56, 189, 248, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid #38bdf8; font-size: 0.85rem; color: #38bdf8; }
         .plans-container { padding: 20px; margin-bottom: 100px; }
-        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; }
-        .plan-card.active-plan { border-color: #22c55e; }
+        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; transition: 0.3s; }
+        .plan-card.active-plan { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
         .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; }
         .plan-info h2 { margin: 10px 0; font-size: 2.2rem; }
-        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; }
-        .buy-btn:disabled { background: #334155; color: #64748b; }
-        .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; }
+        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .buy-btn:active { transform: scale(0.98); }
+        .buy-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
+        .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; font-weight: bold; }
+        
+        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
-        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
         .nav-item.active { color: #38bdf8; }
     </style>
 </head>
@@ -35,19 +39,31 @@
     <div class="plans-container" id="plansDiv">
         <div class="plan-card" id="cardPlan1">
             <div id="badge1"></div>
-            <div class="plan-info"><h3>Level 1</h3><p style="color:#38bdf8">Daily 2.0% Profit</p><h2>$20.00</h2></div>
+            <div class="plan-info">
+                <h3>Level 1</h3>
+                <p style="color:#38bdf8">Daily 2.0% Profit</p>
+                <h2>$20.00</h2>
+            </div>
             <div id="action1"><button class="buy-btn" onclick="handlePlan(1, 20, 0.20)">Activate Plan</button></div>
         </div>
 
         <div class="plan-card" id="cardPlan2">
             <div id="badge2"></div>
-            <div class="plan-info"><h3>Level 2</h3><p style="color:#38bdf8">Daily 3.0% Profit</p><h2>$60.00</h2></div>
+            <div class="plan-info">
+                <h3>Level 2</h3>
+                <p style="color:#38bdf8">Daily 3.0% Profit</p>
+                <h2>$60.00</h2>
+            </div>
             <div id="action2"><button class="buy-btn" onclick="handlePlan(2, 60, 0.25)">Activate Plan</button></div>
         </div>
 
         <div class="plan-card" id="cardPlan3">
             <div id="badge3"></div>
-            <div class="plan-info"><h3>Level 3</h3><p style="color:#38bdf8">Daily 3.5% Profit</p><h2>$120.00</h2></div>
+            <div class="plan-info">
+                <h3>Level 3</h3>
+                <p style="color:#38bdf8">Daily 3.5% Profit</p>
+                <h2>$120.00</h2>
+            </div>
             <div id="action3"><button class="buy-btn" onclick="handlePlan(3, 120, 0.30)">Activate Plan</button></div>
         </div>
     </div>
@@ -82,6 +98,7 @@
         let currentBalance = 0;
         let userData = null;
 
+        // 1. User Ka Data Load Karna
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
@@ -95,6 +112,7 @@
             } else { window.location.href = 'index.html'; }
         });
 
+        // 2. UI Update (Active Plans Dikhaana)
         function updateUI() {
             if (!userData) return;
             const activePlans = userData.activePlans || {};
@@ -110,44 +128,74 @@
             });
         }
 
+        // 3. Plan Buy Karne Ka Function
         window.handlePlan = async (planId, price, rewardPercent) => {
-            if (currentBalance < price) return Swal.fire('Error', 'Insufficient Balance', 'error');
+            if (currentBalance < price) {
+                return Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: 'Please deposit funds first.' });
+            }
             
             const user = auth.currentUser;
-            const userRef = ref(db, 'users/' + user.uid);
             
-            Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+            const result = await Swal.fire({
+                title: 'Confirm Purchase',
+                text: `Do you want to activate Level ${planId} for $${price}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Activate!',
+                confirmButtonColor: '#38bdf8'
+            });
+
+            if (!result.isConfirmed) return;
+
+            Swal.fire({ title: 'Activating Plan...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                // 1. User ki balance update aur plan activate
-                await update(userRef, {
-                    totalBalance: currentBalance - price,
+                // A. User ka data update karein
+                await update(ref(db, 'users/' + user.uid), {
+                    totalBalance: (currentBalance - price).toFixed(2),
                     [`activePlans/${planId}`]: true,
                     miningStatus: 'active'
                 });
 
-                // 2. Upliner reward logic
+                // B. Upliner ko commission aur status update karein
                 if (userData.referredBy && userData.referredBy !== "none") {
-                    const uplinerQuery = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(userData.referredBy));
-                    const snap = await get(uplinerQuery);
+                    const uplineQuery = query(ref(db, 'users'), orderByChild('referralCode'), equalTo(userData.referredBy));
+                    const snap = await get(uplineQuery);
+                    
                     if (snap.exists()) {
-                        const uplinerUID = Object.keys(snap.val())[0];
-                        const reward = price * rewardPercent;
-                        const currentReward = parseFloat(snap.val()[uplinerUID].teamRewards || 0);
+                        const uplineUID = Object.keys(snap.val())[0];
+                        const commAmount = (price * rewardPercent).toFixed(2);
+                        const oldComm = parseFloat(snap.val()[uplineUID].unclaimedCommission || 0);
                         
-                        await update(ref(db, 'users/' + uplinerUID), { teamRewards: currentReward + reward });
-                        
-                        const uTrx = push(ref(db, 'transactions/' + uplinerUID));
-                        await set(uTrx, { type: 'reward', amount: reward, title: 'Team Commission', from: String(user.uid).substring(0,6), timestamp: Date.now(), status: 'SUCCESS' });
+                        // Upliner ka unclaimed commission update karein
+                        await update(ref(db, 'users/' + uplineUID), {
+                            unclaimedCommission: (oldComm + parseFloat(commAmount)).toFixed(2)
+                        });
+
+                        // User ko upliner ki team list mein "Active" mark karein
+                        // Note: Agar aapne team list 'referrals' folder mein rakhi hai to path check karlein
+                        await update(ref(db, `users/${uplineUID}/myTeam/${user.uid}`), {
+                            status: 'Active'
+                        }).catch(e => console.log("Team status skipped"));
                     }
                 }
 
-                // 3. User history entry
-                const myTrx = push(ref(db, 'transactions/' + user.uid));
-                await set(myTrx, { type: 'withdraw', amount: price, title: `Lvl ${planId} Activated`, timestamp: Date.now(), status: 'SUCCESS' });
+                // C. History mein entry karein (Taake History page par dikhayi de)
+                const trxRef = push(ref(db, 'transactions/' + user.uid));
+                await set(trxRef, {
+                    type: 'Plan Purchase',
+                    amount: price,
+                    title: `Level ${planId} Activated`,
+                    timestamp: Date.now(),
+                    status: 'SUCCESS'
+                });
 
-                Swal.fire('Success!', 'Plan Activated', 'success');
-            } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
+                Swal.fire({ icon: 'success', title: 'Success!', text: 'Plan activated and mining started.' });
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Something went wrong. Try again.' });
+            }
         };
     </script>
 </body>

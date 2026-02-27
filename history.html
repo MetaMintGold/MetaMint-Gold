@@ -40,6 +40,7 @@
             <button class="tab-btn" onclick="filterTrx('deposit', this)">Deposits</button>
             <button class="tab-btn" onclick="filterTrx('withdraw', this)">Withdrawals</button>
             <button class="tab-btn" onclick="filterTrx('reward', this)">Team Rewards</button>
+            <button class="tab-btn" onclick="filterTrx('Plan Purchase', this)">Plan Purchases</button>
         </div>
         <div id="historyList">
             <p style="text-align:center; color:#64748b; margin-top:50px;">Fetching records...</p>
@@ -82,7 +83,6 @@
                     const list = document.getElementById('historyList');
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        // Convert object to array and sort by latest timestamp
                         allTransactions = Object.keys(data).map(key => ({ 
                             ...data[key], 
                             id: key 
@@ -108,13 +108,13 @@
                 const status = String(trx.status || 'SUCCESS').toUpperCase();
                 
                 let icon = 'fa-gift';
-                let color = '#fbbf24'; // Reward gold
-                let statusColor = '#22c55e'; // Green for success
+                let color = '#fbbf24'; 
+                let statusColor = '#22c55e'; 
 
                 if (type === 'deposit') { 
                     icon = 'fa-arrow-down'; 
                     color = '#22c55e'; 
-                } else if (type === 'withdraw') { 
+                } else if (type === 'withdraw' || type === 'plan purchase') { 
                     icon = 'fa-arrow-up'; 
                     color = '#f87171'; 
                 }
@@ -122,9 +122,15 @@
                 if (status === 'PENDING') statusColor = '#fbbf24';
                 if (status === 'REJECTED' || status === 'FAILED') statusColor = '#ef4444';
 
-                // Display formatting
-                const title = trx.title || (type === 'reward' ? 'Team Reward' : type.toUpperCase());
-                const dateStr = new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+                const title = trx.title || type.toUpperCase();
+                
+                // Date formatting fix
+                let dateStr = "N/A";
+                if(trx.timestamp) {
+                    dateStr = new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+                }
+
+                const isNegative = (type === 'withdraw' || type === 'plan purchase' || title.toLowerCase().includes('activated'));
 
                 html += `
                 <div class="trx-card">
@@ -136,13 +142,13 @@
                         </div>
                     </div>
                     <div class="trx-amount">
-                        <h4 style="color: ${color};">${(type === 'withdraw' || title.includes('Activated')) ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
+                        <h4 style="color: ${color};">${isNegative ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
                         <p style="color: ${statusColor};">${status}</p>
                     </div>
                 </div>`;
             });
             
-            list.innerHTML = html || '<p style="text-align:center; color:#64748b; margin-top:50px;">No records found for this category.</p>';
+            list.innerHTML = html || '<p style="text-align:center; color:#64748b; margin-top:50px;">No records found.</p>';
         }
 
         window.filterTrx = (type, btn) => {
