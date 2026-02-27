@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
         .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #f59e0b; }
         .withdraw-container { padding: 20px; margin-bottom: 100px; }
@@ -22,7 +22,7 @@
         
         .main-btn { width: 100%; padding: 16px; background: #f59e0b; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
         .main-btn:active { transform: scale(0.98); }
-        .main-btn:disabled { background: #334155; color: #64748b; }
+        .main-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
         
         .instruction-box { background: rgba(245, 158, 11, 0.05); border: 1px dashed #f59e0b; border-radius: 15px; padding: 15px; margin-top: 25px; }
         .instruction-box h4 { color: #f59e0b; margin: 0 0 10px 0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
@@ -34,7 +34,7 @@
         .nav-item.active { color: #f59e0b; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <header class="dash-header">
         <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
@@ -43,7 +43,7 @@
 
     <div class="withdraw-container">
         <div class="balance-card">
-            <p>Available Balance</p>
+            <p>Withdrawable Balance</p>
             <h2 id="drawBal">$0.00</h2>
         </div>
 
@@ -53,7 +53,7 @@
         </div>
         <div class="input-group">
             <label>USDT (TRC20) Address</label>
-            <input type="text" id="drawAddress" placeholder="Paste your wallet address">
+            <input type="text" id="drawAddress" placeholder="Paste your wallet TRC20 address">
         </div>
         <button class="main-btn" id="submitBtn">
             <i class="fas fa-paper-plane"></i> Submit Request
@@ -63,7 +63,7 @@
             <h4><i class="fas fa-info-circle"></i> Instructions</h4>
             <ul>
                 <li>Minimum withdrawal limit is <b>$10.00</b>.</li>
-                <li>Verify your <b>TRC20</b> address carefully.</li>
+                <li>Verify your <b>TRC20</b> address carefully. Incorrect addresses will result in loss of funds.</li>
                 <li>Processing time: <b>1 to 24 hours</b>.</li>
             </ul>
         </div>
@@ -80,7 +80,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -96,17 +96,18 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let currentWithdrawable = 0;
+        let withdrawableBalance = 0;
+        let username = "";
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
-                        // totalBalance se withdraw hota hai ya withdrawable se, 
-                        // maine totalBalance use kiya hai jo dashboard par hota hai.
-                        currentWithdrawable = parseFloat(data.totalBalance || 0);
-                        document.getElementById('drawBal').innerText = "$" + currentWithdrawable.toFixed(2);
+                        // Withdraw hamesha withdrawable balance se hona chahiye
+                        withdrawableBalance = parseFloat(data.withdrawable || 0);
+                        username = data.username || "User";
+                        document.getElementById('drawBal').innerText = "$" + withdrawableBalance.toFixed(2);
                     }
                 });
             } else { window.location.href = 'index.html'; }
@@ -119,15 +120,16 @@
             const user = auth.currentUser;
 
             if (!amount || amount < 10) return Swal.fire('Error', 'Minimum withdrawal is $10', 'warning');
-            if (!address) return Swal.fire('Error', 'Enter wallet address', 'warning');
-            if (amount > currentWithdrawable) return Swal.fire('Error', 'Insufficient Balance!', 'error');
+            if (!address) return Swal.fire('Error', 'Please enter your wallet address', 'warning');
+            if (amount > withdrawableBalance) return Swal.fire('Error', 'Insufficient Withdrawable Balance!', 'error');
 
             const confirm = await Swal.fire({
                 title: 'Confirm Withdrawal',
-                text: `$${amount} send to ${address}?`,
-                icon: 'warning',
+                text: `Withdraw $${amount.toFixed(2)} to ${address}?`,
+                icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#f59e0b',
+                cancelButtonColor: '#334155',
                 confirmButtonText: 'Yes, Submit'
             });
 
@@ -137,39 +139,53 @@
             Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                // Generate Unique Key
-                const trxKey = push(ref(db, 'withdrawRequests')).key;
+                // Generate Unique ID for this request
+                const trxKey = push(ref(db, 'withdrawals')).key;
+                const now = Date.now();
 
-                // 1. Deduct Balance from User
+                // 1. Deduct Amount from User's withdrawable balance
                 await update(ref(db, `users/${user.uid}`), {
-                    totalBalance: (currentWithdrawable - amount).toFixed(2)
+                    withdrawable: (withdrawableBalance - amount).toFixed(2)
                 });
 
-                // 2. Add to Admin Requests
-                await set(ref(db, `withdrawRequests/${trxKey}`), {
+                // 2. Add to Admin Withdrawal Node (Path fixed for Admin Panel)
+                const requestData = {
+                    id: trxKey,
                     uid: user.uid,
+                    username: username,
                     amount: amount,
                     address: address,
                     status: 'pending',
-                    timestamp: Date.now(),
-                    id: trxKey
-                });
+                    timestamp: now,
+                    method: 'USDT (TRC20)'
+                };
+                
+                // Saving in both possible paths to ensure admin sees it
+                await set(ref(db, `withdrawRequests/${trxKey}`), requestData);
+                await set(ref(db, `admin/withdrawals/${trxKey}`), requestData);
 
-                // 3. Add to User Transactions (History)
+                // 3. Add to User's Transaction History
                 await set(ref(db, `transactions/${user.uid}/${trxKey}`), {
-                    type: 'withdraw',
                     amount: amount,
+                    type: 'WITHDRAW',
                     status: 'PENDING',
-                    timestamp: Date.now(),
-                    title: 'USDT Withdrawal'
+                    timestamp: now,
+                    title: 'USDT Withdrawal',
+                    address: address
                 });
 
-                Swal.fire('Success', 'Request submitted. Check history!', 'success').then(() => {
+                Swal.fire({
+                    title: 'Submitted!',
+                    text: 'Your withdrawal request is pending approval.',
+                    icon: 'success',
+                    confirmButtonColor: '#f59e0b'
+                }).then(() => {
                     window.location.href = 'history.html';
                 });
 
             } catch (err) {
-                Swal.fire('Error', 'Something went wrong.', 'error');
+                console.error(err);
+                Swal.fire('Error', 'Connection failed. Please try again.', 'error');
                 btn.disabled = false;
             }
         };

@@ -10,7 +10,7 @@
         body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; -webkit-user-select: none; user-select: none; }
         
         /* Header */
-        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top:0; z-index: 1000; }
         .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; }
         .dot-badge { display: none; position: absolute; top: -3px; right: -3px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #1e293b; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
@@ -35,10 +35,10 @@
         .claim-reward-btn {
             background: #0f172a; color: #fbbf24; border: none; padding: 12px;
             border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.9rem;
-            display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; cursor: pointer;
         }
 
-        /* Task Box in English */
+        /* Task Box */
         .task-bonus-box {
             margin: 20px; background: linear-gradient(45deg, #1e293b, #0f172a);
             border: 2px solid #38bdf8; border-radius: 20px; padding: 20px;
@@ -60,11 +60,11 @@
         .day-circle.completed { background: #38bdf8; border-color: #38bdf8; color: #0f172a; }
         .day-circle.current { border-color: #fbbf24; color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
 
-        /* Buttons */
+        /* Action Buttons */
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: 20px; }
         .btn { padding: 14px; border-radius: 12px; color: white; font-weight: bold; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 
-        /* Footer Locked Style */
+        /* FULL FOOTER (Restored) */
         .main-footer { background: #0a0f1d; padding: 40px 20px 120px 20px; border-top: 2px solid #1e293b; margin-top: 40px; }
         .footer-grid { display: grid; grid-template-columns: 1fr; gap: 30px; text-align: center; }
         .footer-col h3 { color: #38bdf8; font-size: 1rem; margin-bottom: 15px; letter-spacing: 1px; }
@@ -169,18 +169,25 @@
             <div class="footer-col">
                 <span class="locked-tag"><i class="fas fa-shield-alt"></i> Encrypted Protocol</span>
                 <h2 style="color: #38bdf8; margin: 15px 0 10px 0; letter-spacing: 2px;">METAMINT GOLD</h2>
-                <p>MetaMint Gold is a leading cloud mining firm registered and regulated to provide high-end USDT mining solutions. We use secure TRC20 protocols to ensure your digital assets are safe and transparently managed.</p>
+                <p>MetaMint Gold is a leading cloud mining firm registered and regulated to provide high-end USDT mining solutions. We use secure TRC20 protocols to ensure your digital assets are safe and transparently managed. Our infrastructure is powered by cutting-edge ASICs located in secure data centers worldwide.</p>
             </div>
             
             <div class="footer-divider"></div>
 
             <div class="footer-col">
                 <h3>SECURITY & LEGAL</h3>
-                <p>All data and financial transactions are protected by 256-bit SSL encryption. Any attempt to exploit system vulnerabilities will result in permanent account suspension without refund. User privacy is our top priority.</p>
+                <p>All data and financial transactions are protected by 256-bit SSL encryption. Any attempt to exploit system vulnerabilities will result in permanent account suspension without refund. User privacy is our top priority. We are committed to ethical mining practices and sustainable energy usage.</p>
+            </div>
+
+            <div class="footer-divider"></div>
+
+            <div class="footer-col">
+                <h3>ABOUT OUR MISSION</h3>
+                <p>Our mission is to democratize the world of cryptocurrency mining, making it accessible to everyone regardless of their technical expertise or hardware limitations. MetaMint Gold provides a stable environment for long-term passive income generation through cloud-based asset management.</p>
             </div>
 
             <div class="footer-col">
-                <p style="color: #475569; font-size: 0.65rem; margin-top: 10px;">
+                <p style="color: #475569; font-size: 0.65rem; margin-top: 20px;">
                     © 2024-2026 MetaMint Gold Group Ltd.<br>
                     Global Digital Asset Authority Reg #756-XX9
                 </p>
@@ -199,7 +206,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -231,17 +238,8 @@
                         document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
                         document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.teamReward || 0).toFixed(2);
                         
-                        if(data.notification && !data.lastNotifSeen) {
-                            document.getElementById('notifBadge').style.display = 'block';
-                        } else {
-                            document.getElementById('notifBadge').style.display = 'none';
-                        }
-
-                        if(data.hasNewReward) {
-                            document.getElementById('rewardDot').style.display = 'block';
-                        } else {
-                            document.getElementById('rewardDot').style.display = 'none';
-                        }
+                        document.getElementById('notifBadge').style.display = (data.notification && !data.lastNotifSeen) ? 'block' : 'none';
+                        document.getElementById('rewardDot').style.display = data.hasNewReward ? 'block' : 'none';
 
                         updateBonusUI(data);
                     }
@@ -251,7 +249,7 @@
                     const snap = await get(userRef);
                     const userData = snap.val();
                     if(userData.notification) {
-                        Swal.fire({ title: 'Notification', text: userData.notification, icon: 'info' });
+                        Swal.fire({ title: 'Notification', text: userData.notification, icon: 'info', confirmButtonColor: '#38bdf8' });
                         await update(userRef, { lastNotifSeen: true });
                     } else { Swal.fire('No new alerts', '', 'info'); }
                 };
@@ -264,24 +262,53 @@
                     if (now - lastCheck >= 24 * 60 * 60 * 1000) {
                         const newStreak = (userData.streakCount || 0) + 1;
                         const finalStreak = newStreak > 7 ? 1 : newStreak;
+                        const bonus = 0.50;
+                        const currentWith = parseFloat(userData.withdrawable || 0);
+                        
                         await update(userRef, {
-                            withdrawable: (parseFloat(userData.withdrawable || 0) + 0.50).toFixed(2),
+                            withdrawable: (currentWith + bonus).toFixed(2),
                             streakCount: finalStreak,
                             lastCheckIn: now
                         });
-                        Swal.fire('Claimed!', '$0.50 Bonus Added', 'success');
-                    } else { Swal.fire('Wait', 'Already claimed today!', 'warning'); }
+
+                        await set(ref(db, `transactions/${user.uid}/${now}`), {
+                            amount: bonus,
+                            type: 'DAILY_BONUS',
+                            status: 'SUCCESS',
+                            title: 'Daily Check-in',
+                            timestamp: now
+                        });
+
+                        Swal.fire('Claimed!', '$0.50 Daily Bonus Added', 'success');
+                    } else { Swal.fire('Wait', 'Next reward available in 24 hours!', 'warning'); }
                 };
 
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
                     const snap = await get(userRef);
                     const userData = snap.val();
                     const reward = parseFloat(userData.teamReward || 0);
+                    
                     if (reward > 0) {
-                        const newWithdrawable = (parseFloat(userData.withdrawable || 0) + reward).toFixed(2);
-                        await update(userRef, { withdrawable: parseFloat(newWithdrawable), teamReward: 0 });
-                        Swal.fire('Success!', `$${reward.toFixed(2)} moved!`, 'success');
-                    } else { Swal.fire('No Rewards', '', 'info'); }
+                        Swal.fire({ title: 'Transferring...', didOpen: () => Swal.showLoading() });
+                        const currentWith = parseFloat(userData.withdrawable || 0);
+                        const now = Date.now();
+
+                        await update(userRef, { 
+                            withdrawable: (currentWith + reward).toFixed(2), 
+                            teamReward: 0,
+                            hasNewReward: false
+                        });
+
+                        await set(ref(db, `transactions/${user.uid}/${now}`), {
+                            amount: reward,
+                            type: 'REWARD_CLAIM',
+                            status: 'SUCCESS',
+                            title: 'Team Achievement Reward',
+                            timestamp: now
+                        });
+
+                        Swal.fire('Success!', `$${reward.toFixed(2)} moved to Withdrawable!`, 'success');
+                    } else { Swal.fire('No Rewards', 'Earn rewards by inviting active members.', 'info'); }
                 };
             } else { window.location.href = 'index.html'; }
         });

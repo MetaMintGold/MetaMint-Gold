@@ -158,53 +158,87 @@
                 title: 'Confirm Purchase',
                 text: `Activate Level ${planId} Miner for $${price}?`,
                 icon: 'question',
-                showCancelButton: true
+                showCancelButton: true,
+                confirmButtonColor: '#38bdf8',
+                confirmButtonText: 'Confirm'
             });
 
             if (!result.isConfirmed) return;
-            Swal.fire({ title: 'Activating...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Activating...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
             try {
                 const uid = auth.currentUser.uid;
+                
+                // 1. Update User Data (Balance + Plan + Status for Upliner)
                 await update(ref(db, 'users/' + uid), {
                     totalBalance: (currentBalance - price).toFixed(2),
+                    planActive: true, // This fixes Issue #1
                     [`activePlans/${planId}`]: true,
                     [`lastClaims/${planId}`]: Date.now()
                 });
 
-                // Referral Commission Logic (10%)
+                // 2. Referral Commission Logic (10%) - Fixes Issue #2
                 if (userData.referredBy) {
                     const uplinerRef = ref(db, 'users/' + userData.referredBy);
                     const snap = await get(uplinerRef);
                     if (snap.exists()) {
-                        const reward = price * 0.10;
-                        const currentReward = parseFloat(snap.val().teamReward || 0);
+                        const rewardAmt = price * 0.10;
+                        const currentTeamReward = parseFloat(snap.val().teamReward || 0);
+                        
                         await update(uplinerRef, {
-                            teamReward: (currentReward + reward).toFixed(2),
+                            teamReward: (currentTeamReward + rewardAmt).toFixed(2),
                             hasNewReward: true
                         });
                     }
                 }
-                Swal.fire('Success', 'Mining Started!', 'success');
-            } catch (e) { Swal.fire('Error', 'Failed to activate', 'error'); }
+
+                // 3. Create Transaction Entry for History
+                const trxRef = ref(db, `transactions/${uid}`);
+                const newTrx = {
+                    amount: price,
+                    type: 'PLAN_PURCHASE',
+                    status: 'SUCCESS',
+                    title: `Miner Level ${planId}`,
+                    timestamp: Date.now()
+                };
+                await set(ref(db, `transactions/${uid}/${Date.now()}`), newTrx);
+
+                Swal.fire('Success', 'Mining Started Successfully!', 'success');
+            } catch (e) { 
+                console.error(e);
+                Swal.fire('Error', 'Failed to activate. Please try again.', 'error'); 
+            }
         };
 
         window.claimProfit = async (planId) => {
             let profit = planId === 1 ? 0.40 : (planId === 2 ? 1.80 : 4.20);
-            Swal.fire({ title: 'Collecting...', didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Collecting...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
             try {
-                const newWithdrawable = (parseFloat(userData.withdrawable || 0) + profit).toFixed(2);
-                await update(ref(db, 'users/' + auth.currentUser.uid), {
-                    withdrawable: parseFloat(newWithdrawable),
+                const uid = auth.currentUser.uid;
+                const userSnap = await get(ref(db, 'users/' + uid));
+                const currentWithdrawable = parseFloat(userSnap.val().withdrawable || 0);
+
+                await update(ref(db, 'users/' + uid), {
+                    withdrawable: (currentWithdrawable + profit).toFixed(2),
                     [`lastClaims/${planId}`]: Date.now()
                 });
-                Swal.fire('Claimed!', `$${profit.toFixed(2)} added to withdrawable.`, 'success');
-            } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
+
+                // Profit Transaction Entry
+                await set(ref(db, `transactions/${uid}/${Date.now()}`), {
+                    amount: profit,
+                    type: 'PROFIT_CLAIM',
+                    status: 'SUCCESS',
+                    title: `Profit Level ${planId}`,
+                    timestamp: Date.now()
+                });
+
+                Swal.fire('Claimed!', `$${profit.toFixed(2)} added to withdrawable balance.`, 'success');
+            } catch (e) { Swal.fire('Error', 'Failed to claim profit.', 'error'); }
         };
 
         window.cancelPlan = async (planId) => {
-            let price = planId === 1 ? 20 : (planId === 2 ? 60 : 120);
+            let price = planId === 1 ? 20 : (id === 2 ? 60 : 120);
             let fee = price * 0.10;
             let refund = price - fee;
 
@@ -218,12 +252,23 @@
             });
 
             if (result.isConfirmed) {
-                Swal.fire({ title: 'Refunding...', didOpen: () => Swal.showLoading() });
-                await update(ref(db, 'users/' + auth.currentUser.uid), {
+                Swal.fire({ title: 'Refunding...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+                const uid = auth.currentUser.uid;
+                
+                // Get updated plans count to decide if user is still active
+                const snap = await get(ref(db, `users/${uid}/activePlans`));
+                let plansLeft = 0;
+                if(snap.exists()) {
+                    plansLeft = Object.keys(snap.val()).length - 1;
+                }
+
+                await update(ref(db, 'users/' + uid), {
                     totalBalance: (currentBalance + refund).toFixed(2),
+                    planActive: plansLeft > 0 ? true : false,
                     [`activePlans/${planId}`]: null,
                     [`lastClaims/${planId}`]: null
                 });
+
                 Swal.fire('Cancelled', 'Refund processed to main balance.', 'success');
             }
         };

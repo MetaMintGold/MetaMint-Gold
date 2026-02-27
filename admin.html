@@ -43,7 +43,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, remove, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -67,34 +67,40 @@
         });
 
         function loadData() {
+            // Deposit Requests
             onValue(ref(db, 'depositRequests'), snap => {
                 const div = document.getElementById('depositList');
                 div.innerHTML = '';
                 if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending deposits</p>'; return; }
                 snap.forEach(child => {
                     const d = child.val();
+                    // Fix: Using d.id or child.key as trxKey
+                    const trxKey = d.id || child.key; 
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${d.amount}</b><br><small>UID: ${d.uid}</small><span class="txid-text">TXID: ${d.txid}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${d.trxKey || ''}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="rejectDeposit('${child.key}', '${d.uid}', '${d.trxKey || ''}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="rejectDeposit('${child.key}', '${d.uid}', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            onValue(ref(db, 'admin/withdrawals'), snap => {
+            // Withdrawal Requests (Unified Path)
+            onValue(ref(db, 'withdrawRequests'), snap => {
                 const div = document.getElementById('withdrawList');
                 div.innerHTML = '';
                 if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending withdrawals</p>'; return; }
                 snap.forEach(child => {
                     const w = child.val();
-                    div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${w.username} (UID: ${w.uid})</small><span class="txid-text">Addr: ${w.address}</span></div>
+                    const trxKey = child.key;
+                    div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${w.username || 'User'} (UID: ${w.uid})</small><span class="txid-text">Addr: ${w.address}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${w.trxKey || ''}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${w.trxKey || ''}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
+            // Users List
             onValue(ref(db, 'users'), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = '';
@@ -112,9 +118,10 @@
             if(uSnap.exists()){
                 const currentBal = parseFloat(uSnap.val().totalBalance || 0);
                 await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
+                // Update History Status
                 if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: 'SUCCESS' }); }
                 await remove(ref(db, `depositRequests/${key}`));
-                Swal.fire('Approved!', 'History updated to SUCCESS', 'success');
+                Swal.fire('Approved!', 'Balance added and history updated.', 'success');
             }
         };
 
@@ -126,19 +133,27 @@
 
         window.processWithdraw = async (key, uid, amount, status, trxKey) => {
             const userRef = ref(db, `users/${uid}`);
-            if(status === 'rejected') {
-                const uSnap = await get(userRef);
-                if(uSnap.exists()) {
-                    const currentWith = parseFloat(uSnap.val().withdrawable || 0);
-                    await update(userRef, { withdrawable: (currentWith + amount).toFixed(2) });
-                }
+            const uSnap = await get(userRef);
+            
+            if(status === 'rejected' && uSnap.exists()) {
+                // Return money to withdrawable balance if rejected
+                const currentWith = parseFloat(uSnap.val().withdrawable || 0);
+                await update(userRef, { withdrawable: (currentWith + amount).toFixed(2) });
             }
+
+            // Update user transaction history
             if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: status.toUpperCase() }); }
+            
+            // Send Notification
             await update(userRef, { 
-                notification: status === 'approved' ? `Withdrawal of $${amount} approved!` : `Withdrawal of $${amount} rejected.`,
+                notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected. Funds returned.`,
                 lastNotifSeen: false
             });
+
+            // Clean up requests from both possible nodes
+            await remove(ref(db, `withdrawRequests/${key}`));
             await remove(ref(db, `admin/withdrawals/${key}`));
+            
             Swal.fire('Done', `Withdrawal ${status.toUpperCase()}`, 'success');
         };
 
@@ -155,7 +170,7 @@
                     <input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
                     <hr style="border: 0.5px solid #334155; margin: 15px 0;">
                     <label class="swal-label" style="color:#fbbf24;">Send Claimable Reward ($)</label>
-                    <input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Amount for Gift Box">
+                    <input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Enter Amount">
                     <label class="swal-label">Push Notification</label>
                     <input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
                 `,
@@ -182,17 +197,18 @@
                     newData.hasNewReward = true;
                 }
                 await update(ref(db, `users/${userKey}`), newData); 
-                Swal.fire('Updated!', 'Data saved successfully.', 'success'); 
+                Swal.fire('Updated!', 'User data and rewards updated.', 'success'); 
             }
         };
 
         window.searchUser = async () => {
             const inputUID = document.getElementById('searchUID').value;
+            if(!inputUID) return;
             const snap = await get(ref(db, 'users'));
             let foundKey = null;
             snap.forEach(c => { if(String(c.val().uid) === String(inputUID)) foundKey = c.key; });
             if(foundKey) window.openManager(foundKey);
-            else Swal.fire('Error', 'User not found', 'error');
+            else Swal.fire('Error', 'User UID not found', 'error');
         };
     </script>
 </body>
