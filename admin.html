@@ -67,7 +67,6 @@
         });
 
         function loadData() {
-            // Deposits Fetching
             onValue(ref(db, 'depositRequests'), snap => {
                 const div = document.getElementById('depositList');
                 div.innerHTML = '';
@@ -82,7 +81,6 @@
                 });
             });
 
-            // Withdrawals Fetching
             onValue(ref(db, 'admin/withdrawals'), snap => {
                 const div = document.getElementById('withdrawList');
                 div.innerHTML = '';
@@ -97,7 +95,6 @@
                 });
             });
 
-            // Users List Fetching
             onValue(ref(db, 'users'), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = '';
@@ -109,83 +106,84 @@
             });
         }
 
-        // Fix 1: Deposit Approval with History Sync
         window.approveDeposit = async (key, uid, amount, trxKey) => {
             const userRef = ref(db, `users/${uid}`);
             const uSnap = await get(userRef);
             if(uSnap.exists()){
-                const currentBal = uSnap.val().totalBalance || 0;
-                await update(userRef, { totalBalance: currentBal + amount });
-                
-                // User ki history mein status 'SUCCESS' karo
-                if(trxKey) {
-                    await update(ref(db, `users/${uid}/transactions/${trxKey}`), { status: 'SUCCESS' });
-                }
-                
+                const currentBal = parseFloat(uSnap.val().totalBalance || 0);
+                await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
+                if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: 'SUCCESS' }); }
                 await remove(ref(db, `depositRequests/${key}`));
-                Swal.fire('Approved!', 'User balance updated and history synced.', 'success');
+                Swal.fire('Approved!', 'History updated to SUCCESS', 'success');
             }
         };
 
-        // Fix 2: Deposit Rejection with History Sync
         window.rejectDeposit = async (key, uid, trxKey) => {
-            if(trxKey) {
-                await update(ref(db, `users/${uid}/transactions/${trxKey}`), { status: 'REJECTED' });
-            }
+            if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: 'REJECTED' }); }
             await remove(ref(db, `depositRequests/${key}`));
-            Swal.fire('Rejected', 'Deposit request rejected and history updated.', 'error');
+            Swal.fire('Rejected', 'History updated to REJECTED', 'error');
         };
 
-        // Fix 3: Withdrawal Processing with History Sync
         window.processWithdraw = async (key, uid, amount, status, trxKey) => {
             const userRef = ref(db, `users/${uid}`);
-            
-            // Refund logic for rejected withdrawals
             if(status === 'rejected') {
                 const uSnap = await get(userRef);
                 if(uSnap.exists()) {
-                    const currentWith = uSnap.val().withdrawable || 0;
-                    await update(userRef, { withdrawable: currentWith + amount });
+                    const currentWith = parseFloat(uSnap.val().withdrawable || 0);
+                    await update(userRef, { withdrawable: (currentWith + amount).toFixed(2) });
                 }
             }
-
-            // User ki history mein status update karo (APPROVED/REJECTED)
-            if(trxKey) {
-                await update(ref(db, `users/${uid}/transactions/${trxKey}`), { 
-                    status: status.toUpperCase() 
-                });
-            }
-
+            if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: status.toUpperCase() }); }
             await update(userRef, { 
-                notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected and funds returned.`,
+                notification: status === 'approved' ? `Withdrawal of $${amount} approved!` : `Withdrawal of $${amount} rejected.`,
                 lastNotifSeen: false
             });
-
             await remove(ref(db, `admin/withdrawals/${key}`));
-            Swal.fire('Success', `Withdrawal ${status.toUpperCase()} and history synced.`, 'success');
+            Swal.fire('Done', `Withdrawal ${status.toUpperCase()}`, 'success');
         };
 
-        // User Management Popup
         window.openManager = async (userKey) => {
             const u = (await get(ref(db, `users/${userKey}`))).val();
             const { value: form } = await Swal.fire({
                 title: `Manage: ${u.username}`,
+                background: '#1e293b',
+                color: '#f8fafc',
                 html: `
-                    <label class="swal-label">Deposit Balance ($)</label><input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
-                    <label class="swal-label">Withdrawable Balance ($)</label><input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
-                    <label class="swal-label">Team Members</label><input id="m-team" class="swal2-input swal-input-custom" type="number" value="${u.teamCount || 0}">
-                    <label class="swal-label">Push Notification</label><input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
+                    <label class="swal-label">Deposit Balance ($)</label>
+                    <input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
+                    <label class="swal-label">Withdrawable Balance ($)</label>
+                    <input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
+                    <hr style="border: 0.5px solid #334155; margin: 15px 0;">
+                    <label class="swal-label" style="color:#fbbf24;">Send Claimable Reward ($)</label>
+                    <input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Amount for Gift Box">
+                    <label class="swal-label">Push Notification</label>
+                    <input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
                 `,
                 confirmButtonText: 'Save Changes',
+                showCancelButton: true,
                 preConfirm: () => ({
                     totalBalance: parseFloat(document.getElementById('m-dep').value),
                     withdrawable: parseFloat(document.getElementById('m-with').value),
-                    teamCount: parseInt(document.getElementById('m-team').value),
-                    notification: document.getElementById('m-note').value,
-                    lastNotifSeen: false
+                    teamRewardAmt: parseFloat(document.getElementById('m-team-reward').value || 0),
+                    notification: document.getElementById('m-note').value
                 })
             });
-            if(form) { await update(ref(db, `users/${userKey}`), form); Swal.fire('Updated!', 'All data saved.', 'success'); }
+
+            if(form) { 
+                const currentTeamReward = parseFloat(u.teamReward || 0);
+                const newData = {
+                    totalBalance: form.totalBalance.toFixed(2),
+                    withdrawable: form.withdrawable.toFixed(2),
+                    notification: form.notification,
+                    lastNotifSeen: false
+                };
+                if(form.teamRewardAmt > 0) {
+                    newData.teamReward = (currentTeamReward + form.teamRewardAmt).toFixed(2);
+                    newData.hasNewReward = true;
+                }
+                await update(ref(db, `users/${userKey}`), newData); 
+                Swal.fire('Updated!', 'Data saved successfully.', 'success'); 
+            }
         };
 
         window.searchUser = async () => {

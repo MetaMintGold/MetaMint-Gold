@@ -7,21 +7,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
         .dash-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
-        .test-badge { background: #22c55e; color: #0f172a; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; margin-bottom: 5px; display: inline-block; }
         .wallet-display { float: right; background: rgba(56, 189, 248, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid #38bdf8; font-size: 0.85rem; color: #38bdf8; }
+        .test-badge { background: #22c55e; color: #0f172a; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; display: inline-block; }
+        
         .plans-container { padding: 20px; margin-bottom: 100px; }
         .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; transition: 0.3s; }
         .plan-card.active-plan { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
-        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; }
-        .plan-info h2 { margin: 10px 0; font-size: 2.2rem; }
-        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .claim-btn { width: 100%; padding: 12px; background: #22c55e; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .claim-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; }
-        .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; font-weight: bold; }
         
-        .cancel-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.85rem; }
+        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; }
+        .plan-info h2 { margin: 10px 0; font-size: 2.2rem; color: #fbbf24; }
+        .profit-tag { background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
+
+        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; }
+        .claim-btn { width: 100%; padding: 14px; background: #22c55e; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .claim-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; opacity: 0.7; }
+        
+        .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; font-weight: bold; }
+        .cancel-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.8rem; }
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
@@ -29,20 +33,20 @@
         .nav-item.active { color: #38bdf8; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <header class="dash-header">
         <div class="wallet-display"><i class="fas fa-wallet"></i> <span id="userWallet">$0.00</span></div>
-        <span class="test-badge">LIVE SYSTEM: SECURE</span>
-        <h2 style="margin: 0; font-size: 1.3rem; color: #38bdf8;">Premium Mining Hub</h2>
+        <span class="test-badge">SECURE MINING</span>
+        <h2 style="margin: 0; font-size: 1.2rem; color: #38bdf8;">Investment Plans</h2>
     </header>
 
     <div class="plans-container" id="plansDiv">
         <div class="plan-card" id="cardPlan1">
             <div id="badge1"></div>
             <div class="plan-info">
-                <h3>Level 1</h3>
-                <p style="color:#38bdf8">Daily $0.40 Profit (2%)</p>
+                <h3>Level 1 Miner</h3>
+                <div class="profit-tag">Daily Profit: $0.40</div>
                 <h2>$20.00</h2>
             </div>
             <div id="action1"></div>
@@ -51,8 +55,8 @@
         <div class="plan-card" id="cardPlan2">
             <div id="badge2"></div>
             <div class="plan-info">
-                <h3>Level 2</h3>
-                <p style="color:#38bdf8">Daily $1.80 Profit (3%)</p>
+                <h3>Level 2 Miner</h3>
+                <div class="profit-tag">Daily Profit: $1.80</div>
                 <h2>$60.00</h2>
             </div>
             <div id="action2"></div>
@@ -61,8 +65,8 @@
         <div class="plan-card" id="cardPlan3">
             <div id="badge3"></div>
             <div class="plan-info">
-                <h3>Level 3</h3>
-                <p style="color:#38bdf8">Daily $4.20 Profit (3.5%)</p>
+                <h3>Level 3 Miner</h3>
+                <div class="profit-tag">Daily Profit: $4.20</div>
                 <h2>$120.00</h2>
             </div>
             <div id="action3"></div>
@@ -72,15 +76,15 @@
     <nav class="bottom-nav">
         <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
         <a href="plans.html" class="nav-item active"><i class="fas fa-gem"></i><span>Plans</span></a>
-        <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
         <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
         <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, query, orderByChild, equalTo, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -125,115 +129,103 @@
                 
                 if (activePlans[id]) {
                     card.classList.add('active-plan');
-                    badge.innerHTML = `<span class="active-badge">MINING</span>`;
+                    badge.innerHTML = `<span class="active-badge"><i class="fas fa-cog fa-spin"></i> ACTIVE</span>`;
                     
-                    // Check if 24 hours passed
                     const lastClaim = lastClaims[id] || 0;
                     const canClaim = (now - lastClaim) >= 24 * 60 * 60 * 1000;
 
                     actionDiv.innerHTML = `
                         <button class="claim-btn" ${canClaim ? '' : 'disabled'} onclick="window.claimProfit(${id})">
-                            <i class="fas fa-coins"></i> ${canClaim ? 'Claim Daily Profit' : 'Profit Collected'}
+                            <i class="fas fa-hand-holding-usd"></i> ${canClaim ? 'Claim Daily Profit' : 'Mining...'}
                         </button>
-                        <button class="cancel-btn" onclick="window.cancelPlan(${id})">Cancel Plan</button>
+                        <button class="cancel-btn" onclick="window.cancelPlan(${id})">Cancel Plan (10% Fee)</button>
                     `;
                 } else {
                     card.classList.remove('active-plan');
                     badge.innerHTML = '';
                     let price = id === 1 ? 20 : (id === 2 ? 60 : 120);
-                    actionDiv.innerHTML = `<button class="buy-btn" onclick="window.handlePlan(${id}, ${price})">Activate Plan</button>`;
+                    actionDiv.innerHTML = `<button class="buy-btn" onclick="window.handlePlan(${id}, ${price})">Activate Level ${id}</button>`;
                 }
             });
         }
 
-        window.claimProfit = async (planId) => {
-            const user = auth.currentUser;
-            let profit = planId === 1 ? 0.40 : (planId === 2 ? 1.80 : 4.20);
-            
-            Swal.fire({ title: 'Claiming...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            try {
-                const currentWithdrawable = parseFloat(userData.withdrawable || 0);
-                const newWithdrawable = (currentWithdrawable + profit).toFixed(2);
-
-                await update(ref(db, 'users/' + user.uid), {
-                    withdrawable: parseFloat(newWithdrawable),
-                    [`lastClaims/${planId}`]: Date.now()
-                });
-
-                // Add to History
-                const trxKey = Date.now();
-                await set(ref(db, `transactions/${user.uid}/${trxKey}`), {
-                    type: 'reward',
-                    amount: profit,
-                    status: 'SUCCESS',
-                    timestamp: Date.now(),
-                    title: `Level ${planId} Daily Profit`
-                });
-
-                Swal.fire('Success!', `$${profit.toFixed(2)} added to withdrawable balance.`, 'success');
-            } catch (err) { Swal.fire('Error', 'Claim failed.', 'error'); }
-        };
-
         window.handlePlan = async (planId, price) => {
             if (currentBalance < price) {
-                return Swal.fire({ icon: 'error', title: 'Insufficient Balance', text: 'Please deposit funds first.' });
+                return Swal.fire('Error', 'Insufficient Balance!', 'error');
             }
-            const user = auth.currentUser;
+
             const result = await Swal.fire({
-                title: 'Activate Plan?',
-                text: `Start Level ${planId} for $${price}?`,
+                title: 'Confirm Purchase',
+                text: `Activate Level ${planId} Miner for $${price}?`,
                 icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#38bdf8',
-                confirmButtonText: 'Start Mining'
+                showCancelButton: true
             });
 
             if (!result.isConfirmed) return;
-            Swal.fire({ title: 'Activating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'Activating...', didOpen: () => Swal.showLoading() });
 
             try {
-                await update(ref(db, 'users/' + user.uid), {
+                const uid = auth.currentUser.uid;
+                await update(ref(db, 'users/' + uid), {
                     totalBalance: (currentBalance - price).toFixed(2),
                     [`activePlans/${planId}`]: true,
-                    [`lastClaims/${planId}`]: Date.now() // Start timer from now
+                    [`lastClaims/${planId}`]: Date.now()
                 });
 
-                // History record
-                const trxKey = Date.now();
-                await set(ref(db, `transactions/${user.uid}/${trxKey}`), {
-                    type: 'plan purchase',
-                    amount: price,
-                    status: 'SUCCESS',
-                    timestamp: Date.now(),
-                    title: `Level ${planId} Activated`
-                });
+                // Referral Commission Logic (10%)
+                if (userData.referredBy) {
+                    const uplinerRef = ref(db, 'users/' + userData.referredBy);
+                    const snap = await get(uplinerRef);
+                    if (snap.exists()) {
+                        const reward = price * 0.10;
+                        const currentReward = parseFloat(snap.val().teamReward || 0);
+                        await update(uplinerRef, {
+                            teamReward: (currentReward + reward).toFixed(2),
+                            hasNewReward: true
+                        });
+                    }
+                }
+                Swal.fire('Success', 'Mining Started!', 'success');
+            } catch (e) { Swal.fire('Error', 'Failed to activate', 'error'); }
+        };
 
-                Swal.fire('Activated!', 'Mining has started.', 'success');
-            } catch (err) { Swal.fire('Error', 'Failed to activate.', 'error'); }
+        window.claimProfit = async (planId) => {
+            let profit = planId === 1 ? 0.40 : (planId === 2 ? 1.80 : 4.20);
+            Swal.fire({ title: 'Collecting...', didOpen: () => Swal.showLoading() });
+
+            try {
+                const newWithdrawable = (parseFloat(userData.withdrawable || 0) + profit).toFixed(2);
+                await update(ref(db, 'users/' + auth.currentUser.uid), {
+                    withdrawable: parseFloat(newWithdrawable),
+                    [`lastClaims/${planId}`]: Date.now()
+                });
+                Swal.fire('Claimed!', `$${profit.toFixed(2)} added to withdrawable.`, 'success');
+            } catch (e) { Swal.fire('Error', 'Failed', 'error'); }
         };
 
         window.cancelPlan = async (planId) => {
             let price = planId === 1 ? 20 : (planId === 2 ? 60 : 120);
-            let refundAmount = price - (price * 0.10);
+            let fee = price * 0.10;
+            let refund = price - fee;
+
             const result = await Swal.fire({
                 title: 'Cancel Plan?',
-                text: `10% fee will be deducted. Refund: $${refundAmount.toFixed(2)}`,
+                text: `10% fee ($${fee}) will be deducted. You will get $${refund.toFixed(2)} back.`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Cancel & Refund'
+                confirmButtonText: 'Yes, Cancel it'
             });
 
-            if (!result.isConfirmed) return;
-            try {
+            if (result.isConfirmed) {
+                Swal.fire({ title: 'Refunding...', didOpen: () => Swal.showLoading() });
                 await update(ref(db, 'users/' + auth.currentUser.uid), {
-                    totalBalance: (currentBalance + refundAmount).toFixed(2),
+                    totalBalance: (currentBalance + refund).toFixed(2),
                     [`activePlans/${planId}`]: null,
                     [`lastClaims/${planId}`]: null
                 });
-                Swal.fire('Cancelled!', 'Plan stopped and balance refunded.', 'success');
-            } catch (err) { Swal.fire('Error', 'Failed to cancel.', 'error'); }
+                Swal.fire('Cancelled', 'Refund processed to main balance.', 'success');
+            }
         };
     </script>
 </body>

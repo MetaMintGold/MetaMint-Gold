@@ -7,12 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; -webkit-user-select: none; user-select: none; }
         
         /* Header */
         .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; }
         .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; }
-        #notifBadge { display: none; position: absolute; top: -5px; right: 35px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #1e293b; animation: pulse 1.5s infinite; }
+        .dot-badge { display: none; position: absolute; top: -3px; right: -3px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #1e293b; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         /* Branding */
@@ -29,31 +29,29 @@
         /* Gold Reward Card */
         .reward-gold-card {
             background: linear-gradient(135deg, #d4af37, #f1c40f, #9a7d0a);
-            margin: 20px;
-            padding: 20px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            border: 1px solid #f39c12;
-            color: #0f172a;
+            margin: 20px; padding: 20px; border-radius: 20px; text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid #f39c12; color: #0f172a;
         }
-        .reward-gold-card h4 { margin: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
-        .reward-gold-card h2 { margin: 10px 0; font-size: 2rem; font-weight: 900; }
         .claim-reward-btn {
-            background: #0f172a;
-            color: #fbbf24;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            background: #0f172a; color: #fbbf24; border: none; padding: 12px;
+            border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;
         }
+
+        /* Task Box in English */
+        .task-bonus-box {
+            margin: 20px; background: linear-gradient(45deg, #1e293b, #0f172a);
+            border: 2px solid #38bdf8; border-radius: 20px; padding: 20px;
+            position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+        .task-bonus-box::before {
+            content: "\f0d0"; font-family: "Font Awesome 5 Free"; font-weight: 900;
+            position: absolute; right: -10px; bottom: -10px; font-size: 5rem;
+            color: rgba(56, 189, 248, 0.05); transform: rotate(-20deg);
+        }
+        .task-title { color: #38bdf8; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .task-content { font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; }
+        .task-highlight { color: #fbbf24; font-weight: bold; }
 
         /* Daily Bonus */
         .checkin-section { background: #1e293b; margin: 20px; border-radius: 20px; padding: 20px; border: 1px solid #334155; text-align: center; }
@@ -66,20 +64,24 @@
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: 20px; }
         .btn { padding: 14px; border-radius: 12px; color: white; font-weight: bold; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 
+        /* Footer Locked Style */
+        .main-footer { background: #0a0f1d; padding: 40px 20px 120px 20px; border-top: 2px solid #1e293b; margin-top: 40px; }
+        .footer-grid { display: grid; grid-template-columns: 1fr; gap: 30px; text-align: center; }
+        .footer-col h3 { color: #38bdf8; font-size: 1rem; margin-bottom: 15px; letter-spacing: 1px; }
+        .footer-col p { font-size: 0.75rem; color: #64748b; line-height: 1.8; margin: 0; }
+        .footer-divider { height: 1px; background: linear-gradient(90deg, transparent, #334155, transparent); margin: 25px 0; }
+        .locked-tag { background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 5px 15px; border-radius: 20px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; border: 1px solid #38bdf830; }
+
         /* Navigation */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.75rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.3rem; margin-bottom: 4px; }
         .nav-item.active { color: #38bdf8; }
-        
-        .security-note { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin: 25px 20px; }
-        .footer-locked { text-align: center; padding: 60px 20px 150px 20px; background: #0a0f1d; border-top: 1px solid #1e293b; }
 
-        /* ADMIN BOX STYLE */
         #adminBox { display: none; margin: 20px; padding: 20px; background: #ef444415; border: 1px dashed #ef4444; border-radius: 15px; text-align: center; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <header class="dash-header">
         <div class="user-info" style="display:flex; align-items:center; gap:12px;">
@@ -89,12 +91,16 @@
                 <small style="color:#38bdf8; font-weight:bold;">UID: <span id="dashUID">####</span></small>
             </div>
         </div>
-        <div style="position: relative; display:flex; gap:20px;">
-            <div style="position:relative;">
-                <i class="fas fa-bell" id="notifBtn" style="cursor: pointer; font-size: 1.2rem;"></i>
-                <span id="notifBadge"></span>
+        <div style="position: relative; display:flex; gap:18px;">
+            <div style="position:relative; cursor:pointer;" onclick="window.location.href='reward.html'">
+                <i class="fas fa-gift" style="font-size: 1.3rem; color: #fbbf24;"></i>
+                <span id="rewardDot" class="dot-badge"></span>
             </div>
-            <i class="fas fa-sign-out-alt" id="logoutBtn" style="cursor: pointer; font-size: 1.2rem;"></i>
+            <div style="position:relative; cursor:pointer;" id="notifBtn">
+                <i class="fas fa-bell" style="font-size: 1.3rem;"></i>
+                <span id="notifBadge" class="dot-badge"></span>
+            </div>
+            <i class="fas fa-sign-out-alt" id="logoutBtn" style="cursor: pointer; font-size: 1.3rem;"></i>
         </div>
     </header>
 
@@ -118,6 +124,18 @@
             <h2 id="withdrawableBalance" style="margin:10px 0 0 0; font-size: 1.8rem; color: #fbbf24;">$0.00</h2>
         </div>
     </section>
+
+    <div class="task-bonus-box">
+        <div class="task-title">
+            <i class="fas fa-bolt"></i> MetaMint Achievement Task
+        </div>
+        <div class="task-content">
+            By inviting <span class="task-highlight">5 active members</span> to your team, you will receive a massive Achievement Bonus from the company. 
+            Depending on the plan activated by your referral, you can earn a reward ranging from 
+            <span class="task-highlight">$4 up to $50+</span> instantly. 
+            Build a bigger team to unlock infinite rewards!
+        </div>
+    </div>
 
     <div class="reward-gold-card">
         <h4><i class="fas fa-trophy"></i> Team Reward Balance</h4>
@@ -146,14 +164,28 @@
         <button onclick="window.location.href='withdraw.html'" class="btn" style="background: #e11d48;"><i class="fas fa-hand-holding-usd"></i> Withdraw</button>
     </div>
 
-    <div class="security-note">
-        <h4 style="color: #38bdf8; font-size: 0.9rem; margin: 0 0 8px 0;"><i class="fas fa-shield-check"></i> Security & Compliance</h4>
-        <p style="font-size: 0.75rem; color: #cbd5e1; line-height: 1.5; margin: 0;">All transactions are encrypted. Please use only USDT-TRC20 for deposits.</p>
-    </div>
+    <footer class="main-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <span class="locked-tag"><i class="fas fa-shield-alt"></i> Encrypted Protocol</span>
+                <h2 style="color: #38bdf8; margin: 15px 0 10px 0; letter-spacing: 2px;">METAMINT GOLD</h2>
+                <p>MetaMint Gold is a leading cloud mining firm registered and regulated to provide high-end USDT mining solutions. We use secure TRC20 protocols to ensure your digital assets are safe and transparently managed.</p>
+            </div>
+            
+            <div class="footer-divider"></div>
 
-    <footer class="footer-locked">
-        <h2 style="color: #38bdf8; letter-spacing: 2px; margin-bottom: 10px;">METAMINT GOLD</h2>
-        <p style="font-size: 0.7rem; color: #475569;">© 2024-2026 MetaMint Gold Group Ltd.</p>
+            <div class="footer-col">
+                <h3>SECURITY & LEGAL</h3>
+                <p>All data and financial transactions are protected by 256-bit SSL encryption. Any attempt to exploit system vulnerabilities will result in permanent account suspension without refund. User privacy is our top priority.</p>
+            </div>
+
+            <div class="footer-col">
+                <p style="color: #475569; font-size: 0.65rem; margin-top: 10px;">
+                    © 2024-2026 MetaMint Gold Group Ltd.<br>
+                    Global Digital Asset Authority Reg #756-XX9
+                </p>
+            </div>
+        </div>
     </footer>
 
     <nav class="bottom-nav">
@@ -185,7 +217,6 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Admin check
                 if (user.email === "dreamsagweb@gmail.com") {
                     document.getElementById('adminBox').style.display = 'block';
                 }
@@ -199,16 +230,54 @@
                         document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
                         document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.teamReward || 0).toFixed(2);
+                        
+                        if(data.notification && !data.lastNotifSeen) {
+                            document.getElementById('notifBadge').style.display = 'block';
+                        } else {
+                            document.getElementById('notifBadge').style.display = 'none';
+                        }
+
+                        if(data.hasNewReward) {
+                            document.getElementById('rewardDot').style.display = 'block';
+                        } else {
+                            document.getElementById('rewardDot').style.display = 'none';
+                        }
+
                         updateBonusUI(data);
                     }
                 });
+
+                document.getElementById('notifBtn').onclick = async () => {
+                    const snap = await get(userRef);
+                    const userData = snap.val();
+                    if(userData.notification) {
+                        Swal.fire({ title: 'Notification', text: userData.notification, icon: 'info' });
+                        await update(userRef, { lastNotifSeen: true });
+                    } else { Swal.fire('No new alerts', '', 'info'); }
+                };
+
+                document.getElementById('checkinBtn').onclick = async () => {
+                    const snap = await get(userRef);
+                    const userData = snap.val();
+                    const now = Date.now();
+                    const lastCheck = userData.lastCheckIn || 0;
+                    if (now - lastCheck >= 24 * 60 * 60 * 1000) {
+                        const newStreak = (userData.streakCount || 0) + 1;
+                        const finalStreak = newStreak > 7 ? 1 : newStreak;
+                        await update(userRef, {
+                            withdrawable: (parseFloat(userData.withdrawable || 0) + 0.50).toFixed(2),
+                            streakCount: finalStreak,
+                            lastCheckIn: now
+                        });
+                        Swal.fire('Claimed!', '$0.50 Bonus Added', 'success');
+                    } else { Swal.fire('Wait', 'Already claimed today!', 'warning'); }
+                };
 
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
                     const snap = await get(userRef);
                     const userData = snap.val();
                     const reward = parseFloat(userData.teamReward || 0);
                     if (reward > 0) {
-                        Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
                         const newWithdrawable = (parseFloat(userData.withdrawable || 0) + reward).toFixed(2);
                         await update(userRef, { withdrawable: parseFloat(newWithdrawable), teamReward: 0 });
                         Swal.fire('Success!', `$${reward.toFixed(2)} moved!`, 'success');

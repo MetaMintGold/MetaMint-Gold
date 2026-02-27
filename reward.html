@@ -10,7 +10,7 @@
 
     <style>
         /* --- Base Styles --- */
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; }
+        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; -webkit-user-select: none; user-select: none; }
 
         /* --- Header --- */
         .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #334155; }
@@ -25,16 +25,27 @@
             border-radius: 15px; 
             padding: 18px; 
             margin-bottom: 15px; 
-            border-top: 4px solid #fbbf24; /* Golden Top Border */
+            border: 1px solid #fbbf24;
             box-shadow: 0 4px 15px rgba(251, 191, 36, 0.1);
             transition: 0.3s;
+            text-align: center;
         }
-        .reward-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .reward-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .reward-title { color: #fbbf24; font-size: 1rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .reward-amount { color: #22c55e; font-weight: 800; font-size: 1.1rem; }
+        .reward-amount { color: #22c55e; font-weight: 800; font-size: 1.5rem; margin: 10px 0; }
         
-        .reward-msg { font-size: 0.8rem; color: #cbd5e1; margin: 10px 0; line-height: 1.5; }
-        .reward-date { font-size: 0.65rem; color: #64748b; font-weight: 500; display: block; }
+        .claim-btn {
+            background: linear-gradient(135deg, #fbbf24, #d97706);
+            color: #0f172a;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
 
         /* --- Empty State --- */
         .empty-rewards { text-align: center; margin-top: 80px; padding: 0 40px; }
@@ -45,10 +56,10 @@
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 3px; }
-        .nav-item.active { color: #38bdf8; }
+        .nav-item.active { color: #fbbf24; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <header class="dash-header">
         <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
@@ -65,17 +76,16 @@
     <nav class="bottom-nav">
         <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
         <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
-        <a href="deposit.html" class="nav-item"><i class="fas fa-wallet"></i><span>Deposit</span></a>
-        <a href="withdraw.html" class="nav-item"><i class="fas fa-money-bill-wave"></i><span>Withdraw</span></a>
         <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
+        <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -93,36 +103,62 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 const list = document.getElementById('adminRewardsList');
-                
-                // Fetch rewards from user's specific node
-                const rewardRef = ref(db, 'users/' + user.uid + '/rewards');
-                onValue(rewardRef, (snapshot) => {
-                    let html = '';
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        // Latest rewards first
-                        const rewards = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+                const userRef = ref(db, 'users/' + user.uid);
 
-                        rewards.forEach(reward => {
-                            html += `
-                            <div class="reward-card">
-                                <div class="reward-header">
-                                    <div class="reward-title"><i class="fas fa-gift"></i> ${reward.title}</div>
-                                    <div class="reward-amount">+$${parseFloat(reward.amount).toFixed(2)}</div>
-                                </div>
-                                <p class="reward-msg">${reward.message}</p>
-                                <span class="reward-date"><i class="far fa-calendar-alt"></i> Received: ${new Date(reward.timestamp).toLocaleDateString([], {day:'2-digit', month:'short', year:'numeric'})}</span>
-                            </div>`;
-                        });
+                onValue(userRef, (snapshot) => {
+                    const userData = snapshot.val();
+                    let html = '';
+
+                    if (userData && userData.teamReward && parseFloat(userData.teamReward) > 0) {
+                        const amount = parseFloat(userData.teamReward).toFixed(2);
+                        html = `
+                        <div class="reward-card">
+                            <i class="fas fa-gift" style="font-size: 3rem; color: #fbbf24; margin-bottom: 10px;"></i>
+                            <div class="reward-title" style="justify-content: center;">Achievement Bonus</div>
+                            <div class="reward-amount">$${amount}</div>
+                            <p style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 20px;">
+                                Congratulations! You have received a special bonus from MetaMint Gold.
+                            </p>
+                            <button class="claim-btn" onclick="window.claimTeamReward(${amount})">
+                                CLAIM NOW
+                            </button>
+                        </div>`;
                         list.innerHTML = html;
                     } else {
                         list.innerHTML = `
                         <div class="empty-rewards">
                             <i class="fas fa-trophy"></i>
-                            <p>No rewards yet!<br><span style="font-size:0.7rem;">Complete missions or participate in events to earn MetaMint Gold bonuses.</span></p>
+                            <p>No rewards yet!<br><span style="font-size:0.7rem;">Complete missions or invite active members to earn bonuses.</span></p>
                         </div>`;
                     }
                 });
+
+                // Claim Function
+                window.claimTeamReward = async (amount) => {
+                    Swal.fire({ title: 'Claiming...', didOpen: () => Swal.showLoading() });
+
+                    try {
+                        const userSnap = await get(userRef);
+                        const currentData = userSnap.val();
+                        const currentWithdrawable = parseFloat(currentData.withdrawable || 0);
+
+                        await update(userRef, {
+                            withdrawable: (currentWithdrawable + amount).toFixed(2),
+                            teamReward: 0,
+                            hasNewReward: false
+                        });
+
+                        Swal.fire({
+                            title: 'Success!',
+                            text: `$${amount} added to your withdrawable balance.`,
+                            icon: 'success',
+                            confirmButtonColor: '#fbbf24'
+                        });
+                    } catch (e) {
+                        Swal.fire('Error', 'Failed to claim reward.', 'error');
+                    }
+                };
+
             } else {
                 window.location.href = 'index.html';
             }
