@@ -76,13 +76,13 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // FIXED: Listening to the correct node for Rewards and Transactions
                 const trxRef = ref(db, `transactions/${user.uid}`);
                 
                 onValue(trxRef, (snapshot) => {
                     const list = document.getElementById('historyList');
                     if (snapshot.exists()) {
                         const data = snapshot.val();
+                        // Convert object to array and sort by latest timestamp
                         allTransactions = Object.keys(data).map(key => ({ 
                             ...data[key], 
                             id: key 
@@ -105,11 +105,11 @@
             
             data.forEach(trx => {
                 const type = String(trx.type || 'reward').toLowerCase();
-                const status = String(trx.status || 'Success').toUpperCase();
+                const status = String(trx.status || 'SUCCESS').toUpperCase();
                 
                 let icon = 'fa-gift';
-                let color = '#fbbf24'; // Reward color
-                let statusColor = '#22c55e'; // Default Success
+                let color = '#fbbf24'; // Reward gold
+                let statusColor = '#22c55e'; // Green for success
 
                 if (type === 'deposit') { 
                     icon = 'fa-arrow-down'; 
@@ -122,8 +122,9 @@
                 if (status === 'PENDING') statusColor = '#fbbf24';
                 if (status === 'REJECTED' || status === 'FAILED') statusColor = '#ef4444';
 
-                // Display formatting for Rewards
-                const title = type === 'reward' ? `Team Reward (#${trx.from || 'User'})` : (trx.title || type.toUpperCase());
+                // Display formatting
+                const title = trx.title || (type === 'reward' ? 'Team Reward' : type.toUpperCase());
+                const dateStr = new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
 
                 html += `
                 <div class="trx-card">
@@ -131,16 +132,17 @@
                         <div class="trx-icon" style="color: ${color}; background: ${color}15;"><i class="fas ${icon}"></i></div>
                         <div class="trx-info">
                             <h4>${title}</h4>
-                            <p>${new Date(trx.timestamp).toLocaleString([], {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'})}</p>
+                            <p>${dateStr} ${trx.from ? '• From: #' + trx.from : ''}</p>
                         </div>
                     </div>
                     <div class="trx-amount">
-                        <h4 style="color: ${color};">${type === 'withdraw' ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
+                        <h4 style="color: ${color};">${(type === 'withdraw' || title.includes('Activated')) ? '-' : '+'}$${parseFloat(trx.amount).toFixed(2)}</h4>
                         <p style="color: ${statusColor};">${status}</p>
                     </div>
                 </div>`;
             });
-            list.innerHTML = html || '<p style="text-align:center; color:#64748b;">Nothing to show.</p>';
+            
+            list.innerHTML = html || '<p style="text-align:center; color:#64748b; margin-top:50px;">No records found for this category.</p>';
         }
 
         window.filterTrx = (type, btn) => {
