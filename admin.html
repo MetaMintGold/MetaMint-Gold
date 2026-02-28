@@ -107,10 +107,9 @@
             });
         }
 
-        // --- FIXED APPROVE DEPOSIT WITH 25% COMMISSION ---
+        // --- FIXED APPROVE DEPOSIT WITH SEPARATED 25% WALLET ---
         window.approveDeposit = async (key, userKey, amount, trxKey) => {
             try {
-                // Find user by key
                 const userRef = ref(db, `users/${userKey}`);
                 const uSnap = await get(userRef);
                 
@@ -121,25 +120,26 @@
                     // 1. Update User Balance
                     await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
 
-                    // 2. 25% Referral Commission Logic
+                    // 2. 25% Referral Commission (NOW GOES TO referralWallet)
                     if (userData.referredBy && userData.referredBy !== "none") {
                         const allUsersSnap = await get(ref(db, 'users'));
-                        let uplinerUid = null;
+                        let uplinerKey = null;
                         
                         allUsersSnap.forEach((child) => {
-                            if (child.val().referralCode === userData.referredBy) {
-                                uplinerUid = child.key;
+                            if (String(child.val().referralCode) === String(userData.referredBy)) {
+                                uplinerKey = child.key;
                             }
                         });
 
-                        if (uplinerUid) {
+                        if (uplinerKey) {
                             const commission = amount * 0.25;
-                            const uplinerData = allUsersSnap.val()[uplinerUid];
-                            const currentTeamReward = parseFloat(uplinerData.teamReward || 0);
+                            const uplinerData = allUsersSnap.val()[uplinerKey];
+                            const currentRefWallet = parseFloat(uplinerData.referralWallet || 0);
 
-                            await update(ref(db, `users/${uplinerUid}`), {
-                                teamReward: (currentTeamReward + commission).toFixed(2),
-                                hasNewReward: true
+                            // Sending 25% to 'referralWallet' (Dashboard Box)
+                            // We don't trigger hasNewReward here, keeping it for Admin Special Rewards
+                            await update(ref(db, `users/${uplinerKey}`), {
+                                referralWallet: (currentRefWallet + commission).toFixed(2)
                             });
                         }
                     }
@@ -148,7 +148,7 @@
                     if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
                     await remove(ref(db, `depositRequests/${key}`));
                     
-                    Swal.fire('Approved!', `Balance added and 25% commission sent to Upliner.`, 'success');
+                    Swal.fire('Approved!', `Balance added and 25% commission sent to Upliner's Dashboard Box.`, 'success');
                 }
             } catch (error) {
                 console.error(error);
@@ -190,7 +190,8 @@
                     <label class="swal-label">Withdrawable Balance ($)</label>
                     <input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
                     <hr style="border: 0.5px solid #334155; margin: 15px 0;">
-                    <label class="swal-label" style="color:#fbbf24;">Send Claimable Reward ($)</label>
+                    <label class="swal-label" style="color:#fbbf24;">Send Admin Special Reward ($)</label>
+                    <p style="font-size:0.6rem; color:#94a3b8; margin:0;">(Goes to reward.html & triggers Gift icon dot)</p>
                     <input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Enter Amount">
                     <label class="swal-label">Push Notification</label>
                     <input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
@@ -215,7 +216,7 @@
                 };
                 if(form.teamRewardAmt > 0) {
                     newData.teamReward = (currentTeamReward + form.teamRewardAmt).toFixed(2);
-                    newData.hasNewReward = true;
+                    newData.hasNewReward = true; // This triggers the reward icon dot
                 }
                 await update(ref(db, `users/${userKey}`), newData); 
                 Swal.fire('Updated!', 'User data and rewards updated.', 'success'); 

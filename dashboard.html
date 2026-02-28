@@ -186,7 +186,10 @@
                         document.getElementById('dashUID').innerText = data.uid || "####";
                         document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
-                        document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.teamReward || 0).toFixed(2);
+                        
+                        // DASHBOARD NOW SHOWS ONLY REFERRAL COMMISSION
+                        document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.referralWallet || 0).toFixed(2);
+                        
                         document.getElementById('notifBadge').style.display = (data.notification && !data.lastNotifSeen) ? 'block' : 'none';
                         document.getElementById('rewardDot').style.display = data.hasNewReward ? 'block' : 'none';
                         updateBonusUI(data);
@@ -205,15 +208,19 @@
                     Swal.fire('Success!', `$${bonus} added!`, 'success');
                 };
 
+                // CLAIM BUTTON NOW ONLY CLAIMS FROM referralWallet
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
                     const snap = await get(userRef);
                     const userData = snap.val();
-                    const reward = parseFloat(userData.teamReward || 0);
+                    const reward = parseFloat(userData.referralWallet || 0);
                     if (reward > 0) {
-                        await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), teamReward: 0, hasNewReward: false });
-                        await set(ref(db, `transactions/${user.uid}/${Date.now()}`), { amount: reward, type: 'COMMISSION_CLAIM', status: 'SUCCESS', title: 'Referral Commission Claimed', timestamp: Date.now() });
+                        await update(userRef, { 
+                            withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), 
+                            referralWallet: 0 
+                        });
+                        await set(ref(db, `transactions/${user.uid}/${Date.now()}`), { amount: reward, type: 'REFERRAL_COMMISSION', status: 'SUCCESS', title: '25% Referral Bonus Claimed', timestamp: Date.now() });
                         Swal.fire('Claimed!', `$${reward.toFixed(2)} moved to Withdrawable!`, 'success');
-                    } else Swal.fire('Info', 'No commission to claim.', 'info');
+                    } else Swal.fire('Info', 'No referral commission to claim.', 'info');
                 };
 
                 document.getElementById('notifBtn').onclick = async () => {
