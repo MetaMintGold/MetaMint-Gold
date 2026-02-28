@@ -67,14 +67,12 @@
         });
 
         function loadData() {
-            // Deposit Requests
             onValue(ref(db, 'depositRequests'), snap => {
                 const div = document.getElementById('depositList');
                 div.innerHTML = '';
                 if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending deposits</p>'; return; }
                 snap.forEach(child => {
                     const d = child.val();
-                    // Fix: Using d.id or child.key as trxKey
                     const trxKey = d.id || child.key; 
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${d.amount}</b><br><small>UID: ${d.uid}</small><span class="txid-text">TXID: ${d.txid}</span></div>
                     <div style="display:flex; gap:5px;">
@@ -84,23 +82,20 @@
                 });
             });
 
-            // Withdrawal Requests (Unified Path)
             onValue(ref(db, 'withdrawRequests'), snap => {
                 const div = document.getElementById('withdrawList');
                 div.innerHTML = '';
                 if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending withdrawals</p>'; return; }
                 snap.forEach(child => {
                     const w = child.val();
-                    const trxKey = child.key;
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${w.username || 'User'} (UID: ${w.uid})</small><span class="txid-text">Addr: ${w.address}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${child.key}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${child.key}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // Users List
             onValue(ref(db, 'users'), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = '';
@@ -112,16 +107,52 @@
             });
         }
 
-        window.approveDeposit = async (key, uid, amount, trxKey) => {
-            const userRef = ref(db, `users/${uid}`);
-            const uSnap = await get(userRef);
-            if(uSnap.exists()){
-                const currentBal = parseFloat(uSnap.val().totalBalance || 0);
-                await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
-                // Update History Status
-                if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: 'SUCCESS' }); }
-                await remove(ref(db, `depositRequests/${key}`));
-                Swal.fire('Approved!', 'Balance added and history updated.', 'success');
+        // --- FIXED APPROVE DEPOSIT WITH 25% COMMISSION ---
+        window.approveDeposit = async (key, userKey, amount, trxKey) => {
+            try {
+                // Find user by key
+                const userRef = ref(db, `users/${userKey}`);
+                const uSnap = await get(userRef);
+                
+                if(uSnap.exists()){
+                    const userData = uSnap.val();
+                    const currentBal = parseFloat(userData.totalBalance || 0);
+                    
+                    // 1. Update User Balance
+                    await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
+
+                    // 2. 25% Referral Commission Logic
+                    if (userData.referredBy && userData.referredBy !== "none") {
+                        const allUsersSnap = await get(ref(db, 'users'));
+                        let uplinerUid = null;
+                        
+                        allUsersSnap.forEach((child) => {
+                            if (child.val().referralCode === userData.referredBy) {
+                                uplinerUid = child.key;
+                            }
+                        });
+
+                        if (uplinerUid) {
+                            const commission = amount * 0.25;
+                            const uplinerData = allUsersSnap.val()[uplinerUid];
+                            const currentTeamReward = parseFloat(uplinerData.teamReward || 0);
+
+                            await update(ref(db, `users/${uplinerUid}`), {
+                                teamReward: (currentTeamReward + commission).toFixed(2),
+                                hasNewReward: true
+                            });
+                        }
+                    }
+
+                    // 3. Update Transaction History & Cleanup
+                    if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
+                    await remove(ref(db, `depositRequests/${key}`));
+                    
+                    Swal.fire('Approved!', `Balance added and 25% commission sent to Upliner.`, 'success');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Approval failed.', 'error');
             }
         };
 
@@ -134,26 +165,16 @@
         window.processWithdraw = async (key, uid, amount, status, trxKey) => {
             const userRef = ref(db, `users/${uid}`);
             const uSnap = await get(userRef);
-            
             if(status === 'rejected' && uSnap.exists()) {
-                // Return money to withdrawable balance if rejected
                 const currentWith = parseFloat(uSnap.val().withdrawable || 0);
                 await update(userRef, { withdrawable: (currentWith + amount).toFixed(2) });
             }
-
-            // Update user transaction history
             if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: status.toUpperCase() }); }
-            
-            // Send Notification
             await update(userRef, { 
                 notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected. Funds returned.`,
                 lastNotifSeen: false
             });
-
-            // Clean up requests from both possible nodes
             await remove(ref(db, `withdrawRequests/${key}`));
-            await remove(ref(db, `admin/withdrawals/${key}`));
-            
             Swal.fire('Done', `Withdrawal ${status.toUpperCase()}`, 'success');
         };
 

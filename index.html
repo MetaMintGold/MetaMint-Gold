@@ -34,7 +34,7 @@
             <input type="text" id="regCity" placeholder="City">
             <input type="password" id="regPass" placeholder="Password">
             
-            <p id="refText" style="font-size: 0.75rem; color: #38bdf8; margin: 5px 0; display: none;"></p>
+            <p id="refDisplay" style="font-size: 0.8rem; color: #fbbf24; margin: 10px 0; font-weight: bold; display: none;"></p>
             
             <button class="main-btn" id="regBtn">Create Account</button>
         </div>
@@ -43,7 +43,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -58,15 +58,14 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- Start: Referral Link Detection ---
-        const urlParams = new URLSearchParams(window.location.search);
-        const referrerID = urlParams.get('ref');
-        if(referrerID) {
-            const refBox = document.getElementById('refText');
-            refBox.innerText = "You are invited by: #" + referrerID;
+        // --- URL Referral Logic ---
+        const params = new URLSearchParams(window.location.search);
+        const referrerID = params.get('ref');
+        if (referrerID) {
+            const refBox = document.getElementById('refDisplay');
+            refBox.innerText = "Invited By: #" + referrerID;
             refBox.style.display = "block";
         }
-        // --- End: Referral Link Detection ---
 
         const lTab = document.getElementById('loginTab'), rTab = document.getElementById('registerTab');
         const lForm = document.getElementById('loginForm'), rForm = document.getElementById('registerForm');
@@ -81,7 +80,7 @@
                   whatsapp = document.getElementById('regWhatsapp').value,
                   city = document.getElementById('regCity').value;
 
-            if(!name || !email || !pass) return Swal.fire('Error', 'Fill all fields', 'error');
+            if(!name || !email || !pass) return Swal.fire('Error', 'Please fill required fields', 'error');
             
             try {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
@@ -93,25 +92,31 @@
                     whatsapp: whatsapp || "",
                     city: city || "",
                     uid: generatedUID,
-                    referralCode: generatedUID.toString(), // Ye plans.html ke liye zaroori hai
+                    referralCode: generatedUID.toString(), 
                     referredBy: referrerID || "none", 
                     totalBalance: 0, 
                     withdrawable: 0, 
-                    teamReward: 0, // Dashboard se match kar diya
+                    teamReward: 0, 
                     role: 'user', 
-                    miningStatus: 'inactive', // Default status
+                    miningStatus: 'inactive',
                     timestamp: Date.now(),
                     notification: "Welcome to MetaMint Gold!", 
                     lastNotifSeen: false
                 });
-                window.location.href = 'dashboard.html';
+                
+                Swal.fire('Success', 'Account Created!', 'success').then(() => {
+                    window.location.href = 'dashboard.html';
+                });
             } catch (err) { Swal.fire('Error', err.message, 'error'); }
         };
 
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value, pass = document.getElementById('loginPass').value;
-            try { await signInWithEmailAndPassword(auth, email, pass); window.location.href = 'dashboard.html'; }
-            catch (err) { Swal.fire('Error', 'Invalid login', 'error'); }
+            if(!email || !pass) return Swal.fire('Error', 'Fill all fields', 'error');
+            try { 
+                await signInWithEmailAndPassword(auth, email, pass); 
+                window.location.href = 'dashboard.html'; 
+            } catch (err) { Swal.fire('Error', 'Invalid login credentials', 'error'); }
         };
     </script>
 </body>
