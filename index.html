@@ -85,19 +85,21 @@
             
             try {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
+                const generatedUID = Math.floor(1000 + Math.random() * 9000);
+                
                 await set(ref(db, 'users/' + res.user.uid), {
                     username: name, 
                     email: email, 
                     whatsapp: whatsapp || "",
                     city: city || "",
-                    uid: Math.floor(1000 + Math.random() * 9000),
-                    referredBy: referrerID || "none", // Yahan referral ID save ho rahi hai
+                    uid: generatedUID,
+                    referralCode: generatedUID.toString(), // Ye plans.html ke liye zaroori hai
+                    referredBy: referrerID || "none", 
                     totalBalance: 0, 
                     withdrawable: 0, 
-                    teamRewards: 0,
+                    teamReward: 0, // Dashboard se match kar diya
                     role: 'user', 
-                    status: 'Active',
-                    activePlan: null,
+                    miningStatus: 'inactive', // Default status
                     timestamp: Date.now(),
                     notification: "Welcome to MetaMint Gold!", 
                     lastNotifSeen: false

@@ -26,7 +26,7 @@
         .main-card { background: linear-gradient(135deg, #38bdf8, #1e40af); }
         .secondary-card { background: #1e293b; border: 1px solid #334155; }
 
-        /* Achievement Bonus Card */
+        /* Achievement Bonus Card (Updated Name) */
         .reward-gold-card {
             background: linear-gradient(135deg, #d4af37, #f1c40f, #9a7d0a);
             margin: 20px; padding: 20px; border-radius: 20px; text-align: center;
@@ -59,7 +59,7 @@
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: 20px; }
         .btn { padding: 14px; border-radius: 12px; color: white; font-weight: bold; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 
-        /* Footer */
+        /* Full Footer */
         .main-footer { background: #0a0f1d; padding: 40px 20px 120px 20px; border-top: 2px solid #1e293b; margin-top: 40px; }
         .footer-grid { display: grid; grid-template-columns: 1fr; gap: 30px; text-align: center; }
         .footer-col h3 { color: #38bdf8; font-size: 1rem; margin-bottom: 15px; letter-spacing: 1px; }
@@ -67,12 +67,11 @@
         .footer-divider { height: 1px; background: linear-gradient(90deg, transparent, #334155, transparent); margin: 25px 0; }
         .locked-tag { background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 5px 15px; border-radius: 20px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; border: 1px solid #38bdf830; }
 
-        /* Navigation FIXED DESIGN */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; box-sizing: border-box; }
-        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.75rem; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* Navigation */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.75rem; flex: 1; }
         .nav-item i { display: block; font-size: 1.3rem; margin-bottom: 4px; }
         .nav-item.active { color: #38bdf8; }
-        .nav-item span { display: block; }
 
         #adminBox { display: none; margin: 20px; padding: 20px; background: #ef444415; border: 1px dashed #ef4444; border-radius: 15px; text-align: center; }
     </style>
@@ -88,7 +87,7 @@
             </div>
         </div>
         <div style="position: relative; display:flex; gap:18px;">
-            <div style="position:relative; cursor:pointer;" onclick="window.location.href='team.html'">
+            <div style="position:relative; cursor:pointer;" onclick="window.location.href='reward.html'">
                 <i class="fas fa-gift" style="font-size: 1.3rem; color: #fbbf24;"></i>
                 <span id="rewardDot" class="dot-badge"></span>
             </div>
@@ -122,11 +121,14 @@
     </section>
 
     <div class="task-bonus-box">
-        <div class="task-title"><i class="fas fa-bolt"></i> Achievement Mission</div>
+        <div class="task-title">
+            <i class="fas fa-bolt"></i> Achievement Mission
+        </div>
         <div class="task-content">
             Expand your network to unlock <span class="task-highlight">Achievement Bonuses</span>. 
-            When your referrals activate plans, you receive commissions: 
-            <span class="task-highlight">20% (L1), 25% (L2), or 30% (L3)</span>.
+            When your referrals activate plans, you receive instant commissions: 
+            <span class="task-highlight">20% (L1), 25% (L2), or 30% (L3)</span>. 
+            Keep growing to maximize your passive income!
         </div>
     </div>
 
@@ -139,7 +141,7 @@
     </div>
 
     <div class="checkin-section">
-        <h4 style="color: #38bdf8; margin:0 0 10px 0; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Reward</h4>
+        <h4 style="color: #38bdf8; margin:0; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Reward</h4>
         <div class="streak-container">
             <div id="d1" class="day-circle">1</div>
             <div id="d2" class="day-circle">2</div>
@@ -221,58 +223,110 @@
                     const data = snapshot.val();
                     if (data) {
                         document.getElementById('dashUsername').innerText = data.username || "User";
-                        document.getElementById('dashUID').innerText = data.referralCode || (data.uid ? data.uid.toString() : "####");
-                        
+                        document.getElementById('dashUID').innerText = data.uid || "####";
                         document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
                         document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.teamReward || 0).toFixed(2);
                         
                         document.getElementById('notifBadge').style.display = (data.notification && !data.lastNotifSeen) ? 'block' : 'none';
-                        document.getElementById('rewardDot').style.display = (parseFloat(data.teamReward) > 0) ? 'block' : 'none';
+                        document.getElementById('rewardDot').style.display = data.hasNewReward ? 'block' : 'none';
 
-                        updateBonusUI(data.streakCount || 0);
+                        updateBonusUI(data);
                     }
                 });
 
-                // Check-in logic
+                // Daily Check-in Logic Fixed
                 document.getElementById('checkinBtn').onclick = async () => {
                     const snap = await get(userRef);
-                    const d = snap.val();
-                    const now = Date.now();
-                    const last = d.lastCheckIn || 0;
-                    if (now - last >= 24 * 60 * 60 * 1000) {
-                        let ns = (d.streakCount || 0) + 1;
-                        if(ns > 7) ns = 1;
-                        await update(userRef, { withdrawable: (parseFloat(d.withdrawable || 0) + 0.50).toFixed(2), streakCount: ns, lastCheckIn: now });
-                        Swal.fire('Success', '$0.50 Added', 'success');
-                    } else { Swal.fire('Wait', 'Available every 24h', 'info'); }
+                    const userData = snap.val();
+                    const now = new Date();
+                    const todayDate = now.toISOString().split('T')[0];
+                    const lastCheckin = userData.lastCheckinDate || "";
+
+                    if (lastCheckin === todayDate) {
+                        Swal.fire('Already Claimed', 'Aap aaj ka bonus claim kar chuke hain. Kal phir aaiye!', 'warning');
+                        return;
+                    }
+
+                    Swal.fire({ title: 'Claiming Reward...', didOpen: () => Swal.showLoading() });
+
+                    let currentStreak = parseInt(userData.streakCount || 0);
+                    currentStreak = (currentStreak >= 7) ? 1 : currentStreak + 1;
+                    
+                    const dailyBonus = 0.50; // Set your daily bonus amount here
+                    const newWithdrawable = parseFloat(userData.withdrawable || 0) + dailyBonus;
+
+                    await update(userRef, {
+                        withdrawable: newWithdrawable.toFixed(2),
+                        streakCount: currentStreak,
+                        lastCheckinDate: todayDate
+                    });
+
+                    // Add to history
+                    const txId = Date.now();
+                    await set(ref(db, `transactions/${user.uid}/${txId}`), {
+                        amount: dailyBonus,
+                        type: 'DAILY_CHECKIN',
+                        status: 'SUCCESS',
+                        title: 'Daily Bonus Received',
+                        timestamp: txId
+                    });
+
+                    Swal.fire('Success!', `Aapko $${dailyBonus} ka bonus mil gaya hai!`, 'success');
                 };
 
-                // Reward claim
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
                     const snap = await get(userRef);
-                    const d = snap.val();
-                    const r = parseFloat(d.teamReward || 0);
-                    if (r > 0) {
-                        await update(userRef, { withdrawable: (parseFloat(d.withdrawable || 0) + r).toFixed(2), teamReward: 0 });
-                        Swal.fire('Claimed', `$${r.toFixed(2)} moved to Withdrawable.`, 'success');
-                    } else { Swal.fire('Empty', 'No bonus available.', 'info'); }
+                    const userData = snap.val();
+                    const reward = parseFloat(userData.teamReward || 0);
+                    
+                    if (reward > 0) {
+                        Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+                        const currentWith = parseFloat(userData.withdrawable || 0);
+                        const now = Date.now();
+
+                        await update(userRef, { 
+                            withdrawable: (currentWith + reward).toFixed(2), 
+                            teamReward: 0,
+                            hasNewReward: false
+                        });
+
+                        await set(ref(db, `transactions/${user.uid}/${now}`), {
+                            amount: reward,
+                            type: 'REWARD_CLAIM',
+                            status: 'SUCCESS',
+                            title: 'Achievement Bonus Claimed',
+                            timestamp: now
+                        });
+
+                        Swal.fire('Success!', `$${reward.toFixed(2)} moved to Withdrawable!`, 'success');
+                    } else { Swal.fire('Empty Wallet', 'Earn bonuses by inviting active members.', 'info'); }
                 };
 
-                document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => window.location.href='index.html');
+                // Notification Logic
+                document.getElementById('notifBtn').onclick = async () => {
+                    const snap = await get(userRef);
+                    const userData = snap.val();
+                    if(userData.notification) {
+                        Swal.fire({ title: 'Alert', text: userData.notification, icon: 'info' });
+                        await update(userRef, { lastNotifSeen: true });
+                    }
+                };
             } else { window.location.href = 'index.html'; }
         });
 
-        function updateBonusUI(streak) {
+        function updateBonusUI(data) {
+            const streak = data.streakCount || 0;
             for (let i = 1; i <= 7; i++) {
-                const el = document.getElementById('d' + i);
-                if(el) {
-                    el.classList.remove('completed', 'current');
-                    if (i <= streak) el.classList.add('completed');
-                    else if (i === streak + 1) el.classList.add('current');
+                const circle = document.getElementById('d' + i);
+                if(circle) {
+                    circle.className = 'day-circle';
+                    if (i <= streak) circle.classList.add('completed');
+                    if (i === streak + 1) circle.classList.add('current');
                 }
             }
         }
+        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => window.location.href='index.html');
     </script>
 </body>
 </html>

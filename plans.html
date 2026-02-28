@@ -169,13 +169,13 @@
             try {
                 const uid = auth.currentUser.uid;
                 
-                // 1. Calculate Reward based on Plan Level
+                // Calculate Reward
                 let rewardAmt = 0;
-                if (planId === 1) rewardAmt = 4;        // 20% of 20
-                else if (planId === 2) rewardAmt = 15;  // 25% of 60
-                else if (planId === 3) rewardAmt = 36;  // 30% of 120
+                if (planId === 1) rewardAmt = 4;        
+                else if (planId === 2) rewardAmt = 15;  
+                else if (planId === 3) rewardAmt = 36;  
 
-                // 2. Update User Data (Status 'active' fixes Upliner view)
+                // 1. Update Current User
                 await update(ref(db, 'users/' + uid), {
                     totalBalance: (currentBalance - price).toFixed(2),
                     miningStatus: 'active', 
@@ -183,31 +183,34 @@
                     [`lastClaims/${planId}`]: Date.now()
                 });
 
-                // 3. Referral Reward Logic (FIXED)
+                // 2. Referral Reward Logic (Optimized)
                 if (userData.referredBy) {
-                    const uplinerRef = ref(db, 'users');
-                    const usersSnap = await get(uplinerRef);
+                    const usersRef = ref(db, 'users');
+                    const usersSnap = await get(usersRef);
                     
-                    // Find upliner by referralCode
-                    let uplinerKey = null;
-                    usersSnap.forEach((child) => {
-                        if (child.val().referralCode === userData.referredBy) {
-                            uplinerKey = child.key;
-                        }
-                    });
-
-                    if (uplinerKey) {
-                        const uplinerData = usersSnap.val()[uplinerKey];
-                        const currentTeamReward = parseFloat(uplinerData.teamReward || 0);
+                    if (usersSnap.exists()) {
+                        let uplinerUid = null;
+                        const allUsers = usersSnap.val();
                         
-                        await update(ref(db, 'users/' + uplinerKey), {
-                            teamReward: (currentTeamReward + rewardAmt).toFixed(2),
-                            hasNewReward: true
-                        });
+                        // Look for the user who owns this referral code
+                        for (let key in allUsers) {
+                            if (allUsers[key].referralCode === userData.referredBy) {
+                                uplinerUid = key;
+                                break;
+                            }
+                        }
+
+                        if (uplinerUid) {
+                            const currentTeamReward = parseFloat(allUsers[uplinerUid].teamReward || 0);
+                            await update(ref(db, 'users/' + uplinerUid), {
+                                teamReward: (currentTeamReward + rewardAmt).toFixed(2),
+                                hasNewReward: true
+                            });
+                        }
                     }
                 }
 
-                // 4. Transaction Entry
+                // 3. Transaction Entry
                 await set(ref(db, `transactions/${uid}/${Date.now()}`), {
                     amount: price,
                     type: 'PLAN_PURCHASE',
@@ -250,7 +253,7 @@
         };
 
         window.cancelPlan = async (planId) => {
-            let price = planId === 1 ? 20 : (planId === 2 ? 60 : 120);
+            let price = planId === 1 ? 20 : (id === 2 ? 60 : 120);
             let fee = price * 0.10;
             let refund = price - fee;
 
