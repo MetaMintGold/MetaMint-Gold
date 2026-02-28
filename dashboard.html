@@ -20,7 +20,7 @@
         .main-card { background: linear-gradient(135deg, #38bdf8, #1e40af); }
         .secondary-card { background: #1e293b; border: 1px solid #334155; }
         .reward-gold-card { background: linear-gradient(135deg, #d4af37, #f1c40f, #9a7d0a); margin: 20px; padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid #f39c12; color: #0f172a; }
-        .claim-reward-btn { background: #0f172a; color: #fbbf24; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; cursor: pointer; }
+        .claim-reward-btn { background: #0f172a; color: #fbbf24; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.9rem; font-weight: bold; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; cursor: pointer; }
         .task-bonus-box { margin: 20px; background: linear-gradient(45deg, #1e293b, #0f172a); border: 2px solid #38bdf8; border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
         .task-title { color: #38bdf8; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
         .task-content { font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; }
@@ -182,12 +182,28 @@
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
+                        // --- BLOCK CHECK LOGIC (NEW) ---
+                        if (data.isBlocked === true) {
+                            document.body.innerHTML = `
+                                <div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:#0f172a; color:white;">
+                                    <div style="background:#1e293b; padding:40px; border-radius:20px; border:2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);">
+                                        <i class="fas fa-user-slash" style="font-size:5rem; color:#ef4444; margin-bottom:20px;"></i>
+                                        <h1 style="color:#ef4444; margin-bottom:10px;">ACCOUNT SUSPENDED</h1>
+                                        <p style="color:#94a3b8; line-height:1.6; font-size:0.9rem;">Your account has been temporarily blocked due to suspicious activity or violation of our terms. Please contact our official support for further assistance.</p>
+                                        <button onclick="window.location.href='index.html'" style="background:#ef4444; color:white; border:none; padding:12px 30px; border-radius:10px; font-weight:bold; margin-top:25px; cursor:pointer; width:100%;">Return to Home</button>
+                                    </div>
+                                    <p style="margin-top:20px; color:#475569; font-size:0.7rem;">MetaMint Gold Security Protocol #756-B</p>
+                                </div>
+                            `;
+                            return; 
+                        }
+                        // --- END BLOCK CHECK ---
+
                         document.getElementById('dashUsername').innerText = data.username || "User";
                         document.getElementById('dashUID').innerText = data.uid || "####";
                         document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
                         
-                        // DASHBOARD NOW SHOWS ONLY REFERRAL COMMISSION
                         document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.referralWallet || 0).toFixed(2);
                         
                         document.getElementById('notifBadge').style.display = (data.notification && !data.lastNotifSeen) ? 'block' : 'none';
@@ -208,7 +224,6 @@
                     Swal.fire('Success!', `$${bonus} added!`, 'success');
                 };
 
-                // CLAIM BUTTON NOW ONLY CLAIMS FROM referralWallet
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
                     const snap = await get(userRef);
                     const userData = snap.val();

@@ -16,6 +16,7 @@
         .data-card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
         .txid-text { font-size: 0.65rem; color: #38bdf8; word-break: break-all; margin-top: 5px; display: block; background: #0f172a; padding: 5px; border-radius: 4px; }
         .btn-manage { background: #38bdf8; color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .wa-link { color: #22c55e; text-decoration: none; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
         .swal-label { display: block; text-align: left; color: #94a3b8; font-size: 0.75rem; margin-top: 10px; margin-left: 10%; }
         .swal-input-custom { background: #0f172a !important; color: white !important; width: 80% !important; padding: 10px !important; border-radius: 8px !important; border: 1px solid #334155 !important; margin-bottom: 5px !important; }
     </style>
@@ -101,65 +102,56 @@
                 list.innerHTML = '';
                 snap.forEach(c => {
                     const u = c.val();
-                    list.innerHTML += `<div class="data-card"><div><b>${u.username}</b><br><small>UID: ${u.uid}</small></div>
-                    <button onclick="window.openManager('${c.key}')" class="btn-manage">Manage</button></div>`;
+                    const blockIcon = u.isBlocked ? '<i class="fas fa-user-slash" style="color:#ef4444; margin-right:5px;"></i>' : '';
+                    const userWA = u.whatsapp || "No Number";
+                    const waLink = u.whatsapp ? `https://wa.me/${u.whatsapp}` : "#";
+
+                    list.innerHTML += `
+                    <div class="data-card">
+                        <div style="width:65%;">
+                            <b>${blockIcon}${u.username}</b><br>
+                            <small>UID: ${u.uid}</small><br>
+                            <a href="${waLink}" target="_blank" class="wa-link">
+                                <i class="fab fa-whatsapp"></i> ${userWA}
+                            </a>
+                        </div>
+                        <button onclick="window.openManager('${c.key}')" class="btn-manage">Manage</button>
+                    </div>`;
                 });
             });
         }
 
-        // --- FIXED APPROVE DEPOSIT WITH SEPARATED 25% WALLET ---
         window.approveDeposit = async (key, userKey, amount, trxKey) => {
             try {
                 const userRef = ref(db, `users/${userKey}`);
                 const uSnap = await get(userRef);
-                
                 if(uSnap.exists()){
                     const userData = uSnap.val();
                     const currentBal = parseFloat(userData.totalBalance || 0);
-                    
-                    // 1. Update User Balance
                     await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
-
-                    // 2. 25% Referral Commission (NOW GOES TO referralWallet)
                     if (userData.referredBy && userData.referredBy !== "none") {
                         const allUsersSnap = await get(ref(db, 'users'));
                         let uplinerKey = null;
-                        
                         allUsersSnap.forEach((child) => {
-                            if (String(child.val().referralCode) === String(userData.referredBy)) {
-                                uplinerKey = child.key;
-                            }
+                            if (String(child.val().referralCode) === String(userData.referredBy)) { uplinerKey = child.key; }
                         });
-
                         if (uplinerKey) {
                             const commission = amount * 0.25;
-                            const uplinerData = allUsersSnap.val()[uplinerKey];
-                            const currentRefWallet = parseFloat(uplinerData.referralWallet || 0);
-
-                            // Sending 25% to 'referralWallet' (Dashboard Box)
-                            // We don't trigger hasNewReward here, keeping it for Admin Special Rewards
-                            await update(ref(db, `users/${uplinerKey}`), {
-                                referralWallet: (currentRefWallet + commission).toFixed(2)
-                            });
+                            const currentRefWallet = parseFloat(allUsersSnap.val()[uplinerKey].referralWallet || 0);
+                            await update(ref(db, `users/${uplinerKey}`), { referralWallet: (currentRefWallet + commission).toFixed(2) });
                         }
                     }
-
-                    // 3. Update Transaction History & Cleanup
                     if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
                     await remove(ref(db, `depositRequests/${key}`));
-                    
-                    Swal.fire('Approved!', `Balance added and 25% commission sent to Upliner's Dashboard Box.`, 'success');
+                    Swal.fire('Approved!', `Success`, 'success');
                 }
-            } catch (error) {
-                console.error(error);
-                Swal.fire('Error', 'Approval failed.', 'error');
-            }
+            } catch (error) { Swal.fire('Error', 'Failed', 'error'); }
         };
 
         window.rejectDeposit = async (key, uid, trxKey) => {
             if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: 'REJECTED' }); }
             await remove(ref(db, `depositRequests/${key}`));
-            Swal.fire('Rejected', 'History updated to REJECTED', 'error');
+            Swal.fire('Rejected', 'History updated', 'error');
         };
 
         window.processWithdraw = async (key, uid, amount, status, trxKey) => {
@@ -171,11 +163,11 @@
             }
             if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: status.toUpperCase() }); }
             await update(userRef, { 
-                notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected. Funds returned.`,
+                notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected.`,
                 lastNotifSeen: false
             });
             await remove(ref(db, `withdrawRequests/${key}`));
-            Swal.fire('Done', `Withdrawal ${status.toUpperCase()}`, 'success');
+            Swal.fire('Done', `Status: ${status}`, 'success');
         };
 
         window.openManager = async (userKey) => {
@@ -189,9 +181,14 @@
                     <input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
                     <label class="swal-label">Withdrawable Balance ($)</label>
                     <input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
+                    
+                    <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; padding:10px; border-radius:8px; margin:15px 10%;">
+                        <span style="font-size:0.8rem; color:#ef4444; font-weight:bold;"><i class="fas fa-ban"></i> BLOCK ACCOUNT</span>
+                        <input type="checkbox" id="m-block" style="width:20px; height:20px;" ${u.isBlocked ? 'checked' : ''}>
+                    </div>
+
                     <hr style="border: 0.5px solid #334155; margin: 15px 0;">
-                    <label class="swal-label" style="color:#fbbf24;">Send Admin Special Reward ($)</label>
-                    <p style="font-size:0.6rem; color:#94a3b8; margin:0;">(Goes to reward.html & triggers Gift icon dot)</p>
+                    <label class="swal-label" style="color:#fbbf24;">Send Special Reward ($)</label>
                     <input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Enter Amount">
                     <label class="swal-label">Push Notification</label>
                     <input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
@@ -201,6 +198,7 @@
                 preConfirm: () => ({
                     totalBalance: parseFloat(document.getElementById('m-dep').value),
                     withdrawable: parseFloat(document.getElementById('m-with').value),
+                    isBlocked: document.getElementById('m-block').checked,
                     teamRewardAmt: parseFloat(document.getElementById('m-team-reward').value || 0),
                     notification: document.getElementById('m-note').value
                 })
@@ -211,15 +209,16 @@
                 const newData = {
                     totalBalance: form.totalBalance.toFixed(2),
                     withdrawable: form.withdrawable.toFixed(2),
+                    isBlocked: form.isBlocked,
                     notification: form.notification,
                     lastNotifSeen: false
                 };
                 if(form.teamRewardAmt > 0) {
                     newData.teamReward = (currentTeamReward + form.teamRewardAmt).toFixed(2);
-                    newData.hasNewReward = true; // This triggers the reward icon dot
+                    newData.hasNewReward = true;
                 }
                 await update(ref(db, `users/${userKey}`), newData); 
-                Swal.fire('Updated!', 'User data and rewards updated.', 'success'); 
+                Swal.fire('Updated!', 'All changes saved.', 'success'); 
             }
         };
 
