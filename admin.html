@@ -125,27 +125,57 @@
             try {
                 const userRef = ref(db, `users/${userKey}`);
                 const uSnap = await get(userRef);
+                
                 if(uSnap.exists()){
                     const userData = uSnap.val();
                     const currentBal = parseFloat(userData.totalBalance || 0);
+                    
+                    // 1. Approve user's own deposit balance
                     await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
+
+                    // 2. Referral Commission Logic (25%)
                     if (userData.referredBy && userData.referredBy !== "none") {
                         const allUsersSnap = await get(ref(db, 'users'));
                         let uplinerKey = null;
+
+                        // Scanning for the upliner via referralCode
                         allUsersSnap.forEach((child) => {
-                            if (String(child.val().referralCode) === String(userData.referredBy)) { uplinerKey = child.key; }
+                            if (String(child.val().referralCode) === String(userData.referredBy)) { 
+                                uplinerKey = child.key; 
+                            }
                         });
+
                         if (uplinerKey) {
                             const commission = amount * 0.25;
-                            const currentRefWallet = parseFloat(allUsersSnap.val()[uplinerKey].referralWallet || 0);
-                            await update(ref(db, `users/${uplinerKey}`), { referralWallet: (currentRefWallet + commission).toFixed(2) });
+                            const uplinerRef = ref(db, `users/${uplinerKey}`);
+                            const uplinerSnap = await get(uplinerRef);
+                            
+                            if (uplinerSnap.exists()) {
+                                // Updated to use referralWallet as per dashboard.html
+                                const currentRefWallet = parseFloat(uplinerSnap.val().referralWallet || 0);
+                                await update(uplinerRef, { 
+                                    referralWallet: (currentRefWallet + commission).toFixed(2) 
+                                });
+                            }
                         }
                     }
+
+                    // 3. Finalize transaction status
                     if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
                     await remove(ref(db, `depositRequests/${key}`));
-                    Swal.fire('Approved!', `Success`, 'success');
+                    
+                    Swal.fire({
+                        title: 'Approved!',
+                        text: 'Deposit success & 25% referral bonus sent.',
+                        icon: 'success',
+                        background: '#1e293b',
+                        color: '#fff'
+                    });
                 }
-            } catch (error) { Swal.fire('Error', 'Failed', 'error'); }
+            } catch (error) { 
+                console.error(error);
+                Swal.fire('Error', 'Failed to approve deposit', 'error'); 
+            }
         };
 
         window.rejectDeposit = async (key, uid, trxKey) => {

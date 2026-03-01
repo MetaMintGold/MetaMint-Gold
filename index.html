@@ -157,7 +157,8 @@
                     referredBy: referrerID || "none", 
                     totalBalance: 0, 
                     withdrawable: 0, 
-                    teamReward: 0, 
+                    referralWallet: 0, // Updated from teamReward to match Dashboard/Admin
+                    teamReward: 0, // Kept for Special Rewards compatibility
                     role: 'user', 
                     miningStatus: 'inactive',
                     timestamp: Date.now(),
