@@ -46,6 +46,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, onValue, update, get, remove, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // Firebase Config (Keep yours)
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -77,8 +78,8 @@
                     const trxKey = d.id || child.key; 
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${d.amount}</b><br><small>UID: ${d.uid}</small><span class="txid-text">TXID: ${d.txid}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="rejectDeposit('${child.key}', '${d.uid}', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="window.approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="window.rejectDeposit('${child.key}', '${d.uid}', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
@@ -91,8 +92,8 @@
                     const w = child.val();
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${w.username || 'User'} (UID: ${w.uid})</small><span class="txid-text">Addr: ${w.address}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${child.key}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${child.key}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${child.key}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${child.key}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
@@ -121,6 +122,7 @@
             });
         }
 
+        // --- FIXED DEPOSIT APPROVAL LOGIC ---
         window.approveDeposit = async (key, userKey, amount, trxKey) => {
             try {
                 const userRef = ref(db, `users/${userKey}`);
@@ -128,40 +130,48 @@
                 
                 if(uSnap.exists()){
                     const userData = uSnap.val();
+                    const depositAmount = parseFloat(amount);
                     const currentBal = parseFloat(userData.totalBalance || 0);
                     
                     // 1. Approve user's own deposit balance
-                    await update(userRef, { totalBalance: (currentBal + amount).toFixed(2) });
+                    await update(userRef, { totalBalance: (currentBal + depositAmount).toFixed(2) });
 
                     // 2. Referral Commission Logic (25%)
-                    if (userData.referredBy && userData.referredBy !== "none") {
+                    const uplinerUID = String(userData.referredBy || "").trim();
+                    
+                    if (uplinerUID && uplinerUID !== "none") {
                         const allUsersSnap = await get(ref(db, 'users'));
-                        let uplinerKey = null;
+                        let foundUplinerKey = null;
 
-                        // Scanning for the upliner via referralCode
+                        // Find upliner by matching their referralCode with the user's referredBy
                         allUsersSnap.forEach((child) => {
-                            if (String(child.val().referralCode) === String(userData.referredBy)) { 
-                                uplinerKey = child.key; 
+                            const potentialUpliner = child.val();
+                            if (String(potentialUpliner.referralCode || "").trim() === uplinerUID) { 
+                                foundUplinerKey = child.key; 
                             }
                         });
 
-                        if (uplinerKey) {
-                            const commission = amount * 0.25;
-                            const uplinerRef = ref(db, `users/${uplinerKey}`);
+                        if (foundUplinerKey) {
+                            const commission = depositAmount * 0.25;
+                            const uplinerRef = ref(db, `users/${foundUplinerKey}`);
                             const uplinerSnap = await get(uplinerRef);
                             
                             if (uplinerSnap.exists()) {
-                                // Updated to use referralWallet as per dashboard.html
                                 const currentRefWallet = parseFloat(uplinerSnap.val().referralWallet || 0);
-                                await update(uplinerRef, { 
-                                    referralWallet: (currentRefWallet + commission).toFixed(2) 
-                                });
+                                const newRefBalance = (currentRefWallet + commission).toFixed(2);
+                                
+                                await update(uplinerRef, { referralWallet: newRefBalance });
+                                console.log("Success: Bonus sent to upliner: " + foundUplinerKey);
                             }
+                        } else {
+                            console.log("System: No upliner found for UID " + uplinerUID);
                         }
                     }
 
-                    // 3. Finalize transaction status
-                    if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
+                    // 3. Finalize transaction status and remove request
+                    if(trxKey) { 
+                        await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); 
+                    }
                     await remove(ref(db, `depositRequests/${key}`));
                     
                     Swal.fire({
@@ -173,8 +183,8 @@
                     });
                 }
             } catch (error) { 
-                console.error(error);
-                Swal.fire('Error', 'Failed to approve deposit', 'error'); 
+                console.error("Critical Error:", error);
+                Swal.fire('Error', 'Technical fault in bonus system', 'error'); 
             }
         };
 
