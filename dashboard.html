@@ -12,6 +12,33 @@
         .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; }
         .dot-badge { display: none; position: absolute; top: -3px; right: -3px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #1e293b; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        
+        /* --- RAMZAN ANIMATION STYLES --- */
+        .ramzan-container {
+            position: relative;
+            margin: 15px;
+            padding: 25px 10px;
+            background: linear-gradient(135deg, #001a33 0%, #003366 100%);
+            border-radius: 20px;
+            border: 1px solid #d4af37;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        }
+        .ramzan-content { position: relative; z-index: 2; }
+        .ramzan-title {
+            font-size: 1.8rem;
+            color: #FFD700;
+            margin: 0;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            animation: ramzanGlow 2s infinite alternate;
+        }
+        .ramzan-sub { color: #cbd5e1; font-size: 0.8rem; margin-top: 5px; letter-spacing: 1px; }
+        .live-star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite ease-in-out; }
+        @keyframes ramzanGlow { from { transform: scale(1); } to { transform: scale(1.05); } }
+        @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } }
+        /* ------------------------------ */
+
         .brand-section { text-align: center; padding: 30px 10px; }
         .main-logo-3d { font-size: 2.6rem; font-weight: 900; margin: 0; color: #d4af37; text-transform: uppercase; text-shadow: 0 4px 0 #666, 0 8px 10px rgba(0,0,0,0.5); }
         .sub-tagline { color: #fbbf24; font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 5px; text-transform: uppercase; }
@@ -67,6 +94,13 @@
             <i class="fas fa-sign-out-alt" id="logoutBtn" style="cursor: pointer; font-size: 1.3rem;"></i>
         </div>
     </header>
+
+    <div class="ramzan-container" id="star-field">
+        <div class="ramzan-content">
+            <h1 class="ramzan-title">🌙 Ramzan Mubarak ✨</h1>
+            <p class="ramzan-sub">MetaMint Gold ki taraf se khushiyan mubarak!</p>
+        </div>
+    </div>
 
     <div class="brand-section">
         <h1 class="main-logo-3d">MetaMint Gold</h1>
@@ -175,6 +209,26 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
+        // --- Live Star Generation Script ---
+        function createStars() {
+            const container = document.getElementById('star-field');
+            const starCount = 40;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'live-star';
+                const size = Math.random() * 3 + 'px';
+                star.style.width = size;
+                star.style.height = size;
+                star.style.top = Math.random() * 100 + '%';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                star.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(star);
+            }
+        }
+        window.onload = createStars;
+        // -----------------------------------
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (user.email === "dreamsagweb@gmail.com") document.getElementById('adminBox').style.display = 'block';
@@ -204,12 +258,7 @@
                     if (userData.lastCheckinDate === today) return Swal.fire('Wait!', 'Already claimed today!', 'warning');
                     
                     let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
-                    
-                    // Logic for 7 days = $1.00 total
-                    // Day 1-6: $0.10 each. Day 7: $0.40
                     const bonus = (streak === 7) ? 0.40 : 0.10;
-                    
-                    // Reset streak after day 7
                     const nextStreak = (streak === 7) ? 0 : streak;
 
                     await update(userRef, { 
