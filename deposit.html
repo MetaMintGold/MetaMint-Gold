@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MetaMint | Deposit USDT</title>
+    <title>MetaMint | Deposit Funds</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
@@ -20,12 +20,17 @@
         .info-box { background: rgba(56, 189, 248, 0.05); border-left: 4px solid #38bdf8; padding: 18px; border-radius: 10px; margin-bottom: 25px; }
         .info-box h4 { color: #38bdf8; margin: 0 0 10px 0; font-size: 0.95rem; }
         .info-box ul { padding-left: 18px; margin: 0; font-size: 0.75rem; color: #cbd5e1; line-height: 1.7; }
-        .warning-text { color: #ef4444; font-size: 0.75rem; font-weight: bold; margin-top: 10px; display: block; }
         
         /* Cards */
         .dep-card { background: #1e293b; border-radius: 15px; padding: 20px; border: 1px solid #334155; margin-bottom: 20px; text-align: center; }
         .address-box { background: #0f172a; padding: 15px; border-radius: 10px; margin: 15px 0; word-break: break-all; color: #38bdf8; font-family: 'monospace'; font-size: 0.9rem; border: 1px solid #1e40af; }
         
+        /* Bank Card Specific Styling */
+        .bank-card { border: 1px solid #eab308; background: rgba(234, 179, 8, 0.05); }
+        .bank-info { text-align: left; background: #0f172a; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px dashed #eab308; }
+        .bank-info p { margin: 5px 0; font-size: 0.85rem; color: #cbd5e1; }
+        .bank-info b { color: #eab308; }
+
         /* Form Inputs */
         .input-group { text-align: left; margin-bottom: 15px; }
         .input-group label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 8px; }
@@ -35,8 +40,12 @@
         /* Buttons */
         .main-btn { width: 100%; padding: 15px; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; transition: 0.3s; }
         .copy-btn { background: #38bdf8; color: #0f172a; width: auto; padding: 10px 25px; margin: 0 auto; }
+        .copy-bank { background: #eab308; color: #0f172a; }
         .submit-btn { background: #22c55e; margin-top: 10px; }
-        .submit-btn:active { transform: scale(0.98); }
+        
+        /* Help Text */
+        .help-section { text-align: center; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; }
+        .help-link { color: #38bdf8; text-decoration: none; font-size: 0.85rem; font-weight: bold; }
 
         /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
@@ -49,26 +58,46 @@
 
     <header class="dash-header">
         <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
-        <h2 style="margin: 0; font-size: 1.2rem; color: #38bdf8;">Deposit USDT</h2>
+        <h2 style="margin: 0; font-size: 1.2rem; color: #38bdf8;">Deposit Funds</h2>
     </header>
 
     <div class="deposit-container">
         <div class="info-box">
             <h4><i class="fas fa-info-circle"></i> Recharge Guide</h4>
             <ul>
-                <li>Niche diye gaye <b>USDT (TRC20)</b> address ko copy karein.</li>
-                <li>Apne wallet (Binance, TrustWallet) se payment bhejain.</li>
-                <li>Payment ke baad <b>Transaction ID (TXID)</b> yahan paste karein.</li>
+                <li>Aap USDT (TRC20) ya PKR dono tareeqon se deposit kar sakty hain.</li>
+                <li>Payment bhejney ke baad **Transaction ID (TXID)** niche submit karein.</li>
+                <li>Galat network ya galat details par deposit zaya ho sakta hai.</li>
             </ul>
-            <span class="warning-text">⚠️ Only send USDT via TRC20 network.</span>
         </div>
 
         <div class="dep-card">
-            <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Official Deposit Address (TRC20)</p>
+            <p style="font-size: 0.85rem; color: #38bdf8; font-weight: bold; margin-bottom: 5px;">Option 1: Crypto (USDT TRC20)</p>
+            <p style="font-size: 0.7rem; color: #cbd5e1; margin-bottom: 10px; text-align: left;">
+                <b>Tariqa:</b> Apne Binance/TrustWallet se withdraw par jain, USDT select karein aur network <b>TRC20</b> rakh kar niche wala address paste karein.
+            </p>
             <div class="address-box" id="walletAddr">TMUPJkctocmCyiZX43o7g7AP27rKfUpch6</div>
-            <button class="main-btn copy-btn" onclick="copyAddress()">
+            <button class="main-btn copy-btn" onclick="copyValue('TMUPJkctocmCyiZX43o7g7AP27rKfUpch6', 'Wallet Address')">
                 <i class="fas fa-copy"></i> Copy Address
             </button>
+        </div>
+
+        <div class="dep-card bank-card">
+            <p style="font-size: 0.85rem; color: #eab308; font-weight: bold; margin-bottom: 5px;">Option 2: PKR (Local Transfer)</p>
+            <p style="font-size: 0.75rem; color: #cbd5e1; text-align: left;">
+                Jin users ke paas crypto nahi hai, wo apne <b>EasyPaisa, JazzCash</b> ya kisi bhi <b>Bank App</b> se payment bhej sakte hain.
+            </p>
+            
+            <div class="bank-info">
+                <p>Bank: <b>Bank Al Habib limited</b></p>
+                <p>Title: <b>Iqra Muqdas</b></p>
+                <p>A/C: <b id="bankAcc">03311827003381010</b></p>
+            </div>
+
+            <button class="main-btn copy-btn copy-bank" onclick="copyValue('03311827003381010', 'Bank Account')">
+                <i class="fas fa-copy"></i> Copy Account Number
+            </button>
+            <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px;">Payment bhej kar Reference/Transaction ID niche submit karein.</p>
         </div>
 
         <div class="dep-card">
@@ -77,12 +106,17 @@
                 <input type="number" id="depAmount" placeholder="Minimum $20" min="20">
             </div>
             <div class="input-group">
-                <label>Transaction ID (TXID)</label>
+                <label>Transaction ID (TXID / ID Number)</label>
                 <input type="text" id="txidInput" placeholder="Enter Transaction Hash">
             </div>
             <button id="submitDeposit" class="main-btn submit-btn">
                 <i class="fas fa-check-circle"></i> Submit Deposit Request
             </button>
+
+            <div class="help-section">
+                <p style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 5px;">Kuch samajh nahi aa raha?</p>
+                <a href="#" class="help-link"><i class="fab fa-whatsapp"></i> Customer Service se rabta karein</a>
+            </div>
         </div>
     </div>
 
@@ -99,7 +133,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Configuration
+        // Firebase Configuration (Same as before)
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -115,18 +149,12 @@
         const db = getDatabase(app);
 
         // Copy Function
-        window.copyAddress = function() {
-            const addr = document.getElementById('walletAddr').innerText;
-            navigator.clipboard.writeText(addr).then(() => {
+        window.copyValue = function(val, label) {
+            navigator.clipboard.writeText(val).then(() => {
                 Swal.fire({ 
-                    toast: true, 
-                    position: 'top', 
-                    icon: 'success', 
-                    title: 'Address Copied!', 
-                    showConfirmButton: false, 
-                    timer: 1500,
-                    background: '#1e293b',
-                    color: '#fff'
+                    toast: true, position: 'top', icon: 'success', 
+                    title: label + ' Copied!', showConfirmButton: false, timer: 1500,
+                    background: '#1e293b', color: '#fff'
                 });
             });
         };
@@ -137,30 +165,21 @@
             const txid = document.getElementById('txidInput').value.trim();
             const user = auth.currentUser;
 
-            if (!user) {
-                return Swal.fire('Error', 'Session expired. Please login again.', 'error');
-            }
-            if (!amount || amount < 20) {
-                return Swal.fire('Error', 'Minimum deposit is $20', 'warning');
-            }
-            if (!txid) {
-                return Swal.fire('Error', 'Please enter your Transaction ID (TXID)', 'warning');
-            }
+            if (!user) return Swal.fire('Error', 'Please login again.', 'error');
+            if (!amount || amount < 20) return Swal.fire('Error', 'Minimum deposit is $20', 'warning');
+            if (!txid) return Swal.fire('Error', 'Please enter Transaction ID', 'warning');
 
-            // Loading state
             Swal.fire({ 
                 title: 'Submitting...', 
-                text: 'Please wait while we record your request.',
+                text: 'Wait while we record your request.',
                 allowOutsideClick: false, 
                 didOpen: () => { Swal.showLoading(); }
             });
 
             try {
-                // Unique key generate karein
                 const trxKey = push(ref(db, 'depositRequests')).key;
 
-                // 1. Admin Folder: Isse aap admin panel mein approve karenge
-                const adminRequestRef = ref(db, `depositRequests/${trxKey}`);
+                // 1. Admin Request
                 const adminData = {
                     uid: user.uid,
                     amount: parseFloat(amount),
@@ -170,35 +189,29 @@
                     id: trxKey
                 };
 
-                // 2. User History Folder: Isse user ko History page par dikhayi dega
-                const userHistoryRef = ref(db, `transactions/${user.uid}/${trxKey}`);
+                // 2. User History
                 const userHistoryData = {
                     type: 'deposit',
                     amount: parseFloat(amount),
                     status: 'PENDING',
                     timestamp: Date.now(),
-                    title: 'USDT Deposit'
+                    title: 'Deposit Request'
                 };
 
-                // Dono jagah data save karein
-                await set(adminRequestRef, adminData);
-                await set(userHistoryRef, userHistoryData);
+                await set(ref(db, `depositRequests/${trxKey}`), adminData);
+                await set(ref(db, `transactions/${user.uid}/${trxKey}`), userHistoryData);
 
-                // Success Message
                 Swal.fire({
                     icon: 'success',
                     title: 'Request Submitted!',
-                    text: 'Aapki deposit request bhej di gayi hai. Approval ke baad balance add ho jayega.',
-                    confirmButtonColor: '#22c55e',
-                    background: '#1e293b',
-                    color: '#fff'
+                    text: 'Aapki request approve honey mein 10-60 mins lag sakty hain.',
+                    background: '#1e293b', color: '#fff'
                 }).then(() => {
                     window.location.href = 'history.html';
                 });
 
             } catch (error) {
-                console.error(error);
-                Swal.fire('Error', 'Database connection error. Try again.', 'error');
+                Swal.fire('Error', 'Something went wrong. Try again.', 'error');
             }
         };
 
