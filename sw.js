@@ -1,17 +1,17 @@
 
-const CACHE_NAME = 'metamint-v10';
+const CACHE_NAME = 'metamint-v11';
 const assets = [
   '/',
   '/index.html',
   '/manifest.json',
-  'https://cdn-icons-png.flaticon.com/512/7075/7075311.png'
+  'https://cdn-icons-png.flaticon.com/512/14541/14541484.png'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(assets).catch(err => console.log("Cache failed", err));
+      return cache.addAll(assets);
     })
   );
 });
@@ -28,8 +28,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((res) => {
-      return res || fetch(event.request);
-    })
+    caches.match(event.request).then((res) => res || fetch(event.request))
   );
 });
