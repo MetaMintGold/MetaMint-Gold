@@ -1,17 +1,16 @@
-const CACHE_NAME = 'metamint-cache-v2';
+const CACHE_NAME = 'metamint-final-v5';
 const assets = [
   '/',
   'index.html',
   'manifest.json',
-  'logo.png',
+  'https://cdn-icons-png.flaticon.com/512/7075/7075311.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(assets);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(assets))
   );
 });
 
@@ -27,8 +26,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    caches.match(event.request).then((res) => res || fetch(event.request))
   );
 });
