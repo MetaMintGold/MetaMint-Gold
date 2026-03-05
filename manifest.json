@@ -8,16 +8,16 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/14541/14541484.png",
-      "sizes": "192x192",
+      "src": "https://cdn-icons-png.flaticon.com/512/2535/2535077.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/14541/14541484.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/2535/2535077.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
