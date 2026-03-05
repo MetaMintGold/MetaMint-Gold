@@ -1,18 +1,16 @@
 
-const CACHE_NAME = 'metamint-v11';
+const CACHE_NAME = 'metamint-gold-v15';
 const assets = [
   '/',
   '/index.html',
   '/manifest.json',
-  'https://cdn-icons-png.flaticon.com/512/14541/14541484.png'
+  'https://cdn-icons-png.flaticon.com/512/2535/2535077.png'
 ];
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(assets);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(assets))
   );
 });
 
