@@ -1,10 +1,10 @@
-const CACHE_NAME = 'metamint-final-v5';
+
+const CACHE_NAME = 'metamint-v10';
 const assets = [
   '/',
   'index.html',
   'manifest.json',
-  'https://cdn-icons-png.flaticon.com/512/7075/7075311.png',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
+  'https://cdn-icons-png.flaticon.com/512/7075/7075311.png'
 ];
 
 self.addEventListener('install', (event) => {
