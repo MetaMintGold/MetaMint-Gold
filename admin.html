@@ -17,7 +17,7 @@
         .txid-text { font-size: 0.65rem; color: #38bdf8; word-break: break-all; margin-top: 5px; display: block; background: #0f172a; padding: 5px; border-radius: 4px; }
         .btn-manage { background: #38bdf8; color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .wa-link { color: #22c55e; text-decoration: none; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
-        .swal-label { display: block; text-align: left; color: #94a3b8; font-size: 0.75rem; margin-top: 10px; margin-left: 10%; }
+        .swal-label { display: block; text-align: left; color: #94a338; font-size: 0.75rem; margin-top: 10px; margin-left: 10%; }
         .swal-input-custom { background: #0f172a !important; color: white !important; width: 80% !important; padding: 10px !important; border-radius: 8px !important; border: 1px solid #334155 !important; margin-bottom: 5px !important; }
     </style>
 </head>
@@ -26,27 +26,22 @@
         <div><h2 style="margin:0;"><i class="fas fa-user-shield"></i> MASTER CONTROL</h2></div>
         <div id="adminMail" style="font-size: 0.7rem; color: #94a3b8;"></div>
     </header>
-
     <div class="search-box">
         <input type="number" id="searchUID" placeholder="Enter User UID">
         <button onclick="window.searchUser()" style="background:var(--primary); border:none; color:white; padding:10px 18px; border-radius:8px;"><i class="fas fa-search"></i></button>
     </div>
-
     <div class="section-title"><i class="fas fa-wallet"></i> Pending Deposits</div>
     <div id="depositList"></div>
-
     <div class="section-title"><i class="fas fa-hand-holding-usd"></i> Pending Withdrawals</div>
     <div id="withdrawList"></div>
-
     <div class="section-title"><i class="fas fa-users"></i> All Users</div>
     <div id="userList"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, remove, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Config (Keep yours)
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -106,86 +101,40 @@
                     const blockIcon = u.isBlocked ? '<i class="fas fa-user-slash" style="color:#ef4444; margin-right:5px;"></i>' : '';
                     const userWA = u.whatsapp || "No Number";
                     const waLink = u.whatsapp ? `https://wa.me/${u.whatsapp}` : "#";
-
-                    list.innerHTML += `
-                    <div class="data-card">
-                        <div style="width:65%;">
-                            <b>${blockIcon}${u.username}</b><br>
-                            <small>UID: ${u.uid}</small><br>
-                            <a href="${waLink}" target="_blank" class="wa-link">
-                                <i class="fab fa-whatsapp"></i> ${userWA}
-                            </a>
-                        </div>
-                        <button onclick="window.openManager('${c.key}')" class="btn-manage">Manage</button>
-                    </div>`;
+                    list.innerHTML += `<div class="data-card"><div style="width:65%;"><b>${blockIcon}${u.username}</b><br><small>UID: ${u.uid}</small><br><a href="${waLink}" target="_blank" class="wa-link"><i class="fab fa-whatsapp"></i> ${userWA}</a></div><button onclick="window.openManager('${c.key}')" class="btn-manage">Manage</button></div>`;
                 });
             });
         }
 
-        // --- FIXED DEPOSIT APPROVAL LOGIC ---
         window.approveDeposit = async (key, userKey, amount, trxKey) => {
             try {
                 const userRef = ref(db, `users/${userKey}`);
                 const uSnap = await get(userRef);
-                
                 if(uSnap.exists()){
                     const userData = uSnap.val();
                     const depositAmount = parseFloat(amount);
                     const currentBal = parseFloat(userData.totalBalance || 0);
-                    
-                    // 1. Approve user's own deposit balance
                     await update(userRef, { totalBalance: (currentBal + depositAmount).toFixed(2) });
-
-                    // 2. Referral Commission Logic (25%)
                     const uplinerUID = String(userData.referredBy || "").trim();
-                    
                     if (uplinerUID && uplinerUID !== "none") {
                         const allUsersSnap = await get(ref(db, 'users'));
                         let foundUplinerKey = null;
-
-                        // Find upliner by matching their referralCode with the user's referredBy
-                        allUsersSnap.forEach((child) => {
-                            const potentialUpliner = child.val();
-                            if (String(potentialUpliner.referralCode || "").trim() === uplinerUID) { 
-                                foundUplinerKey = child.key; 
-                            }
-                        });
-
+                        allUsersSnap.forEach((child) => { if (String(child.val().referralCode || "").trim() === uplinerUID) { foundUplinerKey = child.key; } });
                         if (foundUplinerKey) {
                             const commission = depositAmount * 0.25;
                             const uplinerRef = ref(db, `users/${foundUplinerKey}`);
                             const uplinerSnap = await get(uplinerRef);
-                            
                             if (uplinerSnap.exists()) {
                                 const currentRefWallet = parseFloat(uplinerSnap.val().referralWallet || 0);
-                                const newRefBalance = (currentRefWallet + commission).toFixed(2);
-                                
-                                await update(uplinerRef, { referralWallet: newRefBalance });
-                                console.log("Success: Bonus sent to upliner: " + foundUplinerKey);
+                                await update(uplinerRef, { referralWallet: (currentRefWallet + commission).toFixed(2) });
                             }
-                        } else {
-                            console.log("System: No upliner found for UID " + uplinerUID);
                         }
                     }
-
-                    // 3. Finalize transaction status and remove request
-                    if(trxKey) { 
-                        await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); 
-                    }
+                    if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
                     await remove(ref(db, `depositRequests/${key}`));
-                    
-                    Swal.fire({
-                        title: 'Approved!',
-                        text: 'Deposit success & 25% referral bonus sent.',
-                        icon: 'success',
-                        background: '#1e293b',
-                        color: '#fff'
-                    });
+                    Swal.fire({ title: 'Approved!', text: 'Deposit success & 25% referral bonus sent.', icon: 'success', background: '#1e293b', color: '#fff' });
                 }
-            } catch (error) { 
-                console.error("Critical Error:", error);
-                Swal.fire('Error', 'Technical fault in bonus system', 'error'); 
-            }
+            } catch (error) { Swal.fire('Error', 'Technical fault', 'error'); }
         };
 
         window.rejectDeposit = async (key, uid, trxKey) => {
@@ -202,10 +151,7 @@
                 await update(userRef, { withdrawable: (currentWith + amount).toFixed(2) });
             }
             if(trxKey) { await update(ref(db, `transactions/${uid}/${trxKey}`), { status: status.toUpperCase() }); }
-            await update(userRef, { 
-                notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected.`,
-                lastNotifSeen: false
-            });
+            await update(userRef, { notification: status === 'approved' ? `Your withdrawal of $${amount} has been approved!` : `Withdrawal of $${amount} was rejected.`, lastNotifSeen: false });
             await remove(ref(db, `withdrawRequests/${key}`));
             Swal.fire('Done', `Status: ${status}`, 'success');
         };
@@ -216,25 +162,12 @@
                 title: `Manage: ${u.username}`,
                 background: '#1e293b',
                 color: '#f8fafc',
-                html: `
-                    <label class="swal-label">Deposit Balance ($)</label>
-                    <input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
-                    <label class="swal-label">Withdrawable Balance ($)</label>
-                    <input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
-                    
-                    <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; padding:10px; border-radius:8px; margin:15px 10%;">
-                        <span style="font-size:0.8rem; color:#ef4444; font-weight:bold;"><i class="fas fa-ban"></i> BLOCK ACCOUNT</span>
-                        <input type="checkbox" id="m-block" style="width:20px; height:20px;" ${u.isBlocked ? 'checked' : ''}>
-                    </div>
-
-                    <hr style="border: 0.5px solid #334155; margin: 15px 0;">
-                    <label class="swal-label" style="color:#fbbf24;">Send Special Reward ($)</label>
-                    <input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Enter Amount">
-                    <label class="swal-label">Push Notification</label>
-                    <input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
-                `,
-                confirmButtonText: 'Save Changes',
-                showCancelButton: true,
+                html: `<label class="swal-label">Deposit Balance ($)</label><input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
+                    <label class="swal-label">Withdrawable Balance ($)</label><input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
+                    <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; padding:10px; border-radius:8px; margin:15px 10%;"><span style="font-size:0.8rem; color:#ef4444; font-weight:bold;"><i class="fas fa-ban"></i> BLOCK ACCOUNT</span><input type="checkbox" id="m-block" style="width:20px; height:20px;" ${u.isBlocked ? 'checked' : ''}></div>
+                    <hr style="border: 0.5px solid #334155; margin: 15px 0;"><label class="swal-label" style="color:#fbbf24;">Send Special Reward ($)</label><input id="m-team-reward" class="swal2-input swal-input-custom" style="border-color:#fbbf24 !important;" type="number" placeholder="Enter Amount">
+                    <label class="swal-label">Push Notification</label><input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">`,
+                confirmButtonText: 'Save Changes', showCancelButton: true,
                 preConfirm: () => ({
                     totalBalance: parseFloat(document.getElementById('m-dep').value),
                     withdrawable: parseFloat(document.getElementById('m-with').value),
@@ -245,7 +178,7 @@
             });
 
             if(form) { 
-                const currentTeamReward = parseFloat(u.teamReward || 0);
+                const currentAdminBonus = parseFloat(u.adminBonusOnly || 0); // Correctly linked now
                 const newData = {
                     totalBalance: form.totalBalance.toFixed(2),
                     withdrawable: form.withdrawable.toFixed(2),
@@ -254,7 +187,7 @@
                     lastNotifSeen: false
                 };
                 if(form.teamRewardAmt > 0) {
-                    newData.teamReward = (currentTeamReward + form.teamRewardAmt).toFixed(2);
+                    newData.adminBonusOnly = (currentAdminBonus + form.teamRewardAmt).toFixed(2);
                     newData.hasNewReward = true;
                 }
                 await update(ref(db, `users/${userKey}`), newData); 
