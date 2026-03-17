@@ -46,6 +46,32 @@
         .submit-btn { background: #22c55e; margin-top: 10px; }
         .submit-btn:active { transform: scale(0.98); }
 
+        /* Floating WhatsApp Icon CSS */
+        .whatsapp-float {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            bottom: 80px;
+            right: 20px;
+            background-color: #25d366;
+            color: #FFF;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 30px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
         /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
         .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
@@ -54,6 +80,10 @@
     </style>
 </head>
 <body>
+
+    <a href="https://wa.me/923222572670" class="whatsapp-float" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
 
     <header class="dash-header">
         <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
@@ -119,7 +149,7 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Configuration (Aapki Original Config)
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -134,7 +164,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Copy Function (Original)
         window.copyAddress = function() {
             const addr = document.getElementById('walletAddr').innerText;
             navigator.clipboard.writeText(addr).then(() => {
@@ -151,7 +180,6 @@
             });
         };
 
-        // Submit Function (Original Logic)
         document.getElementById('submitDeposit').onclick = async () => {
             const amount = document.getElementById('depAmount').value;
             const txid = document.getElementById('txidInput').value.trim();

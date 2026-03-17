@@ -3,73 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MetaMint | Plans</title>
+    <title>MetaMint Gold | Investment Plans</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
-        .dash-header { padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
-        .wallet-display { float: right; background: rgba(56, 189, 248, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid #38bdf8; font-size: 0.85rem; color: #38bdf8; }
-        .test-badge { background: #22c55e; color: #0f172a; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; display: inline-block; }
-        
-        .plans-container { padding: 20px; margin-bottom: 100px; }
-        .plan-card { background: #1e293b; border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid #334155; text-align: center; position: relative; transition: 0.3s; }
-        .plan-card.active-plan { border-color: #22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.2); }
-        
-        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.9rem; text-transform: uppercase; }
-        .plan-info h2 { margin: 10px 0; font-size: 2.2rem; color: #fbbf24; }
-        .profit-tag { background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; margin-bottom: 15px; display: inline-block; }
+        :root {
+            --primary: #00d2ff;
+            --accent: #fbbf24;
+            --bg-dark: #050a18;
+            --card-bg: #1e293b;
+            --success: #22c55e;
+            --danger: #f43f5e;
+        }
 
-        .buy-btn { width: 100%; padding: 14px; background: #38bdf8; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; }
-        .claim-btn { width: 100%; padding: 14px; background: #22c55e; border: none; border-radius: 12px; color: white; font-weight: bold; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .claim-btn:disabled { background: #334155; color: #64748b; cursor: not-allowed; opacity: 0.7; }
+        body { background: radial-gradient(circle at top, #112240 0%, var(--bg-dark) 100%); color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; }
         
-        .active-badge { background: #22c55e; color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 5px; position: absolute; top: 15px; right: 15px; font-weight: bold; }
-        .cancel-btn { background: transparent; color: #ef4444; border: 1px solid #ef4444; width: 100%; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.8rem; }
+        .dash-header { padding: 20px; background: rgba(10, 20, 40, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; position: sticky; top: 0; z-index: 100; }
+        .company-name { color: var(--primary); font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
-        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
-        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 4px; }
-        .nav-item.active { color: #38bdf8; }
+        .plans-container { padding: 20px; margin-bottom: 30px; }
+        .plan-card { background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; transition: 0.3s; }
+        .plan-card.active-plan { border: 2px solid var(--success); box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
+        
+        .timer-box { font-size: 0.75rem; color: var(--accent); background: rgba(251, 191, 36, 0.1); padding: 4px 12px; border-radius: 50px; display: inline-block; margin-bottom: 10px; font-weight: bold; }
+        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .plan-info h2 { margin: 5px 0; font-size: 1.8rem; color: #fff; }
+        .profit-tag { color: var(--success); font-weight: bold; font-size: 0.9rem; margin-bottom: 15px; }
+
+        .buy-btn { width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 14px; color: #000; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+        .claim-btn { width: 100%; padding: 14px; background: var(--success); border: none; border-radius: 14px; color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+        .claim-btn:disabled { background: #334155; opacity: 0.6; cursor: not-allowed; }
+        
+        .cancel-btn { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--danger); border-radius: 12px; color: var(--danger); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+
+        /* History Section */
+        .history-section { padding: 0 20px 120px 20px; }
+        .history-card { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 15px; border-left: 4px solid var(--primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .hist-info h4 { margin: 0; font-size: 0.85rem; }
+        .hist-info small { color: #64748b; font-size: 0.7rem; }
+        .hist-amt { color: var(--success); font-weight: bold; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(10, 20, 40, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
+        .nav-item { color: #94a3b8; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary); }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <header class="dash-header">
-        <div class="wallet-display"><i class="fas fa-wallet"></i> <span id="userWallet">$0.00</span></div>
-        <span class="test-badge">SECURE MINING</span>
-        <h2 style="margin: 0; font-size: 1.2rem; color: #38bdf8;">Investment Plans</h2>
+        <div class="company-name">METAMINT GOLD</div>
+        <h2 style="margin: 5px 0 0 0; font-size: 1.3rem;">Mining Servers</h2>
     </header>
 
     <div class="plans-container" id="plansDiv">
-        <div class="plan-card" id="cardPlan1">
-            <div id="badge1"></div>
-            <div class="plan-info">
-                <h3>Level 1 Miner</h3>
-                <div class="profit-tag">Daily Profit: $0.40</div>
-                <h2>$20.00</h2>
-            </div>
-            <div id="action1"></div>
         </div>
 
-        <div class="plan-card" id="cardPlan2">
-            <div id="badge2"></div>
-            <div class="plan-info">
-                <h3>Level 2 Miner</h3>
-                <div class="profit-tag">Daily Profit: $1.80</div>
-                <h2>$60.00</h2>
-            </div>
-            <div id="action2"></div>
-        </div>
-
-        <div class="plan-card" id="cardPlan3">
-            <div id="badge3"></div>
-            <div class="plan-info">
-                <h3>Level 3 Miner</h3>
-                <div class="profit-tag">Daily Profit: $4.20</div>
-                <h2>$120.00</h2>
-            </div>
-            <div id="action3"></div>
+    <div class="history-section">
+        <h3 style="color: var(--primary); font-size: 0.9rem; margin-bottom: 15px;"><i class="fas fa-history"></i> RECENT EARNINGS</h3>
+        <div id="earningHistory">
+            <p style="text-align:center; color:#64748b; font-size:0.8rem;">No earnings yet.</p>
         </div>
     </div>
 
@@ -78,13 +71,13 @@
         <a href="plans.html" class="nav-item active"><i class="fas fa-gem"></i><span>Plans</span></a>
         <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
         <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i><span>Profile</span></a>
     </nav>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -100,189 +93,172 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        let currentBalance = 0;
+        const PLANS_DATA = [
+            { id: 1, name: "Starter Miner", price: 4, profit: 0.20, label: "5%" },
+            { id: 2, name: "Bronze Miner", price: 10, profit: 1.00, label: "10%" },
+            { id: 3, name: "Silver Miner", price: 20, profit: 3.00, label: "15%" },
+            { id: 4, name: "Gold Miner", price: 60, profit: 12.00, label: "20%" },
+            { id: 5, name: "Diamond Miner", price: 120, profit: 36.00, label: "30%" }
+        ];
+
         let userData = null;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     userData = snapshot.val();
-                    if (userData) {
-                        currentBalance = parseFloat(userData.totalBalance || 0);
-                        document.getElementById('userWallet').innerText = "$" + currentBalance.toFixed(2);
-                        updateUI();
-                    }
+                    renderPlans();
+                    renderHistory();
                 });
             } else { window.location.href = 'index.html'; }
         });
 
-        function updateUI() {
-            if (!userData) return;
-            const activePlans = userData.activePlans || {};
-            const lastClaims = userData.lastClaims || {};
+        function renderPlans() {
+            const container = document.getElementById('plansDiv');
+            container.innerHTML = '';
             const now = Date.now();
 
-            [1, 2, 3].forEach(id => {
-                const actionDiv = document.getElementById(`action${id}`);
-                const card = document.getElementById(`cardPlan${id}`);
-                const badge = document.getElementById(`badge${id}`);
-                
-                if (activePlans[id]) {
-                    card.classList.add('active-plan');
-                    badge.innerHTML = `<span class="active-badge"><i class="fas fa-cog fa-spin"></i> ACTIVE</span>`;
-                    
-                    const lastClaim = lastClaims[id] || 0;
-                    const canClaim = (now - lastClaim) >= 24 * 60 * 60 * 1000;
+            PLANS_DATA.forEach(plan => {
+                const activePlans = userData.activePlans || {};
+                const lastClaims = userData.lastClaims || {};
+                const isActive = activePlans[plan.id];
+                const lastClaim = lastClaims[plan.id] || 0;
+                const timeRemaining = Math.max(0, (lastClaim + 24 * 60 * 60 * 1000) - now);
+                const canClaim = timeRemaining === 0;
 
-                    actionDiv.innerHTML = `
-                        <button class="claim-btn" ${canClaim ? '' : 'disabled'} onclick="window.claimProfit(${id})">
-                            <i class="fas fa-hand-holding-usd"></i> ${canClaim ? 'Claim Daily Profit' : 'Mining...'}
+                const card = document.createElement('div');
+                card.className = `plan-card ${isActive ? 'active-plan' : ''}`;
+                
+                let actionHtml = isActive 
+                    ? `<div>
+                        <button class="claim-btn" ${canClaim ? '' : 'disabled'} onclick="claimProfit(${plan.id}, ${plan.profit})">
+                            <i class="fas fa-coins"></i> ${canClaim ? 'Claim Profit' : 'Mining...'}
                         </button>
-                        <button class="cancel-btn" onclick="window.cancelPlan(${id})">Cancel Plan (10% Fee)</button>
-                    `;
-                } else {
-                    card.classList.remove('active-plan');
-                    badge.innerHTML = '';
-                    let price = id === 1 ? 20 : (id === 2 ? 60 : 120);
-                    actionDiv.innerHTML = `<button class="buy-btn" onclick="window.handlePlan(${id}, ${price})">Activate Level ${id}</button>`;
-                }
+                        <button class="cancel-btn" onclick="cancelPlan(${plan.id}, ${plan.price})">
+                            <i class="fas fa-times-circle"></i> Cancel Plan (10% Fee)
+                        </button>
+                       </div>`
+                    : `<button class="buy-btn" onclick="buyPlan(${plan.id}, ${plan.price})">Activate Miner</button>`;
+
+                let timerHtml = isActive && !canClaim 
+                    ? `<div class="timer-box" id="timer-${plan.id}"><i class="fas fa-clock"></i> Next Claim: ${formatTime(timeRemaining)}</div>`
+                    : (isActive ? `<div class="timer-box" style="color:var(--success)"><i class="fas fa-check-circle"></i> Ready to Claim</div>` : '');
+
+                card.innerHTML = `
+                    ${timerHtml}
+                    <div class="plan-info">
+                        <h3>${plan.name}</h3>
+                        <div class="profit-tag">Daily Profit: $${plan.profit.toFixed(2)} (${plan.label})</div>
+                        <h2>$${plan.price.toFixed(2)}</h2>
+                    </div>
+                    ${actionHtml}
+                `;
+                container.appendChild(card);
             });
         }
 
-        window.handlePlan = async (planId, price) => {
-            if (currentBalance < price) {
-                return Swal.fire('Error', 'Insufficient Balance!', 'error');
-            }
+        function renderHistory() {
+            const histDiv = document.getElementById('earningHistory');
+            const uid = auth.currentUser.uid;
+            onValue(ref(db, `transactions/${uid}`), (snap) => {
+                const data = snap.val();
+                if(!data) return;
+                let html = '';
+                const sortedKeys = Object.keys(data).reverse().slice(0, 10);
+                sortedKeys.forEach(key => {
+                    const tx = data[key];
+                    if(tx.type === 'PROFIT_CLAIM') {
+                        html += `
+                        <div class="history-card">
+                            <div class="hist-info">
+                                <h4>${tx.title}</h4>
+                                <small>${new Date(tx.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div class="hist-amt">+$${parseFloat(tx.amount).toFixed(2)}</div>
+                        </div>`;
+                    }
+                });
+                if(html) histDiv.innerHTML = html;
+            });
+        }
 
-            const result = await Swal.fire({
-                title: 'Confirm Purchase',
-                text: `Activate Level ${planId} Miner for $${price}?`,
+        window.buyPlan = async (id, price) => {
+            const bal = parseFloat(userData.totalBalance || 0);
+            if(bal < price) return Swal.fire('Error', 'Insufficient Balance!', 'error');
+
+            const confirm = await Swal.fire({
+                title: 'Confirm',
+                text: `Activate for $${price}?`,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#38bdf8',
-                confirmButtonText: 'Confirm'
+                confirmButtonColor: '#00d2ff'
             });
 
-            if (!result.isConfirmed) return;
-            Swal.fire({ title: 'Activating...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-            try {
+            if(confirm.isConfirmed) {
                 const uid = auth.currentUser.uid;
-                
-                // Calculate Reward
-                let rewardAmt = 0;
-                if (planId === 1) rewardAmt = 4;        
-                else if (planId === 2) rewardAmt = 15;  
-                else if (planId === 3) rewardAmt = 36;  
-
-                // 1. Update Current User
-                await update(ref(db, 'users/' + uid), {
-                    totalBalance: (currentBalance - price).toFixed(2),
-                    miningStatus: 'active', 
-                    [`activePlans/${planId}`]: true,
-                    [`lastClaims/${planId}`]: Date.now()
+                await update(ref(db, `users/${uid}`), {
+                    totalBalance: (bal - price).toFixed(2),
+                    [`activePlans/${id}`]: true,
+                    [`lastClaims/${id}`]: Date.now()
                 });
-
-                // 2. Referral Reward Logic (Optimized)
-                if (userData.referredBy) {
-                    const usersRef = ref(db, 'users');
-                    const usersSnap = await get(usersRef);
-                    
-                    if (usersSnap.exists()) {
-                        let uplinerUid = null;
-                        const allUsers = usersSnap.val();
-                        
-                        // Look for the user who owns this referral code
-                        for (let key in allUsers) {
-                            if (allUsers[key].referralCode === userData.referredBy) {
-                                uplinerUid = key;
-                                break;
-                            }
-                        }
-
-                        if (uplinerUid) {
-                            const currentTeamReward = parseFloat(allUsers[uplinerUid].teamReward || 0);
-                            await update(ref(db, 'users/' + uplinerUid), {
-                                teamReward: (currentTeamReward + rewardAmt).toFixed(2),
-                                hasNewReward: true
-                            });
-                        }
-                    }
-                }
-
-                // 3. Transaction Entry
-                await set(ref(db, `transactions/${uid}/${Date.now()}`), {
-                    amount: price,
-                    type: 'PLAN_PURCHASE',
-                    status: 'SUCCESS',
-                    title: `Miner Level ${planId} Activated`,
-                    timestamp: Date.now()
-                });
-
-                Swal.fire('Success', 'Mining Started Successfully!', 'success');
-            } catch (e) { 
-                console.error(e);
-                Swal.fire('Error', 'Activation failed.', 'error'); 
+                Swal.fire('Success', 'Miner Activated!', 'success');
             }
         };
 
-        window.claimProfit = async (planId) => {
-            let profit = planId === 1 ? 0.40 : (planId === 2 ? 1.80 : 4.20);
-            Swal.fire({ title: 'Collecting...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
-            try {
-                const uid = auth.currentUser.uid;
-                const userSnap = await get(ref(db, 'users/' + uid));
-                const currentWithdrawable = parseFloat(userSnap.val().withdrawable || 0);
-
-                await update(ref(db, 'users/' + uid), {
-                    withdrawable: (currentWithdrawable + profit).toFixed(2),
-                    [`lastClaims/${planId}`]: Date.now()
-                });
-
-                await set(ref(db, `transactions/${uid}/${Date.now()}`), {
-                    amount: profit,
-                    type: 'PROFIT_CLAIM',
-                    status: 'SUCCESS',
-                    title: `Profit Level ${planId}`,
-                    timestamp: Date.now()
-                });
-
-                Swal.fire('Claimed!', `$${profit.toFixed(2)} added to withdrawable.`, 'success');
-            } catch (e) { Swal.fire('Error', 'Failed to claim.', 'error'); }
-        };
-
-        window.cancelPlan = async (planId) => {
-            let price = planId === 1 ? 20 : (id === 2 ? 60 : 120);
-            let fee = price * 0.10;
-            let refund = price - fee;
-
-            const result = await Swal.fire({
-                title: 'Cancel Plan?',
-                text: `10% fee ($${fee}) applies. Refund: $${refund.toFixed(2)}`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                confirmButtonText: 'Yes, Cancel'
+        window.claimProfit = async (id, profit) => {
+            const uid = auth.currentUser.uid;
+            const withdrawable = parseFloat(userData.withdrawable || 0);
+            
+            await update(ref(db, `users/${uid}`), {
+                withdrawable: (withdrawable + profit).toFixed(2),
+                [`lastClaims/${id}`]: Date.now()
             });
 
-            if (result.isConfirmed) {
-                Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
-                const uid = auth.currentUser.uid;
-                
-                const snap = await get(ref(db, `users/${uid}/activePlans`));
-                let plansLeft = snap.exists() ? Object.keys(snap.val()).length - 1 : 0;
+            await push(ref(db, `transactions/${uid}`), {
+                amount: profit,
+                type: 'PROFIT_CLAIM',
+                title: `Mining Profit (Plan ${id})`,
+                timestamp: Date.now()
+            });
 
-                await update(ref(db, 'users/' + uid), {
-                    totalBalance: (currentBalance + refund).toFixed(2),
-                    miningStatus: plansLeft > 0 ? 'active' : 'inactive',
-                    [`activePlans/${planId}`]: null,
-                    [`lastClaims/${planId}`]: null
+            Swal.fire('Claimed!', `$${profit} added to wallet.`, 'success');
+        };
+
+        window.cancelPlan = async (id, price) => {
+            const fee = price * 0.10;
+            const refund = price - fee;
+            
+            const confirm = await Swal.fire({
+                title: 'Cancel Plan?',
+                text: `10% cancellation fee ($${fee.toFixed(2)}) will be charged. Refund: $${refund.toFixed(2)}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                confirmButtonText: 'Yes, Cancel it'
+            });
+
+            if(confirm.isConfirmed) {
+                const uid = auth.currentUser.uid;
+                const currentBal = parseFloat(userData.totalBalance || 0);
+                
+                await update(ref(db, `users/${uid}`), {
+                    totalBalance: (currentBal + refund).toFixed(2),
+                    [`activePlans/${id}`]: null,
+                    [`lastClaims/${id}`]: null
                 });
 
                 Swal.fire('Cancelled', 'Plan removed and balance refunded.', 'success');
             }
         };
+
+        function formatTime(ms) {
+            const h = Math.floor(ms / 3600000);
+            const m = Math.floor((ms % 3600000) / 60000);
+            const s = Math.floor((ms % 60000) / 1000);
+            return `${h}h ${m}m ${s}s`;
+        }
+
+        setInterval(() => { if(userData) renderPlans(); }, 1000);
     </script>
 </body>
 </html>

@@ -3,144 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MetaMint Gold | Dashboard</title>
+    <title>MetaMint Gold | Premium Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background-color: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; -webkit-user-select: none; user-select: none; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top:0; z-index: 1000; }
-        .user-avatar { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #38bdf8; object-fit: cover; }
-        .dot-badge { display: none; position: absolute; top: -3px; right: -3px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #1e293b; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-        
-        /* --- RAMZAN ANIMATION STYLES --- */
-        .ramzan-container {
-            position: relative;
-            margin: 15px;
-            padding: 25px 10px;
-            background: linear-gradient(135deg, #001a33 0%, #003366 100%);
-            border-radius: 20px;
-            border: 1px solid #d4af37;
-            overflow: hidden;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+        :root {
+            --primary: #00d2ff;
+            --secondary: #3a7bd5;
+            --accent: #fbbf24;
+            --eid-gold: #d4af37;
+            --bg-dark: #050a18;
+            --card-bg: rgba(255, 255, 255, 0.05);
         }
-        .ramzan-content { position: relative; z-index: 2; }
-        .ramzan-title {
-            font-size: 1.8rem;
-            color: #FFD700;
-            margin: 0;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-            animation: ramzanGlow 2s infinite alternate;
-        }
-        .ramzan-sub { color: #cbd5e1; font-size: 0.8rem; margin-top: 5px; letter-spacing: 1px; }
-        .live-star { position: absolute; background: white; border-radius: 50%; opacity: 0; animation: twinkle var(--duration) infinite ease-in-out; }
-        @keyframes ramzanGlow { from { transform: scale(1); } to { transform: scale(1.05); } }
-        @keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1.2); } }
-        /* ------------------------------ */
 
-        .brand-section { text-align: center; padding: 30px 10px; }
-        .main-logo-3d { font-size: 2.6rem; font-weight: 900; margin: 0; color: #d4af37; text-transform: uppercase; text-shadow: 0 4px 0 #666, 0 8px 10px rgba(0,0,0,0.5); }
-        .sub-tagline { color: #fbbf24; font-size: 0.75rem; letter-spacing: 3px; font-weight: bold; margin-top: 5px; text-transform: uppercase; }
-        .balance-cards { display: flex; gap: 15px; padding: 0 20px; margin-top: 10px; }
-        .card { flex: 1; padding: 20px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .main-card { background: linear-gradient(135deg, #38bdf8, #1e40af); }
-        .secondary-card { background: #1e293b; border: 1px solid #334155; }
-        .reward-gold-card { background: linear-gradient(135deg, #d4af37, #f1c40f, #9a7d0a); margin: 20px; padding: 20px; border-radius: 20px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.3); border: 1px solid #f39c12; color: #0f172a; }
-        .claim-reward-btn { background: #0f172a; color: #fbbf24; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; cursor: pointer; }
-        .task-bonus-box { margin: 20px; background: linear-gradient(45deg, #1e293b, #0f172a); border: 2px solid #38bdf8; border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
-        .task-title { color: #38bdf8; font-weight: 800; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .task-content { font-size: 0.85rem; color: #cbd5e1; line-height: 1.6; }
-        .task-highlight { color: #fbbf24; font-weight: bold; }
-        .checkin-section { background: #1e293b; margin: 20px; border-radius: 20px; padding: 20px; border: 1px solid #334155; text-align: center; }
-        .streak-container { display: flex; justify-content: space-between; margin: 15px 0; }
-        .day-circle { width: 32px; height: 32px; border-radius: 50%; background: #0f172a; border: 2px solid #334155; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; }
-        .day-circle.completed { background: #38bdf8; border-color: #38bdf8; color: #0f172a; }
-        .day-circle.current { border-color: #fbbf24; color: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.3); }
-        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; margin-top: 20px; }
-        .btn { padding: 14px; border-radius: 12px; color: white; font-weight: bold; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
-        .main-footer { background: #0a0f1d; padding: 40px 20px 120px 20px; border-top: 2px solid #1e293b; margin-top: 40px; }
-        .footer-grid { display: grid; grid-template-columns: 1fr; gap: 30px; text-align: center; }
-        .footer-col h3 { color: #38bdf8; font-size: 1rem; margin-bottom: 15px; letter-spacing: 1px; }
-        .footer-col p { font-size: 0.75rem; color: #64748b; line-height: 1.8; margin: 0; }
-        .footer-divider { height: 1px; background: linear-gradient(90deg, transparent, #334155, transparent); margin: 25px 0; }
-        .locked-tag { background: rgba(56, 189, 248, 0.1); color: #38bdf8; padding: 5px 15px; border-radius: 20px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; border: 1px solid #38bdf830; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
-        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.75rem; flex: 1; }
-        .nav-item i { display: block; font-size: 1.3rem; margin-bottom: 4px; }
-        .nav-item.active { color: #38bdf8; }
-        #adminBox { display: none; margin: 20px; padding: 20px; background: #ef444415; border: 1px dashed #ef4444; border-radius: 15px; text-align: center; }
+        body { 
+            background: radial-gradient(circle at top, #112240 0%, var(--bg-dark) 100%); 
+            color: white; 
+            font-family: 'Poppins', 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            overflow-x: hidden; 
+            width: 100%; 
+            -webkit-user-select: none; 
+            user-select: none; 
+        }
+
+        /* --- MODERN HEADER --- */
+        .dash-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 15px 20px; 
+            background: rgba(10, 20, 40, 0.8); 
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            position: sticky; 
+            top:0; 
+            z-index: 1000; 
+        }
+
+        .user-avatar { width: 42px; height: 42px; border-radius: 12px; border: 2px solid var(--primary); padding: 2px; }
+
+        /* --- EID SPECIAL OFFER BOX --- */
+        .eid-offer-box {
+            margin: 20px;
+            padding: 25px 20px;
+            background: linear-gradient(135deg, #004d26 0%, #002200 100%);
+            border: 2px solid var(--eid-gold);
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
+            100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        }
+
+        .eid-offer-box h2 { color: var(--eid-gold); margin: 0; font-size: 1.6rem; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.5); }
+        .eid-offer-box p { color: #fff; font-size: 0.95rem; margin: 10px 0; font-weight: 300; }
+        .cashback-badge {
+            display: inline-block;
+            background: linear-gradient(90deg, #d4af37, #f1c40f);
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            margin-top: 5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-8px);}
+            60% {transform: translateY(-4px);}
+        }
+
+        /* --- BALANCE CARDS --- */
+        .balance-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
+        .card { 
+            padding: 20px; 
+            border-radius: 24px; 
+            background: var(--card-bg); 
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(5px);
+        }
+        .main-card { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; }
+        
+        .dot-badge { position: absolute; top: -2px; right: -2px; background: #ff4757; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #0a1428; display: none; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .btn { padding: 16px; border-radius: 16px; border: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer;}
+        .btn-deposit { background: #10b981; color: white; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+        .btn-withdraw { background: #f43f5e; color: white; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.2); }
+
+        /* --- PARTNERS BOX --- */
+        .partners-box {
+            margin: 20px;
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+        }
+        .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .partner-item img { width: 32px; height: 32px; object-fit: contain; }
+        .partner-item p { font-size: 0.6rem; color: #94a3b8; margin: 5px 0 0 0; }
+
+        /* --- FOOTER --- */
+        .main-footer { background: #030712; padding: 40px 20px 120px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 40px; }
+        .footer-badge { background: rgba(0, 210, 255, 0.1); color: var(--primary); padding: 6px 14px; border-radius: 50px; font-size: 0.65rem; font-weight: bold; border: 1px solid rgba(0, 210, 255, 0.2); }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(10, 20, 40, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
+        .nav-item { color: #94a3b8; text-decoration: none; text-align: center; font-size: 0.7rem; }
+        .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary); }
+
+        .day-circle { width:35px; height:35px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); font-size:0.8rem; }
+        #adminBox { display: none; margin: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; border-radius: 15px; }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <header class="dash-header">
-        <div class="user-info" style="display:flex; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap:12px;">
             <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar" alt="Avatar">
             <div>
-                <h3 id="dashUsername" style="margin:0; font-size:1.1rem;">Loading...</h3>
-                <small style="color:#38bdf8; font-weight:bold;">UID: <span id="dashUID">####</span></small>
+                <div style="color: var(--primary); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: -4px;">METAMINT GOLD</div>
+                <h4 id="dashUsername" style="margin:0; font-size:1rem;">Loading...</h4>
+                <small style="opacity: 0.6;">UID: <span id="dashUID">####</span></small>
             </div>
         </div>
-        <div style="position: relative; display:flex; gap:18px;">
+        <div style="display:flex; gap:18px;">
             <div style="position:relative; cursor:pointer;" onclick="window.location.href='reward.html'">
-                <i class="fas fa-gift" style="font-size: 1.3rem; color: #fbbf24;"></i>
+                <i class="fas fa-gift" style="font-size: 1.4rem; color: var(--accent);"></i>
                 <span id="rewardDot" class="dot-badge"></span>
             </div>
             <div style="position:relative; cursor:pointer;" id="notifBtn">
-                <i class="fas fa-bell" style="font-size: 1.3rem;"></i>
+                <i class="fas fa-bell" style="font-size: 1.4rem; color: #fff;"></i>
                 <span id="notifBadge" class="dot-badge"></span>
             </div>
-            <i class="fas fa-sign-out-alt" id="logoutBtn" style="cursor: pointer; font-size: 1.3rem;"></i>
+            <i class="fas fa-power-off" id="logoutBtn" style="font-size: 1.4rem; color: #f43f5e; cursor:pointer;"></i>
         </div>
     </header>
 
-    <div class="ramzan-container" id="star-field">
-        <div class="ramzan-content">
-            <h1 class="ramzan-title">🌙 Ramzan Mubarak ✨</h1>
-            <p class="ramzan-sub">MetaMint Gold ki taraf se khushiyan mubarak!</p>
-        </div>
-    </div>
-
-    <div class="brand-section">
-        <h1 class="main-logo-3d">MetaMint Gold</h1>
-        <div class="sub-tagline">Cloud Mining Revolution</div>
+    <div class="eid-offer-box">
+        <h2>🌙 EID SPECIAL OFFER ✨</h2>
+        <p>Grab your Eid gift! Deposit now and get</p>
+        <div class="cashback-badge">50% CASHBACK + REWARD 🎁</div>
+        <p style="font-size: 0.7rem; opacity: 0.7; margin-top: 12px; letter-spacing: 1px;">VALID FOR NEXT 24 HOURS ONLY</p>
     </div>
 
     <div id="adminBox">
-        <h4 style="color:#ef4444; margin:0 0 10px 0;"><i class="fas fa-user-shield"></i> ADMIN PANEL</h4>
-        <button onclick="window.location.href='admin.html'" style="background:#ef4444; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">Manage Requests</button>
+        <button onclick="window.location.href='admin.html'" style="background:#ef4444; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; width:100%; cursor:pointer;"><i class="fas fa-user-shield"></i> OPEN ADMIN PANEL</button>
     </div>
 
     <section class="balance-cards">
         <div class="card main-card">
-            <p style="margin:0; font-size: 0.8rem; opacity: 0.9;">Deposit Balance</p>
+            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; opacity: 0.9;">Mining Balance</span>
             <h2 id="totalBalance" style="margin:10px 0 0 0; font-size: 1.8rem;">$0.00</h2>
         </div>
-        <div class="card secondary-card">
-            <p style="margin:0; font-size: 0.8rem; color: #94a3b8;">Withdrawable</p>
-            <h2 id="withdrawableBalance" style="margin:10px 0 0 0; font-size: 1.8rem; color: #fbbf24;">$0.00</h2>
+        <div class="card">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Withdrawable</span>
+            <h2 id="withdrawableBalance" style="margin:10px 0 0 0; font-size: 1.8rem; color: var(--accent);">$0.00</h2>
         </div>
     </section>
 
-    <div class="task-bonus-box">
-        <div class="task-title"><i class="fas fa-bolt"></i> Referral Mission</div>
-        <div class="task-content">
-            Expand your network! When your referrals deposit, you receive an instant <span class="task-highlight">25% Referral Commission</span>. Keep growing to maximize your passive income!
-        </div>
+    <div class="action-btns">
+        <button onclick="window.location.href='deposit.html'" class="btn btn-deposit"><i class="fas fa-wallet"></i> Deposit</button>
+        <button onclick="window.location.href='withdraw.html'" class="btn btn-withdraw"><i class="fas fa-hand-holding-usd"></i> Withdraw</button>
     </div>
 
-    <div class="reward-gold-card">
-        <h4><i class="fas fa-trophy"></i> Referral Bonus Wallet</h4>
-        <h2 id="teamRewardDisplay">$0.00</h2>
-        <button id="claimTeamRewardBtn" class="claim-reward-btn">
-            <i class="fas fa-coins"></i> Claim Commission to Withdrawable
+    <div style="background: linear-gradient(135deg, #1e293b, #0f172a); margin: 20px; padding: 25px; border-radius: 24px; border: 1px solid var(--eid-gold); text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
+        <p style="margin:0; font-size: 0.8rem; color: var(--eid-gold); font-weight: bold; letter-spacing: 1px;">REFERRAL COMMISSION WALLET</p>
+        <h2 id="teamRewardDisplay" style="font-size: 2.2rem; margin: 12px 0; color: #fff;">$0.00</h2>
+        <button id="claimTeamRewardBtn" style="background: var(--eid-gold); color: #000; border:none; padding:14px; border-radius:14px; font-weight:900; width:100%; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <i class="fas fa-coins"></i> CLAIM TO WITHDRAWABLE
         </button>
     </div>
 
-    <div class="checkin-section">
-        <h4 style="color: #38bdf8; margin:0; font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> Daily Reward</h4>
-        <div class="streak-container">
+    <div class="partners-box">
+        <h4 style="color: var(--primary); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px;">Verified Global Partners</h4>
+        <div class="partner-grid">
+            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/binance/binance-icon.svg" alt="Binance"><p>Binance</p></div>
+            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/tether/tether-icon.svg" alt="Tether"><p>USDT (TRC20)</p></div>
+            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/coinbase/coinbase-icon.svg" alt="Coinbase"><p>Coinbase</p></div>
+            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/trustwallet/trustwallet-icon.svg" alt="Trust"><p>Trust Wallet</p></div>
+            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/tron/tron-icon.svg" alt="Tron"><p>TRON</p></div>
+            <div class="partner-item"><img src="https://cdn-icons-png.flaticon.com/512/5806/5806364.png" style="filter:invert(1)" alt="Certik"><p>Certik Audited</p></div>
+        </div>
+    </div>
+
+    <div style="background: var(--card-bg); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);">
+        <h4 style="margin:0 0 15px 0; color: var(--primary); font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> DAILY LOGIN STREAK</h4>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;" id="streakContainer">
             <div id="d1" class="day-circle">1</div>
             <div id="d2" class="day-circle">2</div>
             <div id="d3" class="day-circle">3</div>
@@ -149,37 +212,39 @@
             <div id="d6" class="day-circle">6</div>
             <div id="d7" class="day-circle">7</div>
         </div>
-        <button id="checkinBtn" style="background: #38bdf8; color: #0f172a; border: none; padding: 12px; border-radius: 10px; font-weight: bold; width: 100%; cursor: pointer;">Claim Bonus</button>
-    </div>
-
-    <div class="action-btns">
-        <button onclick="window.location.href='deposit.html'" class="btn" style="background: #22c55e;"><i class="fas fa-wallet"></i> Deposit</button>
-        <button onclick="window.location.href='withdraw.html'" class="btn" style="background: #e11d48;"><i class="fas fa-hand-holding-usd"></i> Withdraw</button>
+        <button id="checkinBtn" style="background: rgba(0, 210, 255, 0.1); color: var(--primary); border: 1px solid var(--primary); padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer;">Collect Reward</button>
     </div>
 
     <footer class="main-footer">
-        <div class="footer-grid">
-            <div class="footer-col">
-                <span class="locked-tag"><i class="fas fa-shield-alt"></i> Encrypted Protocol</span>
-                <h2 style="color: #38bdf8; margin: 15px 0 10px 0; letter-spacing: 2px;">METAMINT GOLD</h2>
-                <p>MetaMint Gold is a leading cloud mining firm registered and regulated to provide high-end USDT mining solutions. We use secure TRC20 protocols to ensure your digital assets are safe. Our infrastructure is powered by cutting-edge ASICs located in secure data centers worldwide.</p>
+        <h2 style="color: var(--primary); font-size: 1.4rem; margin: 0; letter-spacing: 1px;">METAMINT GOLD</h2>
+        <p style="color: #64748b; font-size: 0.8rem; line-height: 1.6; margin-top: 10px;">
+            MetaMint Gold is a premier cloud mining platform providing secure and high-yield USDT mining. We utilize advanced TRC20 protocols to ensure maximum security for your assets.
+        </p>
+        
+        <div style="margin: 25px 0; display: flex; gap: 10px;">
+            <span class="footer-badge"><i class="fas fa-shield-check"></i> SSL SECURED</span>
+            <span class="footer-badge" style="color:#fbbf24; border-color:rgba(251,191,36,0.2);"><i class="fas fa-lock"></i> AES-256 BIT</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+            <div>
+                <h4 style="color: #fff; font-size: 0.85rem; margin-bottom: 12px; text-transform: uppercase;">Legal</h4>
+                <ul style="list-style: none; padding: 0; font-size: 0.75rem; color: #64748b; line-height: 2;">
+                    <li>Privacy Policy</li>
+                    <li>Terms & Conditions</li>
+                    <li>Mining License</li>
+                </ul>
             </div>
-            <div class="footer-divider"></div>
-            <div class="footer-col">
-                <h3>SECURITY & LEGAL</h3>
-                <p>All data and financial transactions are protected by 256-bit SSL encryption. Any attempt to exploit system vulnerabilities will result in permanent account suspension without refund. Users must adhere to international digital asset regulations.</p>
+            <div>
+                <h4 style="color: #fff; font-size: 0.85rem; margin-bottom: 12px; text-transform: uppercase;">Support</h4>
+                <p style="color: #64748b; font-size: 0.75rem; line-height: 1.6;">24/7 technical support is available via our official Telegram channel.</p>
             </div>
-            <div class="footer-divider"></div>
-            <div class="footer-col">
-                <h3>ABOUT OUR MISSION</h3>
-                <p>Our mission is to democratize the world of cryptocurrency mining, making it accessible to everyone. MetaMint Gold provides a stable environment for long-term passive income generation through cloud-based asset management.</p>
-            </div>
-            <div class="footer-col">
-                <p style="color: #475569; font-size: 0.65rem; margin-top: 20px;">
-                    © 2024-2026 MetaMint Gold Group Ltd.<br>
-                    Global Digital Asset Authority Reg #756-XX9
-                </p>
-            </div>
+        </div>
+
+        <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 30px 0;"></div>
+        <div style="text-align: center; color: #475569; font-size: 0.65rem;">
+            © 2024-2026 MetaMint Gold Group Ltd.<br>
+            Reg No: #MMG-7721-UK | HQ: Singapore
         </div>
     </footer>
 
@@ -188,7 +253,7 @@
         <a href="plans.html" class="nav-item"><i class="fas fa-gem"></i><span>Plans</span></a>
         <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
         <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
-        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i><span>Profile</span></a>
     </nav>
 
     <script type="module">
@@ -209,26 +274,6 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- Live Star Generation Script ---
-        function createStars() {
-            const container = document.getElementById('star-field');
-            const starCount = 40;
-            for (let i = 0; i < starCount; i++) {
-                const star = document.createElement('div');
-                star.className = 'live-star';
-                const size = Math.random() * 3 + 'px';
-                star.style.width = size;
-                star.style.height = size;
-                star.style.top = Math.random() * 100 + '%';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
-                star.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(star);
-            }
-        }
-        window.onload = createStars;
-        // -----------------------------------
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (user.email === "dreamsagweb@gmail.com") document.getElementById('adminBox').style.display = 'block';
@@ -237,7 +282,7 @@
                     const data = snapshot.val();
                     if (data) {
                         if (data.isBlocked === true) {
-                            document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:#0f172a; color:white;"><div style="background:#1e293b; padding:40px; border-radius:20px; border:2px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);"><i class="fas fa-user-slash" style="font-size:5rem; color:#ef4444; margin-bottom:20px;"></i><h1 style="color:#ef4444; margin-bottom:10px;">ACCOUNT SUSPENDED</h1><p style="color:#94a3b8; line-height:1.6; font-size:0.9rem;">Your account has been temporarily blocked due to suspicious activity or violation of our terms. Please contact our official support for further assistance.</p><button onclick="window.location.href='index.html'" style="background:#ef4444; color:white; border:none; padding:12px 30px; border-radius:10px; font-weight:bold; margin-top:25px; cursor:pointer; width:100%;">Return to Home</button></div></div>`;
+                            document.body.innerHTML = `<div style="height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:30px; background:#050a18; color:white;"><h1>ACCOUNT SUSPENDED</h1><p>Contact support for details.</p></div>`;
                             return; 
                         }
                         document.getElementById('dashUsername').innerText = data.username || "User";
@@ -255,7 +300,7 @@
                     const snap = await get(userRef);
                     const userData = snap.val();
                     const today = new Date().toISOString().split('T')[0];
-                    if (userData.lastCheckinDate === today) return Swal.fire('Wait!', 'Already claimed today!', 'warning');
+                    if (userData.lastCheckinDate === today) return Swal.fire({ title: 'Already Claimed!', text: 'Come back tomorrow!', icon: 'warning', background: '#112240', color: '#fff' });
                     
                     let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
                     const bonus = (streak === 7) ? 0.40 : 0.10;
@@ -267,21 +312,7 @@
                         lastCheckinDate: today 
                     });
                     
-                    await set(ref(db, `transactions/${user.uid}/${Date.now()}`), { 
-                        amount: bonus, 
-                        type: 'DAILY_BONUS', 
-                        status: 'SUCCESS', 
-                        title: (streak === 7) ? 'Weekly Bonus' : 'Daily Reward', 
-                        timestamp: Date.now() 
-                    });
-                    
-                    Swal.fire({
-                        title: 'Success!',
-                        text: streak === 7 ? `Weekly Bonus of $${bonus} added!` : `$${bonus} Daily Reward added!`,
-                        icon: 'success',
-                        background: '#1e293b',
-                        color: '#fff'
-                    });
+                    Swal.fire({ title: 'Reward Collected!', text: `$${bonus} added to withdrawable balance.`, icon: 'success', background: '#112240', color: '#fff' });
                 };
 
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
@@ -290,15 +321,14 @@
                     const reward = parseFloat(userData.referralWallet || 0);
                     if (reward > 0) {
                         await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
-                        await set(ref(db, `transactions/${user.uid}/${Date.now()}`), { amount: reward, type: 'REFERRAL_COMMISSION', status: 'SUCCESS', title: '25% Referral Bonus Claimed', timestamp: Date.now() });
-                        Swal.fire('Claimed!', `$${reward.toFixed(2)} moved to Withdrawable!`, 'success');
-                    } else Swal.fire('Info', 'No referral commission to claim.', 'info');
+                        Swal.fire({ title: 'Claimed!', text: `$${reward.toFixed(2)} moved to Withdrawable!`, icon: 'success', background: '#112240', color: '#fff' });
+                    } else Swal.fire({ title: 'Empty Wallet', text: 'No commission available to claim.', icon: 'info', background: '#112240', color: '#fff' });
                 };
 
                 document.getElementById('notifBtn').onclick = async () => {
                     const snap = await get(userRef);
                     if(snap.val().notification) {
-                        Swal.fire('Notification', snap.val().notification, 'info');
+                        Swal.fire({ title: 'System Message', text: snap.val().notification, icon: 'info', background: '#112240', color: '#fff' });
                         await update(userRef, { lastNotifSeen: true });
                     }
                 };
@@ -310,9 +340,9 @@
             for (let i = 1; i <= 7; i++) {
                 const circle = document.getElementById('d' + i);
                 if(circle) {
-                    circle.className = 'day-circle';
-                    if (i <= streak) circle.classList.add('completed');
-                    if (i === streak + 1) circle.classList.add('current');
+                    circle.style.background = (i <= streak) ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
+                    circle.style.color = (i <= streak) ? '#000' : '#fff';
+                    circle.style.borderColor = (i === streak + 1) ? 'var(--accent)' : 'rgba(255,255,255,0.1)';
                 }
             }
         }
