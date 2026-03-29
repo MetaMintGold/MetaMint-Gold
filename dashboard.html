@@ -44,7 +44,18 @@
 
         .user-avatar { width: 42px; height: 42px; border-radius: 12px; border: 2px solid var(--primary); padding: 2px; }
 
-        /* --- EID SPECIAL OFFER BOX --- */
+        /* --- ENHANCED BRANDING --- */
+        .brand-text {
+            color: var(--primary); 
+            font-size: 1.1rem; 
+            font-weight: 900; 
+            letter-spacing: 2px; 
+            margin-bottom: -2px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+            white-space: nowrap; /* Ensures it stays on one line */
+        }
+
+        /* --- SPECIAL OFFER BOX --- */
         .eid-offer-box {
             margin: 20px;
             padding: 25px 20px;
@@ -114,7 +125,7 @@
             text-align: center;
         }
         .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
-        .partner-item img { width: 32px; height: 32px; object-fit: contain; }
+        .partner-item img { width: 35px; height: 35px; object-fit: contain; }
         .partner-item p { font-size: 0.6rem; color: #94a3b8; margin: 5px 0 0 0; }
 
         /* --- FOOTER --- */
@@ -128,6 +139,11 @@
 
         .day-circle { width:35px; height:35px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); font-size:0.8rem; }
         #adminBox { display: none; margin: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; border-radius: 15px; }
+        
+        .transfer-section { background: rgba(255,255,255,0.03); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
+        .transfer-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
+        .t-to-m { background: var(--secondary); color: white; }
+        .m-to-t { background: transparent; border: 1px solid var(--secondary); color: white; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -136,7 +152,7 @@
         <div style="display:flex; align-items:center; gap:12px;">
             <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar" alt="Avatar">
             <div>
-                <div style="color: var(--primary); font-size: 0.65rem; font-weight: 800; letter-spacing: 1px; margin-bottom: -4px;">METAMINT GOLD</div>
+                <div class="brand-text">METAMINT GOLD</div>
                 <h4 id="dashUsername" style="margin:0; font-size:1rem;">Loading...</h4>
                 <small style="opacity: 0.6;">UID: <span id="dashUID">####</span></small>
             </div>
@@ -155,10 +171,10 @@
     </header>
 
     <div class="eid-offer-box">
-        <h2>🌙 EID SPECIAL OFFER ✨</h2>
-        <p>Grab your Eid gift! Deposit now and get</p>
+        <h2>✨ EXCLUSIVE SPECIAL OFFER ✨</h2>
+        <p>Grab your special gift! Deposit now and get</p>
         <div class="cashback-badge">50% CASHBACK + REWARD 🎁</div>
-        <p style="font-size: 0.7rem; opacity: 0.7; margin-top: 12px; letter-spacing: 1px;">VALID FOR NEXT 24 HOURS ONLY</p>
+        <p style="font-size: 0.7rem; opacity: 0.7; margin-top: 12px; letter-spacing: 1px;">VALID FOR NEXT 1 MONTH ONLY</p>
     </div>
 
     <div id="adminBox">
@@ -181,6 +197,12 @@
         <button onclick="window.location.href='withdraw.html'" class="btn btn-withdraw"><i class="fas fa-hand-holding-usd"></i> Withdraw</button>
     </div>
 
+    <div class="transfer-section">
+        <h4 style="margin:0 0 10px 0; color: var(--primary); font-size: 0.85rem; text-transform: uppercase;"><i class="fas fa-exchange-alt"></i> Internal Transfer</h4>
+        <button class="transfer-btn t-to-m" id="btnWtoM">Withdrawable to Mining (0% Fee)</button>
+        <button class="transfer-btn m-to-t" id="btnMtoW">Mining to Withdrawable (10% Fee)</button>
+    </div>
+
     <div style="background: linear-gradient(135deg, #1e293b, #0f172a); margin: 20px; padding: 25px; border-radius: 24px; border: 1px solid var(--eid-gold); text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
         <p style="margin:0; font-size: 0.8rem; color: var(--eid-gold); font-weight: bold; letter-spacing: 1px;">REFERRAL COMMISSION WALLET</p>
         <h2 id="teamRewardDisplay" style="font-size: 2.2rem; margin: 12px 0; color: #fff;">$0.00</h2>
@@ -192,11 +214,11 @@
     <div class="partners-box">
         <h4 style="color: var(--primary); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px;">Verified Global Partners</h4>
         <div class="partner-grid">
-            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/binance/binance-icon.svg" alt="Binance"><p>Binance</p></div>
-            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/tether/tether-icon.svg" alt="Tether"><p>USDT (TRC20)</p></div>
-            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/coinbase/coinbase-icon.svg" alt="Coinbase"><p>Coinbase</p></div>
-            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/trustwallet/trustwallet-icon.svg" alt="Trust"><p>Trust Wallet</p></div>
-            <div class="partner-item"><img src="https://www.vectorlogo.zone/logos/tron/tron-icon.svg" alt="Tron"><p>TRON</p></div>
+            <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/bnb.svg" alt="Binance"><p>Binance</p></div>
+            <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/usdt.svg" alt="Tether"><p>USDT (TRC20)</p></div>
+            <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/btc.svg" alt="Coinbase"><p>Coinbase</p></div>
+            <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/eth.svg" alt="Trust"><p>Trust Wallet</p></div>
+            <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/trx.svg" alt="Tron"><p>TRON</p></div>
             <div class="partner-item"><img src="https://cdn-icons-png.flaticon.com/512/5806/5806364.png" style="filter:invert(1)" alt="Certik"><p>Certik Audited</p></div>
         </div>
     </div>
@@ -295,6 +317,56 @@
                         updateBonusUI(data);
                     }
                 });
+
+                document.getElementById('btnWtoM').onclick = async () => {
+                    const { value: amount } = await Swal.fire({
+                        title: 'Transfer to Mining',
+                        input: 'number',
+                        inputLabel: 'Amount to Transfer (0% Fee)',
+                        inputPlaceholder: 'Enter amount...',
+                        showCancelButton: true,
+                        background: '#112240', color: '#fff'
+                    });
+                    if (amount && amount > 0) {
+                        const snap = await get(userRef);
+                        const userData = snap.val();
+                        if (parseFloat(userData.withdrawable) >= parseFloat(amount)) {
+                            await update(userRef, {
+                                withdrawable: (parseFloat(userData.withdrawable) - parseFloat(amount)).toFixed(2),
+                                totalBalance: (parseFloat(userData.totalBalance) + parseFloat(amount)).toFixed(2)
+                            });
+                            Swal.fire({ title: 'Success!', text: 'Balance moved to Mining!', icon: 'success', background: '#112240', color: '#fff' });
+                        } else {
+                            Swal.fire({ title: 'Error', text: 'Insufficient Withdrawable balance!', icon: 'error', background: '#112240', color: '#fff' });
+                        }
+                    }
+                };
+
+                document.getElementById('btnMtoW').onclick = async () => {
+                    const { value: amount } = await Swal.fire({
+                        title: 'Transfer to Withdrawable',
+                        html: '<p style="font-size:0.8rem; color:#aaa;">Note: 10% fee will be deducted</p>',
+                        input: 'number',
+                        inputLabel: 'Amount from Mining',
+                        inputPlaceholder: 'Enter amount...',
+                        showCancelButton: true,
+                        background: '#112240', color: '#fff'
+                    });
+                    if (amount && amount > 0) {
+                        const snap = await get(userRef);
+                        const userData = snap.val();
+                        if (parseFloat(userData.totalBalance) >= parseFloat(amount)) {
+                            const netAmount = (parseFloat(amount) * 0.9).toFixed(2); 
+                            await update(userRef, {
+                                totalBalance: (parseFloat(userData.totalBalance) - parseFloat(amount)).toFixed(2),
+                                withdrawable: (parseFloat(userData.withdrawable) + parseFloat(netAmount)).toFixed(2)
+                            });
+                            Swal.fire({ title: 'Success!', text: `$${netAmount} added after 10% fee.`, icon: 'success', background: '#112240', color: '#fff' });
+                        } else {
+                            Swal.fire({ title: 'Error', text: 'Insufficient Mining balance!', icon: 'error', background: '#112240', color: '#fff' });
+                        }
+                    }
+                };
 
                 document.getElementById('checkinBtn').onclick = async () => {
                     const snap = await get(userRef);

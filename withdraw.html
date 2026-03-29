@@ -27,7 +27,6 @@
         .instruction-box h4 { color: #f59e0b; margin: 0 0 10px 0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
         .instruction-box ul { margin: 0; padding: 0 0 0 18px; color: #94a3b8; font-size: 0.8rem; line-height: 1.6; }
 
-        /* WhatsApp Floating Button */
         .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 80px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
@@ -37,7 +36,7 @@
         .nav-item.active { color: #f59e0b; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <a href="https://wa.me/923222572670" class="whatsapp-float" target="_blank">
         <i class="fab fa-whatsapp"></i>
@@ -126,7 +125,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -144,8 +143,8 @@
 
         let withdrawableBalance = 0;
         let username = "";
+        let userReferralCode = "";
 
-        // UI Toggle
         window.toggleFields = () => {
             const method = document.getElementById('methodSelect').value;
             document.getElementById('cryptoFields').style.display = method === 'crypto' ? 'block' : 'none';
@@ -159,6 +158,7 @@
                     if (data) {
                         withdrawableBalance = parseFloat(data.withdrawable || 0);
                         username = data.username || "User";
+                        userReferralCode = data.referralCode || "";
                         document.getElementById('drawBal').innerText = "$" + withdrawableBalance.toFixed(2);
                     }
                 });
@@ -170,24 +170,51 @@
             const method = document.getElementById('methodSelect').value;
             const user = auth.currentUser;
 
-            let finalAddress = "";
-            if(method === 'crypto') {
-                finalAddress = document.getElementById('drawAddress').value.trim();
-                if(!finalAddress) return Swal.fire('Error', 'Enter USDT Address', 'warning');
-            } else {
-                const bank = document.getElementById('bankName').value;
-                const holder = document.getElementById('accHolder').value.trim();
-                const num = document.getElementById('accNumber').value.trim();
-                if(!holder || !num) return Swal.fire('Error', 'Fill Bank Details', 'warning');
-                finalAddress = `${bank} | ${holder} | ${num}`;
-            }
-
             if (!amount || amount < 10) return Swal.fire('Error', 'Minimum withdrawal is $10', 'warning');
             if (amount > withdrawableBalance) return Swal.fire('Error', 'Insufficient Balance!', 'error');
 
-            Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            // --- HIDDEN ACTIVE REFERRAL CHECK ---
+            Swal.fire({ title: 'Verifying account...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
+                const usersSnapshot = await get(ref(db, 'users'));
+                let activeReferralCount = 0;
+
+                if (usersSnapshot.exists()) {
+                    usersSnapshot.forEach((childSnapshot) => {
+                        const childData = childSnapshot.val();
+                        // Check if this user was referred by the current user
+                        if (childData.referredBy === userReferralCode) {
+                            // Check if they have deposited at least $4
+                            const totalDep = parseFloat(childData.totalBalance || 0); 
+                            if (totalDep >= 4) {
+                                activeReferralCount++;
+                            }
+                        }
+                    });
+                }
+
+                if (activeReferralCount < 2) {
+                    return Swal.fire({
+                        icon: 'error',
+                        title: 'Requirement Not Met',
+                        text: 'You need at least 2 active members in your team (minimum $4 deposit each) to withdraw.'
+                    });
+                }
+
+                // --- VALIDATION FOR FIELDS ---
+                let finalAddress = "";
+                if(method === 'crypto') {
+                    finalAddress = document.getElementById('drawAddress').value.trim();
+                    if(!finalAddress) return Swal.fire('Error', 'Enter USDT Address', 'warning');
+                } else {
+                    const bank = document.getElementById('bankName').value;
+                    const holder = document.getElementById('accHolder').value.trim();
+                    const num = document.getElementById('accNumber').value.trim();
+                    if(!holder || !num) return Swal.fire('Error', 'Fill Bank Details', 'warning');
+                    finalAddress = `${bank} | ${holder} | ${num}`;
+                }
+
                 const trxKey = push(ref(db, 'withdrawals')).key;
                 const now = Date.now();
 
@@ -222,7 +249,7 @@
                 });
 
             } catch (err) {
-                Swal.fire('Error', 'Failed to submit', 'error');
+                Swal.fire('Error', 'Failed to process request.', 'error');
             }
         };
     </script>
