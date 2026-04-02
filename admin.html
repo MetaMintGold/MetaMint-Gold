@@ -69,7 +69,6 @@
         });
 
         function loadData() {
-            // Deposits
             onValue(ref(db, 'depositRequests'), snap => {
                 const div = document.getElementById('depositList');
                 div.innerHTML = '';
@@ -79,13 +78,12 @@
                     const trxKey = d.id || child.key; 
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${d.amount}</b><br><small>UID: ${d.uid}</small><span class="txid-text">TXID: ${d.txid}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="window.approveDeposit('${child.key}', '${d.uidKey || d.uid}', ${d.amount}, '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="window.rejectDeposit('${child.key}', '${d.uidKey || d.uid}', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="window.approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${trxKey}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="window.rejectDeposit('${child.key}', '${d.uid}', '${trxKey}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // Withdrawals
             onValue(ref(db, 'withdrawRequests'), snap => {
                 const div = document.getElementById('withdrawList');
                 div.innerHTML = '';
@@ -94,13 +92,12 @@
                     const w = child.val();
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${w.username || 'User'} (UID: ${w.uid})</small><span class="txid-text">Addr: ${w.address}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="window.processWithdraw('${child.key}', '${child.val().uidKey || w.uid}', ${w.amount}, 'approved', '${child.key}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="window.processWithdraw('${child.key}', '${child.val().uidKey || w.uid}', ${w.amount}, 'rejected', '${child.key}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${child.key}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
+                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${child.key}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // User List
             onValue(ref(db, 'users'), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = '';
@@ -115,10 +112,8 @@
             });
         }
 
-        // --- CORE LOGIC: APPROVE DEPOSIT & ACTIVATE MINING ---
         window.approveDeposit = async (key, userUID, amount, trxKey) => {
             try {
-                // Find user by UID since userUID might be a number or string UID
                 const usersSnap = await get(ref(db, 'users'));
                 let userKey = null;
                 usersSnap.forEach(child => { if(String(child.val().uid) === String(userUID) || child.key === userUID) userKey = child.key; });
@@ -129,47 +124,51 @@
                     const depositAmount = parseFloat(amount);
                     const currentBal = parseFloat(uData.totalBalance || 0);
 
-                    // Update Balance AND set status to ACTIVE
+                    // 1. Balance Barhana aur Status ACTIVE karna
                     await update(userRef, { 
                         totalBalance: (currentBal + depositAmount).toFixed(2),
                         miningStatus: 'active' 
                     });
 
-                    // Handle Referral Commission (5%)
+                    // 2. 25% Commission Logic
                     const uplinerUID = String(uData.referredBy || "").trim();
                     if (uplinerUID && uplinerUID !== "none") {
                         usersSnap.forEach(async (child) => {
                             if (String(child.val().referralCode || "").trim() === uplinerUID) {
-                                const commission = depositAmount * 0.05;
+                                const commission = depositAmount * 0.25; // WAPAS 25% KAR DIYA
                                 const uplinerRef = ref(db, `users/${child.key}`);
                                 const currentRefWallet = parseFloat(child.val().referralWallet || 0);
-                                await update(uplinerRef, { referralWallet: (currentRefWallet + commission).toFixed(2) });
+                                await update(uplinerRef, { 
+                                    referralWallet: (currentRefWallet + commission).toFixed(2) 
+                                });
                             }
                         });
                     }
 
                     if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
                     await remove(ref(db, `depositRequests/${key}`));
-                    Swal.fire({ title: 'Approved!', text: 'Deposit success & User is now Active.', icon: 'success', background: '#1e293b', color: '#fff' });
-                } else { Swal.fire('Error', 'User not found in database', 'error'); }
+                    Swal.fire({ title: 'Approved!', text: 'Deposit success, Status Active & 25% Bonus sent.', icon: 'success', background: '#1e293b', color: '#fff' });
+                } else { Swal.fire('Error', 'User not found!', 'error'); }
             } catch (error) { Swal.fire('Error', 'Technical fault', 'error'); }
         };
 
         window.rejectDeposit = async (key, uid, trxKey) => {
-            // Try to find the userKey first for transaction history
             const usersSnap = await get(ref(db, 'users'));
             let userKey = uid;
             usersSnap.forEach(c => { if(String(c.val().uid) === String(uid)) userKey = c.key; });
-            
             if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'REJECTED' }); }
             await remove(ref(db, `depositRequests/${key}`));
             Swal.fire('Rejected', 'History updated', 'error');
         };
 
-        window.processWithdraw = async (key, userKey, amount, status, trxKey) => {
-            const userRef = ref(db, `users/${userKey}`);
-            const uSnap = await get(userRef);
-            if(uSnap.exists()) {
+        window.processWithdraw = async (key, userUID, amount, status, trxKey) => {
+            const usersSnap = await get(ref(db, 'users'));
+            let userKey = null;
+            usersSnap.forEach(c => { if(String(c.val().uid) === String(userUID) || c.key === userUID) userKey = c.key; });
+
+            if(userKey) {
+                const userRef = ref(db, `users/${userKey}`);
+                const uSnap = await get(userRef);
                 if(status === 'rejected') {
                     const currentWith = parseFloat(uSnap.val().withdrawable || 0);
                     await update(userRef, { withdrawable: (currentWith + amount).toFixed(2) });
