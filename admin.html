@@ -116,29 +116,35 @@
             try {
                 const usersSnap = await get(ref(db, 'users'));
                 let userKey = null;
-                usersSnap.forEach(child => { if(String(child.val().uid) === String(userUID) || child.key === userUID) userKey = child.key; });
+                let userData = null;
+                
+                usersSnap.forEach(child => { 
+                    if(String(child.val().uid) === String(userUID) || child.key === userUID) {
+                        userKey = child.key;
+                        userData = child.val();
+                    }
+                });
 
-                if(userKey){
-                    const userRef = ref(db, `users/${userKey}`);
-                    const uData = (await get(userRef)).val();
+                if(userKey && userData){
                     const depositAmount = parseFloat(amount);
-                    const currentBal = parseFloat(uData.totalBalance || 0);
+                    const currentBal = parseFloat(userData.totalBalance || 0);
 
                     // 1. Balance Barhana aur Status ACTIVE karna
-                    await update(userRef, { 
+                    await update(ref(db, `users/${userKey}`), { 
                         totalBalance: (currentBal + depositAmount).toFixed(2),
                         miningStatus: 'active' 
                     });
 
-                    // 2. 25% Commission Logic
-                    const uplinerUID = String(uData.referredBy || "").trim();
+                    // 2. 25% Commission Logic (FIXED)
+                    const uplinerUID = String(userData.referredBy || "").trim();
                     if (uplinerUID && uplinerUID !== "none") {
                         usersSnap.forEach(async (child) => {
-                            if (String(child.val().referralCode || "").trim() === uplinerUID) {
-                                const commission = depositAmount * 0.25; // WAPAS 25% KAR DIYA
-                                const uplinerRef = ref(db, `users/${child.key}`);
-                                const currentRefWallet = parseFloat(child.val().referralWallet || 0);
-                                await update(uplinerRef, { 
+                            const u = child.val();
+                            // Checks both referralCode and direct uid
+                            if (String(u.referralCode || "").trim() === uplinerUID || String(u.uid).trim() === uplinerUID) {
+                                const commission = depositAmount * 0.25;
+                                const currentRefWallet = parseFloat(u.referralWallet || 0);
+                                await update(ref(db, `users/${child.key}`), { 
                                     referralWallet: (currentRefWallet + commission).toFixed(2) 
                                 });
                             }
