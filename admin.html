@@ -69,6 +69,7 @@
         });
 
         function loadData() {
+            // Pending Deposits
             onValue(ref(db, 'depositRequests'), snap => {
                 const div = document.getElementById('depositList');
                 div.innerHTML = '';
@@ -84,6 +85,7 @@
                 });
             });
 
+            // Pending Withdrawals
             onValue(ref(db, 'withdrawRequests'), snap => {
                 const div = document.getElementById('withdrawList');
                 div.innerHTML = '';
@@ -98,6 +100,7 @@
                 });
             });
 
+            // User List
             onValue(ref(db, 'users'), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = '';
@@ -112,12 +115,14 @@
             });
         }
 
+        // --- FIXED DEPOSIT & COMMISSION LOGIC ---
         window.approveDeposit = async (key, userUID, amount, trxKey) => {
             try {
                 const usersSnap = await get(ref(db, 'users'));
                 let userKey = null;
                 let userData = null;
                 
+                // Find the user who deposited
                 usersSnap.forEach(child => { 
                     if(String(child.val().uid) === String(userUID) || child.key === userUID) {
                         userKey = child.key;
@@ -129,21 +134,26 @@
                     const depositAmount = parseFloat(amount);
                     const currentBal = parseFloat(userData.totalBalance || 0);
 
-                    // 1. Balance Barhana aur Status ACTIVE karna
+                    // 1. User ka balance aur status update karein
                     await update(ref(db, `users/${userKey}`), { 
                         totalBalance: (currentBal + depositAmount).toFixed(2),
                         miningStatus: 'active' 
                     });
 
-                    // 2. 25% Commission Logic (FIXED)
-                    const uplinerUID = String(userData.referredBy || "").trim();
+                    // 2. 25% UPLINER COMMISSION LOGIC (STABLE)
+                    const uplinerUID = String(userData.referredBy || "").trim().toLowerCase();
+                    
                     if (uplinerUID && uplinerUID !== "none") {
                         usersSnap.forEach(async (child) => {
                             const u = child.val();
-                            // Checks both referralCode and direct uid
-                            if (String(u.referralCode || "").trim() === uplinerUID || String(u.uid).trim() === uplinerUID) {
+                            const uCode = String(u.referralCode || "").trim().toLowerCase();
+                            const uID = String(u.uid || "").trim().toLowerCase();
+
+                            // Checking match for referralCode or UID
+                            if (uCode === uplinerUID || uID === uplinerUID) {
                                 const commission = depositAmount * 0.25;
                                 const currentRefWallet = parseFloat(u.referralWallet || 0);
+                                
                                 await update(ref(db, `users/${child.key}`), { 
                                     referralWallet: (currentRefWallet + commission).toFixed(2) 
                                 });
@@ -151,11 +161,24 @@
                         });
                     }
 
-                    if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); }
+                    // 3. Cleanup transaction
+                    if(trxKey) { 
+                        await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'SUCCESS' }); 
+                    }
                     await remove(ref(db, `depositRequests/${key}`));
-                    Swal.fire({ title: 'Approved!', text: 'Deposit success, Status Active & 25% Bonus sent.', icon: 'success', background: '#1e293b', color: '#fff' });
+                    
+                    Swal.fire({ 
+                        title: 'Approved!', 
+                        text: `Deposit added. 25% Commission sent to upliner (${uplinerUID})`, 
+                        icon: 'success', 
+                        background: '#1e293b', 
+                        color: '#fff' 
+                    });
                 } else { Swal.fire('Error', 'User not found!', 'error'); }
-            } catch (error) { Swal.fire('Error', 'Technical fault', 'error'); }
+            } catch (error) { 
+                console.error(error);
+                Swal.fire('Error', 'Technical fault', 'error'); 
+            }
         };
 
         window.rejectDeposit = async (key, uid, trxKey) => {
@@ -195,8 +218,9 @@
                 title: `Manage: ${u.username}`,
                 background: '#1e293b',
                 color: '#f8fafc',
-                html: `<label class="swal-label">Deposit Balance ($)</label><input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
-                    <label class="swal-label">Withdrawable Balance ($)</label><input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
+                html: `<label class="swal-label">Mining Balance ($)</label><input id="m-dep" class="swal2-input swal-input-custom" type="number" value="${u.totalBalance || 0}">
+                    <label class="swal-label">Withdrawable ($)</label><input id="m-with" class="swal2-input swal-input-custom" type="number" value="${u.withdrawable || 0}">
+                    <label class="swal-label">Ref Wallet ($)</label><input id="m-ref" class="swal2-input swal-input-custom" type="number" value="${u.referralWallet || 0}">
                     <label class="swal-label">Status (active/inactive)</label><input id="m-status" class="swal2-input swal-input-custom" value="${u.miningStatus || 'inactive'}">
                     <div style="display:flex; align-items:center; justify-content:space-between; background:#0f172a; padding:10px; border-radius:8px; margin:15px 10%;"><span style="font-size:0.8rem; color:#ef4444; font-weight:bold;"><i class="fas fa-ban"></i> BLOCK ACCOUNT</span><input type="checkbox" id="m-block" style="width:20px; height:20px;" ${u.isBlocked ? 'checked' : ''}></div>
                     <label class="swal-label">Push Notification</label><input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">`,
@@ -204,6 +228,7 @@
                 preConfirm: () => ({
                     totalBalance: parseFloat(document.getElementById('m-dep').value),
                     withdrawable: parseFloat(document.getElementById('m-with').value),
+                    referralWallet: parseFloat(document.getElementById('m-ref').value),
                     miningStatus: document.getElementById('m-status').value.toLowerCase(),
                     isBlocked: document.getElementById('m-block').checked,
                     notification: document.getElementById('m-note').value
@@ -214,6 +239,7 @@
                 await update(ref(db, `users/${userKey}`), {
                     totalBalance: form.totalBalance.toFixed(2),
                     withdrawable: form.withdrawable.toFixed(2),
+                    referralWallet: form.referralWallet.toFixed(2),
                     miningStatus: form.miningStatus,
                     isBlocked: form.isBlocked,
                     notification: form.notification,
