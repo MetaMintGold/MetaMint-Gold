@@ -26,7 +26,7 @@
         .dep-card { background: #1e293b; border-radius: 15px; padding: 20px; border: 1px solid #334155; margin-bottom: 20px; text-align: center; }
         .address-box { background: #0f172a; padding: 15px; border-radius: 10px; margin: 15px 0; word-break: break-all; color: #38bdf8; font-family: 'monospace'; font-size: 0.9rem; border: 1px solid #1e40af; }
         
-        /* --- Naya PKR Box Style --- */
+        /* PKR Box Style */
         .pkr-instruction-box { background: rgba(234, 179, 8, 0.05); border: 1px solid #eab308; border-radius: 15px; padding: 20px; margin-bottom: 20px; text-align: left; }
         .pkr-instruction-box h4 { color: #eab308; margin: 0 0 10px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; }
         .pkr-text { font-size: 0.8rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 15px; }
@@ -46,31 +46,9 @@
         .submit-btn { background: #22c55e; margin-top: 10px; }
         .submit-btn:active { transform: scale(0.98); }
 
-        /* Floating WhatsApp Icon CSS */
-        .whatsapp-float {
-            position: fixed;
-            width: 60px;
-            height: 60px;
-            bottom: 80px;
-            right: 20px;
-            background-color: #25d366;
-            color: #FFF;
-            border-radius: 50px;
-            text-align: center;
-            font-size: 30px;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
-        }
+        /* WhatsApp Float */
+        .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 80px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); } }
 
         /* Bottom Navigation */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #1e293b; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #334155; z-index: 1000; }
@@ -81,9 +59,7 @@
 </head>
 <body>
 
-    <a href="https://wa.me/923222572670" class="whatsapp-float" target="_blank">
-        <i class="fab fa-whatsapp"></i>
-    </a>
+    <a href="https://wa.me/923222572670" class="whatsapp-float" target="_blank"><i class="fab fa-whatsapp"></i></a>
 
     <header class="dash-header">
         <i class="fas fa-arrow-left back-btn" onclick="window.location.href='dashboard.html'"></i>
@@ -94,11 +70,10 @@
         <div class="info-box">
             <h4><i class="fas fa-info-circle"></i> Recharge Guide</h4>
             <ul>
-                <li>Niche diye gaye <b>USDT (TRC20)</b> address ko copy karein.</li>
-                <li>Apne wallet (Binance, TrustWallet) se payment bhejain.</li>
-                <li>Payment ke baad <b>Transaction ID (TXID)</b> yahan paste karein.</li>
+                <li>USDT (TRC20) address ko copy karein.</li>
+                <li>Wallet se payment bhejne ke baad <b>Transaction ID (TXID)</b> paste karein.</li>
             </ul>
-            <span class="warning-text">⚠️ Only send USDT via TRC20 network.</span>
+            <span class="warning-text">⚠️ Minimum Deposit Amount: $4.</span>
         </div>
 
         <div class="dep-card">
@@ -110,21 +85,18 @@
         </div>
 
         <div class="pkr-instruction-box">
-            <h4><i class="fas fa-wallet"></i> JazzCash / EasyPaisa / Bank</h4>
-            <p class="pkr-text">
-                Jin users ke paas crypto wallet nahi hai, wo JazzCash, EasyPaisa ya Bank Account mein payment bhejne ke liye apni <b>Profile</b> mein ja kar <b>Customer Support</b> se rabta karein.
-            </p>
+            <h4><i class="fas fa-wallet"></i> PKR Rates</h4>
             <table class="rate-table">
+                <tr><td>4$</td><td><b>1120 PKR</b></td></tr>
                 <tr><td>20$</td><td><b>5600 PKR</b></td></tr>
                 <tr><td>60$</td><td><b>16800 PKR</b></td></tr>
-                <tr><td>120$</td><td><b>33600 PKR</b></td></tr>
             </table>
         </div>
 
         <div class="dep-card">
             <div class="input-group">
                 <label>Deposit Amount ($)</label>
-                <input type="number" id="depAmount" placeholder="Minimum $20" min="20">
+                <input type="number" id="depAmount" placeholder="Minimum $4" min="4">
             </div>
             <div class="input-group">
                 <label>Transaction ID (TXID)</label>
@@ -149,7 +121,6 @@
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
             authDomain: "metamint-127ee.firebaseapp.com",
@@ -168,14 +139,8 @@
             const addr = document.getElementById('walletAddr').innerText;
             navigator.clipboard.writeText(addr).then(() => {
                 Swal.fire({ 
-                    toast: true, 
-                    position: 'top', 
-                    icon: 'success', 
-                    title: 'Address Copied!', 
-                    showConfirmButton: false, 
-                    timer: 1500,
-                    background: '#1e293b',
-                    color: '#fff'
+                    toast: true, position: 'top', icon: 'success', title: 'Address Copied!', 
+                    showConfirmButton: false, timer: 1500, background: '#1e293b', color: '#fff'
                 });
             });
         };
@@ -188,8 +153,16 @@
             if (!user) {
                 return Swal.fire('Error', 'Session expired. Please login again.', 'error');
             }
-            if (!amount || amount < 20) {
-                return Swal.fire('Error', 'Minimum deposit is $20', 'warning');
+            
+            // Yahan JS validation mein 4 set kar diya hai
+            if (!amount || amount < 4) {
+                return Swal.fire({
+                    icon: 'warning',
+                    title: 'Minimum Deposit $4',
+                    text: 'Aap kam az kam $4 deposit kar sakte hain.',
+                    background: '#1e293b',
+                    color: '#fff'
+                });
             }
             if (!txid) {
                 return Swal.fire('Error', 'Please enter your Transaction ID (TXID)', 'warning');
@@ -197,7 +170,7 @@
 
             Swal.fire({ 
                 title: 'Submitting...', 
-                text: 'Please wait while we record your request.',
+                text: 'Please wait...',
                 allowOutsideClick: false, 
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -239,7 +212,7 @@
 
             } catch (error) {
                 console.error(error);
-                Swal.fire('Error', 'Database connection error. Try again.', 'error');
+                Swal.fire('Error', 'Database connection error.', 'error');
             }
         };
 
