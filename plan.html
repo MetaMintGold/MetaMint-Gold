@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint Gold | Investment Plans</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --accent: #fbbf24;
+            --bg-dark: #050a18;
+            --card-bg: #1e293b;
+            --success: #22c55e;
+            --danger: #f43f5e;
+        }
+
+        body { background: radial-gradient(circle at top, #112240 0%, var(--bg-dark) 100%); color: white; font-family: 'Poppins', sans-serif; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; overflow-x: hidden; }
+        
+        .dash-header { padding: 20px; background: rgba(10, 20, 40, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.1); text-align: center; position: sticky; top: 0; z-index: 100; }
+        .company-name { color: var(--primary); font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; }
+
+        .plans-container { padding: 20px; margin-bottom: 30px; }
+        .plan-card { background: var(--card-bg); border-radius: 24px; padding: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; transition: 0.3s; }
+        .plan-card.active-plan { border: 2px solid var(--success); box-shadow: 0 0 20px rgba(34, 197, 94, 0.2); }
+        
+        .timer-box { font-size: 0.75rem; color: var(--accent); background: rgba(251, 191, 36, 0.1); padding: 6px 14px; border-radius: 50px; display: inline-block; margin-bottom: 10px; font-weight: bold; font-family: monospace; }
+        .plan-info h3 { margin: 0; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+        .plan-info h2 { margin: 5px 0; font-size: 1.8rem; color: #fff; }
+        .profit-tag { color: var(--success); font-weight: bold; font-size: 0.9rem; margin-bottom: 15px; }
+
+        .buy-btn { width: 100%; padding: 14px; background: var(--primary); border: none; border-radius: 14px; color: #000; font-weight: 900; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; transition: 0.2s; }
+        .claim-btn { width: 100%; padding: 14px; background: var(--success); border: none; border-radius: 14px; color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; font-size: 0.9rem; }
+        .claim-btn:disabled { background: #334155; opacity: 0.6; cursor: not-allowed; color: #94a3b8; }
+        
+        .cancel-btn { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--danger); border-radius: 12px; color: var(--danger); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+
+        .history-section { padding: 0 20px 120px 20px; }
+        .history-card { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 15px; border-left: 4px solid var(--primary); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .hist-info h4 { margin: 0; font-size: 0.85rem; }
+        .hist-info small { color: #64748b; font-size: 0.7rem; }
+        .hist-amt { color: var(--success); font-weight: bold; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(10, 20, 40, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
+        .nav-item { color: #94a3b8; text-decoration: none; text-align: center; font-size: 0.7rem; flex: 1; }
+        .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary); }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <header class="dash-header">
+        <div class="company-name">METAMINT GOLD</div>
+        <h2 style="margin: 5px 0 0 0; font-size: 1.3rem;">Mining Servers</h2>
+    </header>
+
+    <div class="plans-container" id="plansDiv"></div>
+
+    <div class="history-section">
+        <h3 style="color: var(--primary); font-size: 0.9rem; margin-bottom: 15px;"><i class="fas fa-history"></i> RECENT EARNINGS</h3>
+        <div id="earningHistory">
+            <p style="text-align:center; color:#64748b; font-size:0.8rem;">No earnings yet.</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="plans.html" class="nav-item active"><i class="fas fa-gem"></i><span>Plans</span></a>
+        <a href="team.html" class="nav-item"><i class="fas fa-users"></i><span>Team</span></a>
+        <a href="history.html" class="nav-item"><i class="fas fa-history"></i><span>History</span></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, update, get, set, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // All 8 Plans Configured with 10% daily base reward
+        const PLANS_DATA = [
+            { id: 1, name: "Starter Miner", price: 300, profit: 30 },
+            { id: 2, name: "Bronze Miner", price: 800, profit: 80 },
+            { id: 3, name: "Silver Miner", price: 1800, profit: 180 },
+            { id: 4, name: "Gold Miner", price: 3000, profit: 300 },
+            { id: 5, name: "Diamond Miner", price: 5000, profit: 500 },
+            { id: 6, name: "Master Miner", price: 10000, profit: 1000 },
+            { id: 7, name: "Apex Miner", price: 20000, profit: 2000 },
+            { id: 8, name: "Omega Miner", price: 30000, profit: 3000 }
+        ];
+
+        let userData = null;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                    userData = snapshot.val();
+                    renderPlans();
+                    renderHistory();
+                });
+            } else { window.location.href = 'index.html'; }
+        });
+
+        function formatCountdown(ms) {
+            if (ms <= 0) return "00:00:00";
+            const hrs = Math.floor(ms / (3600 * 1000)).toString().padStart(2, '0');
+            const mins = Math.floor((ms % (3600 * 1000)) / (60 * 1000)).toString().padStart(2, '0');
+            const secs = Math.floor((ms % (60 * 1000)) / 1000).toString().padStart(2, '0');
+            return `${hrs}:${mins}:${secs}`;
+        }
+
+        function renderPlans() {
+            const container = document.getElementById('plansDiv');
+            if(!container || !userData) return;
+            
+            const currentHTMLScroll = container.innerHTML;
+            const now = Date.now();
+            let finalHtml = '';
+
+            PLANS_DATA.forEach(plan => {
+                const activePlans = userData.activePlans || {};
+                const lastClaims = userData.lastClaims || {};
+                const isActive = activePlans[plan.id];
+                const lastClaim = lastClaims[plan.id] || 0;
+
+                const msInDay = 24 * 60 * 60 * 1000;
+                const timePassed = now - lastClaim;
+                const timeLeft = msInDay - timePassed;
+                const canClaim = timePassed >= msInDay;
+
+                let actionHtml = '';
+                let statusHtml = '';
+
+                if (isActive) {
+                    statusHtml = `<div class="timer-box" style="color:${canClaim ? 'var(--success)' : 'var(--accent)'}">
+                        <i class="fas ${canClaim ? 'fa-check-circle' : 'fa-clock'}"></i> 
+                        ${canClaim ? 'Profit Ready' : `Next Claim: ${formatCountdown(timeLeft)}`}
+                       </div>`;
+
+                    actionHtml = `<div>
+                        <button class="claim-btn" ${canClaim ? '' : 'disabled'} onclick="claimProfit(${plan.id}, ${plan.profit})">
+                            <i class="fas fa-coins"></i> ${canClaim ? `Claim Rs. ${plan.profit}` : 'Mining Server Running'}
+                        </button>
+                        <button class="cancel-btn" onclick="cancelPlan(${plan.id}, ${plan.price})">
+                            <i class="fas fa-times-circle"></i> Cancel Plan (10% Fee)
+                        </button>
+                       </div>`;
+                } else {
+                    actionHtml = `<button class="buy-btn" onclick="buyPlan(${plan.id}, ${plan.price})">Activate Miner</button>`;
+                }
+
+                finalHtml += `
+                    <div class="plan-card ${isActive ? 'active-plan' : ''}">
+                        ${statusHtml}
+                        <div class="plan-info">
+                            <h3>${plan.name}</h3>
+                            <div class="profit-tag">Earning: Rs. ${plan.profit} / 24h (10%)</div>
+                            <h2>Rs. ${plan.price}</h2>
+                        </div>
+                        ${actionHtml}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = finalHtml;
+        }
+
+        window.claimProfit = async (id, profit) => {
+            const uid = auth.currentUser.uid;
+            const withdrawable = parseFloat(userData.withdrawable || 0);
+            
+            Swal.fire({ title: 'Processing...', background: '#1e293b', color: '#fff', didOpen: () => Swal.showLoading() });
+
+            try {
+                await update(ref(db, `users/${uid}`), {
+                    withdrawable: (withdrawable + profit).toFixed(2),
+                    [`lastClaims/${id}`]: Date.now()
+                });
+
+                await push(ref(db, `transactions/${uid}`), {
+                    amount: profit.toFixed(2),
+                    type: 'PROFIT_CLAIM',
+                    title: `Mining Profit (Plan ${id})`,
+                    timestamp: Date.now()
+                });
+
+                Swal.fire({ title: 'Success!', text: `Rs. ${profit} profit added to your withdrawable balance.`, icon: 'success', confirmButtonColor: '#00d2ff', background: '#1e293b', color: '#fff' });
+            } catch(e) {
+                Swal.fire({ title: 'Error', text: 'Failed to process operation.', icon: 'error', background: '#1e293b', color: '#fff' });
+            }
+        };
+
+        window.buyPlan = async (id, price) => {
+            const bal = parseFloat(userData.totalBalance || 0);
+            if(bal < price) return Swal.fire({ title: 'Error', text: 'Insufficient Balance! Please deposit first.', icon: 'error', confirmButtonColor: '#f43f5e', background: '#1e293b', color: '#fff' });
+            
+            const confirm = await Swal.fire({
+                title: 'Confirm Activation',
+                text: `Do you want to activate this miner for Rs. ${price}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#00d2ff',
+                cancelButtonColor: '#334155',
+                background: '#1e293b',
+                color: '#fff'
+            });
+
+            if(confirm.isConfirmed) {
+                const uid = auth.currentUser.uid;
+                try {
+                    await update(ref(db, `users/${uid}`), {
+                        totalBalance: (bal - price).toFixed(2),
+                        [`activePlans/${id}`]: true,
+                        [`lastClaims/${id}`]: Date.now()
+                    });
+                    Swal.fire({ title: 'Activated!', text: 'Your Miner Server has been started successfully.', icon: 'success', confirmButtonColor: '#00d2ff', background: '#1e293b', color: '#fff' });
+                } catch(e) {
+                    Swal.fire({ title: 'Error', text: 'Something went wrong.', icon: 'error', background: '#1e293b', color: '#fff' });
+                }
+            }
+        };
+
+        window.cancelPlan = async (id, price) => {
+            const fee = price * 0.10;
+            const refund = price - fee;
+            const confirm = await Swal.fire({
+                title: 'Cancel Plan?',
+                text: `10% cancellation fee (Rs. ${fee.toFixed(2)}) will be charged. Refund added to balance: Rs. ${refund.toFixed(2)}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                cancelButtonColor: '#334155',
+                background: '#1e293b',
+                color: '#fff'
+            });
+
+            if(confirm.isConfirmed) {
+                const uid = auth.currentUser.uid;
+                const currentBal = parseFloat(userData.totalBalance || 0);
+                try {
+                    await update(ref(db, `users/${uid}`), {
+                        totalBalance: (currentBal + refund).toFixed(2),
+                        [`activePlans/${id}`]: null,
+                        [`lastClaims/${id}`]: null
+                    });
+                    Swal.fire({ title: 'Cancelled', text: 'Plan removed and refund issued.', icon: 'success', confirmButtonColor: '#00d2ff', background: '#1e293b', color: '#fff' });
+                } catch(e) {
+                    Swal.fire({ title: 'Error', text: 'Failed to process cancellation.', icon: 'error', background: '#1e293b', color: '#fff' });
+                }
+            }
+        };
+
+        function renderHistory() {
+            const histDiv = document.getElementById('earningHistory');
+            const uid = auth.currentUser.uid;
+            onValue(ref(db, `transactions/${uid}`), (snap) => {
+                const data = snap.val();
+                if(!data) return;
+                let html = '';
+                const sortedKeys = Object.keys(data).reverse().slice(0, 10);
+                sortedKeys.forEach(key => {
+                    const tx = data[key];
+                    if(tx.type === 'PROFIT_CLAIM') {
+                        html += `
+                        <div class="history-card">
+                            <div class="hist-info">
+                                <h4>${tx.title}</h4>
+                                <small>${new Date(tx.timestamp).toLocaleString()}</small>
+                            </div>
+                            <div class="hist-amt">+Rs. ${parseFloat(tx.amount).toFixed(2)}</div>
+                        </div>`;
+                    }
+                });
+                if(html) histDiv.innerHTML = html;
+            });
+        }
+
+        // Live smooth countdown dynamic text updates (Every 1 second)
+        setInterval(() => { if(userData) renderPlans(); }, 1000);
+    </script>
+</body>
+</html>

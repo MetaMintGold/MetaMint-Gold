@@ -72,7 +72,7 @@
                         const amount = parseFloat(userData.adminBonusOnly).toFixed(2);
                         html = `<div class="reward-card"><i class="fas fa-gift" style="font-size: 3rem; color: #fbbf24; margin-bottom: 10px;"></i>
                             <div class="reward-title" style="justify-content: center;">Achievement Bonus</div>
-                            <div class="reward-amount">$${amount}</div>
+                            <div class="reward-amount">Rs. ${amount}</div>
                             <p style="font-size: 0.8rem; color: #cbd5e1; margin-bottom: 20px;">Congratulations! You have received a special bonus from Admin.</p>
                             <button class="claim-btn" onclick="window.claimBonusReward(${amount})">CLAIM NOW</button></div>`;
                         list.innerHTML = html;
@@ -92,7 +92,14 @@
                             adminBonusOnly: 0,
                             hasNewReward: false
                         });
-                        Swal.fire({ title: 'Success!', text: `$${amount} added to your withdrawable balance.`, icon: 'success', confirmButtonColor: '#fbbf24' });
+                        Swal.fire({ 
+                            title: 'Success!', 
+                            text: `Rs. ${amount} added to your withdrawable balance.`, 
+                            icon: 'success', 
+                            confirmButtonColor: '#fbbf24',
+                            background: '#1e293b',
+                            color: '#fff'
+                        });
                     } catch (e) { Swal.fire('Error', 'Failed to claim.', 'error'); }
                 };
             } else { window.location.href = 'index.html'; }

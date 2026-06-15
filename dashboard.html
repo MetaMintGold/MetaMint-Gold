@@ -8,16 +8,17 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            --primary: #00d2ff;
-            --secondary: #3a7bd5;
-            --accent: #fbbf24;
-            --eid-gold: #d4af37;
-            --bg-dark: #050a18;
-            --card-bg: rgba(255, 255, 255, 0.05);
+            --primary: #f59e0b; /* Premium Gold */
+            --secondary: #d97706; /* Dark Metallic Gold */
+            --accent: #10b981; /* Success Green */
+            --eid-gold: #fbbf24;
+            --bg-dark: #090d16; /* Deep Dark Obsidian */
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --gold-glow: rgba(245, 158, 11, 0.15);
         }
 
         body { 
-            background: radial-gradient(circle at top, #112240 0%, var(--bg-dark) 100%); 
+            background: radial-gradient(circle at top, #1e1b4b 0%, var(--bg-dark) 100%); 
             color: white; 
             font-family: 'Poppins', 'Segoe UI', sans-serif; 
             margin: 0; 
@@ -34,9 +35,9 @@
             justify-content: space-between; 
             align-items: center; 
             padding: 15px 20px; 
-            background: rgba(10, 20, 40, 0.8); 
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            background: rgba(9, 13, 22, 0.85); 
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.2); 
             position: sticky; 
             top:0; 
             z-index: 1000; 
@@ -51,49 +52,57 @@
             font-weight: 900; 
             letter-spacing: 2px; 
             margin-bottom: -2px;
-            text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
-            white-space: nowrap; /* Ensures it stays on one line */
+            text-shadow: 0 0 12px rgba(245, 158, 11, 0.6);
+            white-space: nowrap;
         }
 
-        /* --- SPECIAL OFFER BOX --- */
-        .eid-offer-box {
+        /* --- NEW PROFESSIONAL WELCOME & TEAM BOX --- */
+        .welcome-earning-box {
             margin: 20px;
-            padding: 25px 20px;
-            background: linear-gradient(135deg, #004d26 0%, #002200 100%);
-            border: 2px solid var(--eid-gold);
+            padding: 22px 20px;
+            background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.3);
             border-radius: 24px;
             text-align: center;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.4);
-            animation: pulse-border 2s infinite;
+            box-shadow: 0 8px 32px var(--gold-glow);
+        }
+        
+        .welcome-earning-box::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(245,158,11,0.05) 0%, transparent 70%);
+            pointer-events: none;
         }
 
-        @keyframes pulse-border {
-            0% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.6); }
-            100% { box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
-        }
-
-        .eid-offer-box h2 { color: var(--eid-gold); margin: 0; font-size: 1.6rem; text-shadow: 0 2px 10px rgba(212, 175, 55, 0.5); }
-        .eid-offer-box p { color: #fff; font-size: 0.95rem; margin: 10px 0; font-weight: 300; }
-        .cashback-badge {
-            display: inline-block;
-            background: linear-gradient(90deg, #d4af37, #f1c40f);
+        .welcome-earning-box h2 { color: #fff; margin: 0; font-size: 1.3rem; font-weight: 800; letter-spacing: 0.5px; }
+        .welcome-earning-box h2 span { color: var(--primary); }
+        .welcome-earning-box p { color: #cbd5e1; font-size: 0.85rem; margin: 12px 0; font-weight: 400; line-height: 1.5; }
+        
+        .team-pitch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
             color: #000;
-            padding: 8px 20px;
+            padding: 8px 18px;
             border-radius: 50px;
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
             margin-top: 5px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            animation: bounce 2s infinite;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
+            animation: soft-pulse 2s infinite;
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-8px);}
-            60% {transform: translateY(-4px);}
+        @keyframes soft-pulse {
+            0% { transform: scale(1); box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3); }
+            50% { transform: scale(1.03); box-shadow: 0 4px 25px rgba(217, 119, 6, 0.5); }
+            100% { transform: scale(1); box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3); }
         }
 
         /* --- BALANCE CARDS --- */
@@ -102,48 +111,56 @@
             padding: 20px; 
             border-radius: 24px; 
             background: var(--card-bg); 
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.06);
             backdrop-filter: blur(5px);
+            box-shadow: inset 0 0 12px rgba(255,255,255,0.01);
         }
-        .main-card { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; }
+        .main-card { 
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(217, 119, 6, 0.05)); 
+            border: 1px solid rgba(245, 158, 11, 0.4); 
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.08);
+        }
         
-        .dot-badge { position: absolute; top: -2px; right: -2px; background: #ff4757; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #0a1428; display: none; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+        .dot-badge { position: absolute; top: -2px; right: -2px; background: #ef4444; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #090d16; display: none; animation: pulse-dot 1.5s infinite; }
+        @keyframes pulse-dot { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
         .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
         .btn { padding: 16px; border-radius: 16px; border: none; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer;}
-        .btn-deposit { background: #10b981; color: white; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
-        .btn-withdraw { background: #f43f5e; color: white; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.2); }
+        .btn-deposit { background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 6px 15px rgba(16, 185, 129, 0.2); }
+        .btn-withdraw { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; box-shadow: 0 6px 15px rgba(239, 68, 68, 0.2); }
+
+        /* --- INTERNAL TRANSFER SECTION --- */
+        .transfer-section { background: rgba(255,255,255,0.02); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .transfer-btn { width: 100%; padding: 13px; border-radius: 14px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; font-size: 0.85rem; }
+        .t-to-m { background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #000; font-weight: 800; }
+        .m-to-t { background: transparent; border: 1px solid rgba(245,158,11,0.4); color: white; }
 
         /* --- PARTNERS BOX --- */
         .partners-box {
             margin: 20px;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.01);
             padding: 20px;
             border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.04);
             text-align: center;
         }
         .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
-        .partner-item img { width: 35px; height: 35px; object-fit: contain; }
-        .partner-item p { font-size: 0.6rem; color: #94a3b8; margin: 5px 0 0 0; }
+        .partner-item img { width: 32px; height: 32px; object-fit: contain; }
+        .partner-item p { font-size: 0.65rem; color: #94a3b8; margin: 5px 0 0 0; }
+
+        /* --- DAILY STREAK --- */
+        .day-circle { width:35px; height:35px; border-radius:10px; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.08); font-size:0.8rem; }
 
         /* --- FOOTER --- */
-        .main-footer { background: #030712; padding: 40px 20px 120px 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 40px; }
-        .footer-badge { background: rgba(0, 210, 255, 0.1); color: var(--primary); padding: 6px 14px; border-radius: 50px; font-size: 0.65rem; font-weight: bold; border: 1px solid rgba(0, 210, 255, 0.2); }
+        .main-footer { background: #05080f; padding: 40px 20px 120px 20px; border-top: 1px solid rgba(245,158,11,0.1); margin-top: 40px; }
+        .footer-badge { background: rgba(245, 158, 11, 0.08); color: var(--primary); padding: 6px 14px; border-radius: 50px; font-size: 0.65rem; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.2); }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(10, 20, 40, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.1); z-index: 1000; }
-        .nav-item { color: #94a3b8; text-decoration: none; text-align: center; font-size: 0.7rem; }
-        .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 5px; }
-        .nav-item.active { color: var(--primary); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(9, 13, 22, 0.96); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(245,158,11,0.1); z-index: 1000; }
+        .nav-item { color: #64748b; text-decoration: none; text-align: center; font-size: 0.7rem; transition: 0.2s; }
+        .nav-item i { display: block; font-size: 1.3rem; margin-bottom: 5px; }
+        .nav-item.active { color: var(--primary); text-shadow: 0 0 8px rgba(245,158,11,0.4); }
 
-        .day-circle { width:35px; height:35px; border-radius:10px; background:rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); font-size:0.8rem; }
         #adminBox { display: none; margin: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; border-radius: 15px; }
-        
-        .transfer-section { background: rgba(255,255,255,0.03); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
-        .transfer-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; }
-        .t-to-m { background: var(--secondary); color: white; }
-        .m-to-t { background: transparent; border: 1px solid var(--secondary); color: white; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -159,22 +176,23 @@
         </div>
         <div style="display:flex; gap:18px;">
             <div style="position:relative; cursor:pointer;" onclick="window.location.href='reward.html'">
-                <i class="fas fa-gift" style="font-size: 1.4rem; color: var(--accent);"></i>
+                <i class="fas fa-gift" style="font-size: 1.4rem; color: var(--primary);"></i>
                 <span id="rewardDot" class="dot-badge"></span>
             </div>
             <div style="position:relative; cursor:pointer;" id="notifBtn">
                 <i class="fas fa-bell" style="font-size: 1.4rem; color: #fff;"></i>
                 <span id="notifBadge" class="dot-badge"></span>
             </div>
-            <i class="fas fa-power-off" id="logoutBtn" style="font-size: 1.4rem; color: #f43f5e; cursor:pointer;"></i>
+            <i class="fas fa-power-off" id="logoutBtn" style="font-size: 1.4rem; color: #ef4444; cursor:pointer;"></i>
         </div>
     </header>
 
-    <div class="eid-offer-box">
-        <h2>✨ EXCLUSIVE SPECIAL OFFER ✨</h2>
-        <p>Grab your special gift! Deposit now and get</p>
-        <div class="cashback-badge">50% CASHBACK + REWARD 🎁</div>
-        <p style="font-size: 0.7rem; opacity: 0.7; margin-top: 12px; letter-spacing: 1px;">VALID FOR NEXT 1 MONTH ONLY</p>
+    <div class="welcome-earning-box">
+        <h2>Welcome to <span>MetaMint Gold</span></h2>
+        <p>Start your high-yield cloud mining journey with maximum safety. Build a solid team, share your referral code, and unlock multi-level high affiliate commissions instantly!</p>
+        <div class="team-pitch-badge">
+            <i class="fas fa-users"></i> Build Your Team & Earn Non-Stop
+        </div>
     </div>
 
     <div id="adminBox">
@@ -183,12 +201,12 @@
 
     <section class="balance-cards">
         <div class="card main-card">
-            <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; opacity: 0.9;">Mining Balance</span>
-            <h2 id="totalBalance" style="margin:10px 0 0 0; font-size: 1.8rem;">$0.00</h2>
+            <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary);">Mining Balance</span>
+            <h2 id="totalBalance" style="margin:10px 0 0 0; font-size: 1.7rem; font-weight: 800;">Rs. 0.00</h2>
         </div>
         <div class="card">
-            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; text-transform: uppercase;">Withdrawable</span>
-            <h2 id="withdrawableBalance" style="margin:10px 0 0 0; font-size: 1.8rem; color: var(--accent);">$0.00</h2>
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Withdrawable</span>
+            <h2 id="withdrawableBalance" style="margin:10px 0 0 0; font-size: 1.7rem; color: var(--primary); font-weight: 800;">Rs. 0.00</h2>
         </div>
     </section>
 
@@ -198,33 +216,33 @@
     </div>
 
     <div class="transfer-section">
-        <h4 style="margin:0 0 10px 0; color: var(--primary); font-size: 0.85rem; text-transform: uppercase;"><i class="fas fa-exchange-alt"></i> Internal Transfer</h4>
+        <h4 style="margin:0 0 10px 0; color: var(--primary); font-size: 0.85rem; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;"><i class="fas fa-exchange-alt"></i> Internal Transfer</h4>
         <button class="transfer-btn t-to-m" id="btnWtoM">Withdrawable to Mining (0% Fee)</button>
         <button class="transfer-btn m-to-t" id="btnMtoW">Mining to Withdrawable (10% Fee)</button>
     </div>
 
-    <div style="background: linear-gradient(135deg, #1e293b, #0f172a); margin: 20px; padding: 25px; border-radius: 24px; border: 1px solid var(--eid-gold); text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.2);">
-        <p style="margin:0; font-size: 0.8rem; color: var(--eid-gold); font-weight: bold; letter-spacing: 1px;">REFERRAL COMMISSION WALLET</p>
-        <h2 id="teamRewardDisplay" style="font-size: 2.2rem; margin: 12px 0; color: #fff;">$0.00</h2>
-        <button id="claimTeamRewardBtn" style="background: var(--eid-gold); color: #000; border:none; padding:14px; border-radius:14px; font-weight:900; width:100%; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8)); margin: 20px; padding: 25px; border-radius: 24px; border: 1px solid rgba(245, 158, 11, 0.4); text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.4);">
+        <p style="margin:0; font-size: 0.75rem; color: var(--primary); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">REFERRAL COMMISSION WALLET</p>
+        <h2 id="teamRewardDisplay" style="font-size: 2.2rem; margin: 12px 0; color: #fff; font-weight: 800;">Rs. 0.00</h2>
+        <button id="claimTeamRewardBtn" style="background: linear-gradient(90deg, var(--primary), var(--secondary)); color: #000; border:none; padding:14px; border-radius:14px; font-weight:900; width:100%; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.9rem;">
             <i class="fas fa-coins"></i> CLAIM TO WITHDRAWABLE
         </button>
     </div>
 
     <div class="partners-box">
-        <h4 style="color: var(--primary); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px;">Verified Global Partners</h4>
+        <h4 style="color: var(--primary); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px; font-weight: 800;">Verified Global Partners</h4>
         <div class="partner-grid">
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/bnb.svg" alt="Binance"><p>Binance</p></div>
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/usdt.svg" alt="Tether"><p>USDT (TRC20)</p></div>
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/btc.svg" alt="Coinbase"><p>Coinbase</p></div>
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/eth.svg" alt="Trust"><p>Trust Wallet</p></div>
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/trx.svg" alt="Tron"><p>TRON</p></div>
-            <div class="partner-item"><img src="https://cdn-icons-png.flaticon.com/512/5806/5806364.png" style="filter:invert(1)" alt="Certik"><p>Certik Audited</p></div>
+            <div class="partner-item"><img src="https://cdn-icons-png.flaticon.com/512/5806/5806364.png" style="filter:invert(1) sepia(1) saturate(5) hue-rotate(15deg)" alt="Certik"><p>Certik Audited</p></div>
         </div>
     </div>
 
-    <div style="background: var(--card-bg); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1);">
-        <h4 style="margin:0 0 15px 0; color: var(--primary); font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> DAILY LOGIN STREAK</h4>
+    <div style="background: var(--card-bg); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(245,158,11,0.15);">
+        <h4 style="margin:0 0 15px 0; color: var(--primary); font-size: 0.85rem; font-weight: 800; text-transform: uppercase;"><i class="fas fa-calendar-check"></i> DAILY LOGIN STREAK</h4>
         <div style="display: flex; justify-content: space-between; margin-bottom: 15px;" id="streakContainer">
             <div id="d1" class="day-circle">1</div>
             <div id="d2" class="day-circle">2</div>
@@ -234,18 +252,18 @@
             <div id="d6" class="day-circle">6</div>
             <div id="d7" class="day-circle">7</div>
         </div>
-        <button id="checkinBtn" style="background: rgba(0, 210, 255, 0.1); color: var(--primary); border: 1px solid var(--primary); padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer;">Collect Reward</button>
+        <button id="checkinBtn" style="background: rgba(245, 158, 11, 0.05); color: var(--primary); border: 1px solid var(--primary); padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer; font-size: 0.85rem;">Collect Reward</button>
     </div>
 
     <footer class="main-footer">
-        <h2 style="color: var(--primary); font-size: 1.4rem; margin: 0; letter-spacing: 1px;">METAMINT GOLD</h2>
+        <h2 style="color: var(--primary); font-size: 1.4rem; margin: 0; letter-spacing: 1px; font-weight: 900;">METAMINT GOLD</h2>
         <p style="color: #64748b; font-size: 0.8rem; line-height: 1.6; margin-top: 10px;">
             MetaMint Gold is a premier cloud mining platform providing secure and high-yield USDT mining. We utilize advanced TRC20 protocols to ensure maximum security for your assets.
         </p>
         
         <div style="margin: 25px 0; display: flex; gap: 10px;">
             <span class="footer-badge"><i class="fas fa-shield-check"></i> SSL SECURED</span>
-            <span class="footer-badge" style="color:#fbbf24; border-color:rgba(251,191,36,0.2);"><i class="fas fa-lock"></i> AES-256 BIT</span>
+            <span class="footer-badge" style="color:var(--primary); border-color:rgba(245,158,11,0.2);"><i class="fas fa-lock"></i> AES-256 BIT</span>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
@@ -302,123 +320,3 @@
                 const userRef = ref(db, 'users/' + user.uid);
                 onValue(userRef, (snapshot) => {
                     const data = snapshot.val();
-                    if (data) {
-                        if (data.isBlocked === true) {
-                            document.body.innerHTML = `<div style="height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:30px; background:#050a18; color:white;"><h1>ACCOUNT SUSPENDED</h1><p>Contact support for details.</p></div>`;
-                            return; 
-                        }
-                        document.getElementById('dashUsername').innerText = data.username || "User";
-                        document.getElementById('dashUID').innerText = data.uid || "####";
-                        document.getElementById('totalBalance').innerText = "$" + parseFloat(data.totalBalance || 0).toFixed(2);
-                        document.getElementById('withdrawableBalance').innerText = "$" + parseFloat(data.withdrawable || 0).toFixed(2);
-                        document.getElementById('teamRewardDisplay').innerText = "$" + parseFloat(data.referralWallet || 0).toFixed(2);
-                        document.getElementById('notifBadge').style.display = (data.notification && !data.lastNotifSeen) ? 'block' : 'none';
-                        document.getElementById('rewardDot').style.display = data.hasNewReward ? 'block' : 'none';
-                        updateBonusUI(data);
-                    }
-                });
-
-                document.getElementById('btnWtoM').onclick = async () => {
-                    const { value: amount } = await Swal.fire({
-                        title: 'Transfer to Mining',
-                        input: 'number',
-                        inputLabel: 'Amount to Transfer (0% Fee)',
-                        inputPlaceholder: 'Enter amount...',
-                        showCancelButton: true,
-                        background: '#112240', color: '#fff'
-                    });
-                    if (amount && amount > 0) {
-                        const snap = await get(userRef);
-                        const userData = snap.val();
-                        if (parseFloat(userData.withdrawable) >= parseFloat(amount)) {
-                            await update(userRef, {
-                                withdrawable: (parseFloat(userData.withdrawable) - parseFloat(amount)).toFixed(2),
-                                totalBalance: (parseFloat(userData.totalBalance) + parseFloat(amount)).toFixed(2)
-                            });
-                            Swal.fire({ title: 'Success!', text: 'Balance moved to Mining!', icon: 'success', background: '#112240', color: '#fff' });
-                        } else {
-                            Swal.fire({ title: 'Error', text: 'Insufficient Withdrawable balance!', icon: 'error', background: '#112240', color: '#fff' });
-                        }
-                    }
-                };
-
-                document.getElementById('btnMtoW').onclick = async () => {
-                    const { value: amount } = await Swal.fire({
-                        title: 'Transfer to Withdrawable',
-                        html: '<p style="font-size:0.8rem; color:#aaa;">Note: 10% fee will be deducted</p>',
-                        input: 'number',
-                        inputLabel: 'Amount from Mining',
-                        inputPlaceholder: 'Enter amount...',
-                        showCancelButton: true,
-                        background: '#112240', color: '#fff'
-                    });
-                    if (amount && amount > 0) {
-                        const snap = await get(userRef);
-                        const userData = snap.val();
-                        if (parseFloat(userData.totalBalance) >= parseFloat(amount)) {
-                            const netAmount = (parseFloat(amount) * 0.9).toFixed(2); 
-                            await update(userRef, {
-                                totalBalance: (parseFloat(userData.totalBalance) - parseFloat(amount)).toFixed(2),
-                                withdrawable: (parseFloat(userData.withdrawable) + parseFloat(netAmount)).toFixed(2)
-                            });
-                            Swal.fire({ title: 'Success!', text: `$${netAmount} added after 10% fee.`, icon: 'success', background: '#112240', color: '#fff' });
-                        } else {
-                            Swal.fire({ title: 'Error', text: 'Insufficient Mining balance!', icon: 'error', background: '#112240', color: '#fff' });
-                        }
-                    }
-                };
-
-                document.getElementById('checkinBtn').onclick = async () => {
-                    const snap = await get(userRef);
-                    const userData = snap.val();
-                    const today = new Date().toISOString().split('T')[0];
-                    if (userData.lastCheckinDate === today) return Swal.fire({ title: 'Already Claimed!', text: 'Come back tomorrow!', icon: 'warning', background: '#112240', color: '#fff' });
-                    
-                    let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
-                    const bonus = (streak === 7) ? 0.40 : 0.10;
-                    const nextStreak = (streak === 7) ? 0 : streak;
-
-                    await update(userRef, { 
-                        withdrawable: (parseFloat(userData.withdrawable || 0) + bonus).toFixed(2), 
-                        streakCount: nextStreak, 
-                        lastCheckinDate: today 
-                    });
-                    
-                    Swal.fire({ title: 'Reward Collected!', text: `$${bonus} added to withdrawable balance.`, icon: 'success', background: '#112240', color: '#fff' });
-                };
-
-                document.getElementById('claimTeamRewardBtn').onclick = async () => {
-                    const snap = await get(userRef);
-                    const userData = snap.val();
-                    const reward = parseFloat(userData.referralWallet || 0);
-                    if (reward > 0) {
-                        await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
-                        Swal.fire({ title: 'Claimed!', text: `$${reward.toFixed(2)} moved to Withdrawable!`, icon: 'success', background: '#112240', color: '#fff' });
-                    } else Swal.fire({ title: 'Empty Wallet', text: 'No commission available to claim.', icon: 'info', background: '#112240', color: '#fff' });
-                };
-
-                document.getElementById('notifBtn').onclick = async () => {
-                    const snap = await get(userRef);
-                    if(snap.val().notification) {
-                        Swal.fire({ title: 'System Message', text: snap.val().notification, icon: 'info', background: '#112240', color: '#fff' });
-                        await update(userRef, { lastNotifSeen: true });
-                    }
-                };
-            } else window.location.href = 'index.html';
-        });
-
-        function updateBonusUI(data) {
-            const streak = data.streakCount || 0;
-            for (let i = 1; i <= 7; i++) {
-                const circle = document.getElementById('d' + i);
-                if(circle) {
-                    circle.style.background = (i <= streak) ? 'var(--primary)' : 'rgba(255,255,255,0.05)';
-                    circle.style.color = (i <= streak) ? '#000' : '#fff';
-                    circle.style.borderColor = (i === streak + 1) ? 'var(--accent)' : 'rgba(255,255,255,0.1)';
-                }
-            }
-        }
-        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => window.location.href='index.html');
-    </script>
-</body>
-</html>

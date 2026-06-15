@@ -33,7 +33,7 @@
         .reward-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 4px solid #38bdf8; }
         .reward-item span { font-size: 0.85rem; color: #cbd5e1; }
         .reward-amount { color: #22c55e; font-weight: bold; font-size: 1rem; }
-        .promo-text { font-size: 0.8rem; color: #94a3b8; text-align: center; margin-top: 15px; line-height: 1.4; font-style: italic; }
+        .promo-text { font-style: italic; font-size: 0.8rem; color: #94a3b8; text-align: center; margin-top: 15px; line-height: 1.4; }
 
         /* Table Styles */
         .team-table-card { background: #1e293b; border-radius: 15px; border: 1px solid #334155; overflow: hidden; }
@@ -85,16 +85,16 @@
         <div class="reward-info-card">
             <h3><i class="fas fa-gift"></i> Achievement Rewards</h3>
             <div class="reward-item">
-                <span>Plan Level 1 ($20)</span>
-                <span class="reward-amount">+$4.00 (20%)</span>
+                <span>Plan Level 1 (Rs. 600)</span>
+                <span class="reward-amount">+Rs. 120.00 (20%)</span>
             </div>
             <div class="reward-item">
-                <span>Plan Level 2 ($60)</span>
-                <span class="reward-amount">+$15.00 (25%)</span>
+                <span>Plan Level 2 (Rs. 2,000)</span>
+                <span class="reward-amount">+Rs. 500.00 (25%)</span>
             </div>
             <div class="reward-item">
-                <span>Plan Level 3 ($120)</span>
-                <span class="reward-amount">+$36.00 (30%)</span>
+                <span>Plan Level 3 (Rs. 4,000)</span>
+                <span class="reward-amount">+Rs. 1,200.00 (30%)</span>
             </div>
             <p class="promo-text">
                 "Apna link share karen. Jab aapka team member plan active karega, reward aapke Achievement Bonus wallet mein add ho jayega."
@@ -175,7 +175,6 @@
                             snapshot.forEach((child) => {
                                 totalCount++;
                                 const member = child.val();
-                                // Checked miningStatus for active/inactive label
                                 const isPlanActive = member.miningStatus === 'active';
                                 if (isPlanActive) activeCount++;
                                 
@@ -201,10 +200,12 @@
         window.copyReferral = function() {
             const code = document.getElementById('myReferralCode').innerText;
             if(code === "----") return;
-            // Assuming your site is hosted on a domain, otherwise window.location.origin works
             const link = window.location.origin + "/index.html?ref=" + code;
             navigator.clipboard.writeText(link).then(() => {
-                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'Referral Link Copied!', showConfirmButton: false, timer: 1500 });
+                Swal.fire({ 
+                    toast: true, position: 'top', icon: 'success', title: 'Referral Link Copied!', 
+                    showConfirmButton: false, timer: 1500, background: '#1e293b', color: '#fff'
+                });
             });
         }
     </script>
