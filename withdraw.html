@@ -11,15 +11,21 @@
         .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #f59e0b; }
         .withdraw-container { padding: 20px; margin-bottom: 100px; }
-        .balance-card { background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; padding: 30px 20px; text-align: center; box-shadow: 0 10px 20px rgba(217, 119, 6, 0.2); margin-bottom: 25px; }
+        .balance-card { background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; padding: 25px 20px; text-align: center; box-shadow: 0 10px 20px rgba(217, 119, 6, 0.2); margin-bottom: 25px; }
         .balance-card p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
-        .balance-card h2 { margin: 10px 0 0 0; font-size: 2.5rem; font-weight: 800; }
+        .balance-card h2 { margin: 5px 0 0 0; font-size: 2.3rem; font-weight: 800; }
         
+        /* PKR Subtext inside card */
+        .pkr-card-subtext { font-size: 0.95rem; color: #fff; font-weight: 600; display: block; margin-top: 4px; opacity: 0.95; }
+
         .input-group { margin-bottom: 20px; text-align: left; }
         .input-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #94a3b8; }
         .input-group input, .input-group select { width: 100%; padding: 15px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; color: white; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
         .input-group input:focus, .input-group select:focus { border-color: #f59e0b; }
         
+        /* Live PKR Preview under input */
+        .pkr-live-preview { font-size: 0.85rem; color: #f59e0b; margin-top: 6px; display: block; font-weight: 600; }
+
         .main-btn { width: 100%; padding: 16px; background: #f59e0b; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
         .main-btn:active { transform: scale(0.98); }
         
@@ -50,30 +56,32 @@
     <div class="withdraw-container">
         <div class="balance-card">
             <p>Withdrawable Balance</p>
-            <h2 id="drawBal">Rs. 0.00</h2>
+            <h2 id="drawBal">$0.00</h2>
+            <span id="pkrDrawBal" class="pkr-card-subtext">Rs. 0</span>
         </div>
 
         <div class="input-group">
             <label>Select Payment Method</label>
             <select id="methodSelect" onchange="toggleFields()">
-                <option value="local">JazzCash / EasyPaisa / Bank</option>
                 <option value="crypto">USDT (TRC20)</option>
+                <option value="local">JazzCash / EasyPaisa / Bank</option>
             </select>
         </div>
 
         <div class="input-group">
-            <label>Amount to Withdraw (PKR)</label>
-            <input type="number" id="drawAmount" placeholder="Minimum Rs. 300" min="300">
+            <label>Amount to Withdraw ($)</label>
+            <input type="number" id="drawAmount" placeholder="Minimum $10" min="10">
+            <span id="pkrWithdrawPreview" class="pkr-live-preview">Rs. 0 PKR</span>
         </div>
 
-        <div id="cryptoFields" style="display: none;">
+        <div id="cryptoFields">
             <div class="input-group">
                 <label>USDT (TRC20) Address</label>
                 <input type="text" id="drawAddress" placeholder="Paste TRC20 wallet address">
             </div>
         </div>
 
-        <div id="localFields">
+        <div id="localFields" style="display: none;">
             <div class="input-group">
                 <label>Select Bank / Wallet</label>
                 <select id="bankName">
@@ -94,7 +102,7 @@
                 <input type="text" id="accHolder" placeholder="Enter full name">
             </div>
             <div class="input-group">
-                <label>Account Number / Mobile Account</label>
+                <label>Account Number / IBAN</label>
                 <input type="text" id="accNumber" placeholder="Enter account number">
             </div>
         </div>
@@ -104,12 +112,11 @@
         </button>
 
         <div class="instruction-box">
-            <h4><i class="fas fa-info-circle"></i> Important Instructions</h4>
+            <h4><i class="fas fa-info-circle"></i> Instructions</h4>
             <ul>
-                <li>Minimum withdrawal limit is <b>Rs. 300</b>.</li>
-                <li>Daily withdrawal limit is **Unlimited**. Aap rozana jitni baar chahein aur jitni raqam chahein withdrawal kar sakte hain.</li>
-                <li>Meherbaani karke waisa mobile number ya account dein jiski transaction limit full na ho taake payment asani se transfer ho sake.</li>
-                <li>Apni details achi tarah check kar lein, galat details par company zimmadar nahi hogi.</li>
+                <li>Minimum withdrawal limit is <b>$10.00</b>.</li>
+                <li>Withdrawal available in <b>JazzCash, EasyPaisa, and All Local Banks</b>.</li>
+                <li>Verify your details carefully. Incorrect info results in loss.</li>
                 <li>Processing time: <b>1 to 24 hours</b>.</li>
             </ul>
         </div>
@@ -126,7 +133,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -144,12 +151,19 @@
 
         let withdrawableBalance = 0;
         let username = "";
+        const PKR_RATE = 280;
 
         window.toggleFields = () => {
             const method = document.getElementById('methodSelect').value;
             document.getElementById('cryptoFields').style.display = method === 'crypto' ? 'block' : 'none';
             document.getElementById('localFields').style.display = method === 'local' ? 'block' : 'none';
         }
+
+        // Live PKR conversion calculation for withdraw input
+        document.getElementById('drawAmount').addEventListener('input', function() {
+            const val = parseFloat(this.value) || 0;
+            document.getElementById('pkrWithdrawPreview').innerText = "Rs. " + Math.round(val * PKR_RATE).toLocaleString() + " PKR";
+        });
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -158,7 +172,12 @@
                     if (data) {
                         withdrawableBalance = parseFloat(data.withdrawable || 0);
                         username = data.username || "User";
-                        document.getElementById('drawBal').innerText = "Rs. " + withdrawableBalance.toFixed(2);
+                        
+                        // USD Display
+                        document.getElementById('drawBal').innerText = "$" + withdrawableBalance.toFixed(2);
+                        
+                        // PKR Display (Fixed 280 Rate)
+                        document.getElementById('pkrDrawBal').innerText = "Rs. " + Math.round(withdrawableBalance * PKR_RATE).toLocaleString();
                     }
                 });
             } else { window.location.href = 'index.html'; }
@@ -169,45 +188,25 @@
             const method = document.getElementById('methodSelect').value;
             const user = auth.currentUser;
 
-            if (!user) {
-                return Swal.fire('Error', 'Session expired. Please login again.', 'error');
-            }
-
-            if (!amount || amount < 300) {
-                return Swal.fire({
-                    icon: 'warning',
-                    title: 'Minimum Withdrawal Rs. 300',
-                    text: 'Aap kam az kam Rs. 300 withdraw kar sakte hain.',
-                    background: '#1e293b',
-                    color: '#fff'
-                });
-            }
-            if (amount > withdrawableBalance) {
-                return Swal.fire({
-                    icon: 'error',
-                    title: 'Insufficient Balance!',
-                    text: 'Aapke account mein itna balance nahi hai.',
-                    background: '#1e293b',
-                    color: '#fff'
-                });
-            }
-
-            let finalAddress = "";
-            if(method === 'crypto') {
-                finalAddress = document.getElementById('drawAddress').value.trim();
-                if(!finalAddress) return Swal.fire('Error', 'Enter USDT Address', 'warning');
-            } else {
-                const bank = document.getElementById('bankName').value;
-                const holder = document.getElementById('accHolder').value.trim();
-                const num = document.getElementById('accNumber').value.trim();
-                if(!holder || !num) return Swal.fire('Error', 'Fill Bank Details', 'warning');
-                finalAddress = `${bank} | ${holder} | ${num}`;
-            }
+            if (!amount || amount < 10) return Swal.fire('Error', 'Minimum withdrawal is $10', 'warning');
+            if (amount > withdrawableBalance) return Swal.fire('Error', 'Insufficient Balance!', 'error');
 
             Swal.fire({ title: 'Processing request...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                const trxKey = push(ref(db, 'withdrawRequests')).key;
+                let finalAddress = "";
+                if(method === 'crypto') {
+                    finalAddress = document.getElementById('drawAddress').value.trim();
+                    if(!finalAddress) return Swal.fire('Error', 'Enter USDT Address', 'warning');
+                } else {
+                    const bank = document.getElementById('bankName').value;
+                    const holder = document.getElementById('accHolder').value.trim();
+                    const num = document.getElementById('accNumber').value.trim();
+                    if(!holder || !num) return Swal.fire('Error', 'Fill Bank Details', 'warning');
+                    finalAddress = `${bank} | ${holder} | ${num}`;
+                }
+
+                const trxKey = push(ref(db, 'withdrawals')).key;
                 const now = Date.now();
 
                 // Update user balance
@@ -238,19 +237,11 @@
                     details: finalAddress
                 });
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Withdrawal Requested!',
-                    text: 'Aapki withdrawal request bhej di gayi hai.',
-                    confirmButtonColor: '#f59e0b',
-                    background: '#1e293b',
-                    color: '#fff'
-                }).then(() => {
+                Swal.fire('Success', 'Withdrawal Requested!', 'success').then(() => {
                     window.location.href = 'history.html';
                 });
 
             } catch (err) {
-                console.error(err);
                 Swal.fire('Error', 'Failed to process request.', 'error');
             }
         };
