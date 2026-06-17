@@ -96,14 +96,15 @@
         // Fixed PKR exchange rate
         const PKR_RATE = 280;
 
+        // ALL PLANS SET TO FIXED 10% DAILY PROFIT RATE
         const PLANS_DATA = [
-            { id: 6, name: "Eco Miner", price: 1, profit: 0.05, label: "5%" },
-            { id: 7, name: "Micro Miner", price: 2, profit: 0.10, label: "5%" },
-            { id: 1, name: "Starter Miner", price: 4, profit: 0.20, label: "5%" },
-            { id: 2, name: "Bronze Miner", price: 10, profit: 1.00, label: "10%" },
-            { id: 3, name: "Silver Miner", price: 20, profit: 3.00, label: "15%" },
-            { id: 4, name: "Gold Miner", price: 60, profit: 12.00, label: "20%" },
-            { id: 5, name: "Diamond Miner", price: 120, profit: 36.00, label: "30%" }
+            { id: 6, name: "Eco Miner", price: 1, profit: 0.10 },       // $1 * 10% = $0.10
+            { id: 7, name: "Micro Miner", price: 2, profit: 0.20 },     // $2 * 10% = $0.20
+            { id: 1, name: "Starter Miner", price: 4, profit: 0.40 },   // $4 * 10% = $0.40
+            { id: 2, name: "Bronze Miner", price: 10, profit: 1.00 },   // $10 * 10% = $1.00
+            { id: 3, name: "Silver Miner", price: 20, profit: 2.00 },   // $20 * 10% = $2.00
+            { id: 4, name: "Gold Miner", price: 60, profit: 6.00 },     // $60 * 10% = $6.00
+            { id: 5, name: "Diamond Miner", price: 120, profit: 12.00 } // $120 * 10% = $12.00
         ];
 
         let userData = null;
@@ -167,7 +168,7 @@
                     <div class="plan-info">
                         <h3>${plan.name}</h3>
                         <div class="profit-tag">
-                            <span>Rate: $${plan.profit.toFixed(2)} / 24h</span>
+                            <span>Rate: $${plan.profit.toFixed(2)} / 24h (10%)</span>
                             <span class="pkr-profit">(Rs. ${pkrProfit.toFixed(0)})</span>
                         </div>
                         <h2>$${plan.price.toFixed(2)} <span class="pkr-text">/ Rs. ${pkrPrice.toLocaleString()}</span></h2>

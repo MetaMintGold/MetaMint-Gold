@@ -15,7 +15,6 @@
         .balance-card p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
         .balance-card h2 { margin: 5px 0 0 0; font-size: 2.3rem; font-weight: 800; }
         
-        /* PKR Subtext inside card */
         .pkr-card-subtext { font-size: 0.95rem; color: #fff; font-weight: 600; display: block; margin-top: 4px; opacity: 0.95; }
 
         .input-group { margin-bottom: 20px; text-align: left; }
@@ -23,15 +22,17 @@
         .input-group input, .input-group select { width: 100%; padding: 15px; background: #1e293b; border: 1px solid #334155; border-radius: 12px; color: white; font-size: 16px; box-sizing: border-box; outline: none; transition: 0.3s; }
         .input-group input:focus, .input-group select:focus { border-color: #f59e0b; }
         
-        /* Live PKR Preview under input */
         .pkr-live-preview { font-size: 0.85rem; color: #f59e0b; margin-top: 6px; display: block; font-weight: 600; }
 
         .main-btn { width: 100%; padding: 16px; background: #f59e0b; border: none; border-radius: 12px; color: #0f172a; font-weight: bold; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
         .main-btn:active { transform: scale(0.98); }
         
-        .instruction-box { background: rgba(245, 158, 11, 0.05); border: 1px dashed #f59e0b; border-radius: 15px; padding: 15px; margin-top: 25px; }
-        .instruction-box h4 { color: #f59e0b; margin: 0 0 10px 0; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; }
-        .instruction-box ul { margin: 0; padding: 0 0 0 18px; color: #94a3b8; font-size: 0.8rem; line-height: 1.6; }
+        /* Beautified Custom Notice Box */
+        .instruction-box { background: rgba(34, 197, 94, 0.05); border: 1px solid #22c55e; border-radius: 15px; padding: 18px; margin-top: 25px; }
+        .instruction-box h4 { color: #22c55e; margin: 0 0 12px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .instruction-box ul { margin: 0; padding: 0 0 0 15px; color: #cbd5e1; font-size: 0.85rem; line-height: 1.7; list-style-type: none; }
+        .instruction-box ul li { position: relative; margin-bottom: 8px; text-align: left; direction: ltr; }
+        .instruction-box ul li::before { content: "✓"; color: #22c55e; font-weight: bold; position: absolute; left: -15px; top: 0; }
 
         .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 80px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 70% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -63,25 +64,25 @@
         <div class="input-group">
             <label>Select Payment Method</label>
             <select id="methodSelect" onchange="toggleFields()">
-                <option value="crypto">USDT (TRC20)</option>
                 <option value="local">JazzCash / EasyPaisa / Bank</option>
+                <option value="crypto">USDT (TRC20)</option>
             </select>
         </div>
 
         <div class="input-group">
             <label>Amount to Withdraw ($)</label>
-            <input type="number" id="drawAmount" placeholder="Minimum $10" min="10">
+            <input type="number" id="drawAmount" placeholder="Enter amount to withdraw" min="0.1">
             <span id="pkrWithdrawPreview" class="pkr-live-preview">Rs. 0 PKR</span>
         </div>
 
-        <div id="cryptoFields">
+        <div id="cryptoFields" style="display: none;">
             <div class="input-group">
                 <label>USDT (TRC20) Address</label>
                 <input type="text" id="drawAddress" placeholder="Paste TRC20 wallet address">
             </div>
         </div>
 
-        <div id="localFields" style="display: none;">
+        <div id="localFields">
             <div class="input-group">
                 <label>Select Bank / Wallet</label>
                 <select id="bankName">
@@ -102,8 +103,8 @@
                 <input type="text" id="accHolder" placeholder="Enter full name">
             </div>
             <div class="input-group">
-                <label>Account Number / IBAN</label>
-                <input type="text" id="accNumber" placeholder="Enter account number">
+                <label>Account Number / Mobile Wallet No</label>
+                <input type="text" id="accNumber" placeholder="Enter account or phone number">
             </div>
         </div>
 
@@ -112,12 +113,12 @@
         </button>
 
         <div class="instruction-box">
-            <h4><i class="fas fa-info-circle"></i> Instructions</h4>
+            <h4><i class="fas fa-check-circle"></i> Important Notice / ضروری معلومات</h4>
             <ul>
-                <li>Minimum withdrawal limit is <b>$10.00</b>.</li>
-                <li>Withdrawal available in <b>JazzCash, EasyPaisa, and All Local Banks</b>.</li>
-                <li>Verify your details carefully. Incorrect info results in loss.</li>
-                <li>Processing time: <b>1 to 24 hours</b>.</li>
+                <li>آپ روزانہ جتنا چاہیں ودڈرا حاصل کر سکتے ہیں، کوئی بھی ٹیم یا ریفرل کی شرط موجود نہیں ہے۔ (You can withdraw daily without any team or referral conditions).</li>
+                <li>ودڈرا کی رقم آپ اپنے <b>JazzCash, EasyPaisa</b> یا کسی بھی پاکستانی بینک اکاؤنٹ میں حاصل کر سکتے ہیں۔</li>
+                <li>برائے مہربانی اپنا وہ اکاؤنٹ نمبر درج کریں جس کی ڈیلی ریسیونگ لِمٹ فل نہ ہو تاکہ ٹرانزیکشن کامیابی سے ہو سکے۔ (Provide an account with active daily receiving limits).</li>
+                <li>ودڈرا کی درخواست جمع ہونے کے بعد <b>صرف 2 گھنٹے (2 Hours)</b> کے اندر اندر رقم آپ کے اکاؤنٹ میں منتقل کر دی جائے گی۔</li>
             </ul>
         </div>
     </div>
@@ -133,7 +134,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -159,7 +160,6 @@
             document.getElementById('localFields').style.display = method === 'local' ? 'block' : 'none';
         }
 
-        // Live PKR conversion calculation for withdraw input
         document.getElementById('drawAmount').addEventListener('input', function() {
             const val = parseFloat(this.value) || 0;
             document.getElementById('pkrWithdrawPreview').innerText = "Rs. " + Math.round(val * PKR_RATE).toLocaleString() + " PKR";
@@ -173,10 +173,7 @@
                         withdrawableBalance = parseFloat(data.withdrawable || 0);
                         username = data.username || "User";
                         
-                        // USD Display
                         document.getElementById('drawBal').innerText = "$" + withdrawableBalance.toFixed(2);
-                        
-                        // PKR Display (Fixed 280 Rate)
                         document.getElementById('pkrDrawBal').innerText = "Rs. " + Math.round(withdrawableBalance * PKR_RATE).toLocaleString();
                     }
                 });
@@ -188,7 +185,7 @@
             const method = document.getElementById('methodSelect').value;
             const user = auth.currentUser;
 
-            if (!amount || amount < 10) return Swal.fire('Error', 'Minimum withdrawal is $10', 'warning');
+            if (!amount || amount <= 0) return Swal.fire('Error', 'Please enter a valid amount', 'warning');
             if (amount > withdrawableBalance) return Swal.fire('Error', 'Insufficient Balance!', 'error');
 
             Swal.fire({ title: 'Processing request...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -202,7 +199,7 @@
                     const bank = document.getElementById('bankName').value;
                     const holder = document.getElementById('accHolder').value.trim();
                     const num = document.getElementById('accNumber').value.trim();
-                    if(!holder || !num) return Swal.fire('Error', 'Fill Bank Details', 'warning');
+                    if(!holder || !num) return Swal.fire('Error', 'Fill Wallet / Bank Details', 'warning');
                     finalAddress = `${bank} | ${holder} | ${num}`;
                 }
 
@@ -219,7 +216,7 @@
                     uid: user.uid,
                     username: username,
                     amount: amount,
-                    details: finalAddress,
+                    address: finalAddress, // mapped to 'address' field for master admin dashboard compatibility
                     status: 'pending',
                     timestamp: now,
                     method: method.toUpperCase()
@@ -237,7 +234,7 @@
                     details: finalAddress
                 });
 
-                Swal.fire('Success', 'Withdrawal Requested!', 'success').then(() => {
+                Swal.fire('Success', 'Withdrawal Requested successfully!', 'success').then(() => {
                     window.location.href = 'history.html';
                 });
 
