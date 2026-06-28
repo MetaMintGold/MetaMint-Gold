@@ -65,7 +65,7 @@
         }
         
         #installBanner {
-            display: none; /* Hidden by default, script will show it if app can be installed */
+            display: none; 
             width: 90%;
             max-width: 400px;
             background: linear-gradient(90deg, #fbbf24, #f59e0b); 
@@ -81,7 +81,7 @@
         }
 
         .auth-container { 
-            display: none; /* Initially hidden until splash completes */
+            display: none; 
             width: 90%; 
             max-width: 400px; 
             background: #1e293b; 
@@ -205,7 +205,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -222,7 +222,7 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- AUTOMATIC LOADING BAR ANIMATION (Runs on Startup) ---
+        // --- AUTOMATIC LOADING BAR ANIMATION ---
         let currentProgress = 0;
         const loadBar = document.getElementById('loadBar');
         const loadText = document.getElementById('loadText');
@@ -240,16 +240,13 @@
             }, 12);
         }
 
-        // --- AUTOMATIC ONE-CLICK PWA APP DOWNLOAD SYSTEM ---
+        // --- PWA INSTALLATION SYSTEM ---
         let deferredPrompt;
         const installBanner = document.getElementById('installBanner');
 
         window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later.
             deferredPrompt = e;
-            // Update UI notify the user they can install the PWA
             if(document.getElementById('splashScreen').style.display === 'none') {
                 installBanner.style.display = 'block';
             }
@@ -257,51 +254,62 @@
 
         installBanner.addEventListener('click', async () => {
             if (!deferredPrompt) return;
-            // Show the install prompt
             deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
             const { outcome } = await deferredPrompt.userChoice;
-            if (outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            }
-            // We've used the prompt, and can't use it again
             deferredPrompt = null;
             installBanner.style.display = 'none';
         });
 
         window.addEventListener('appinstalled', () => {
-            // Hide the install button once installed successfully
             installBanner.style.display = 'none';
             deferredPrompt = null;
         });
 
-        // --- CRITICAL: PERSISTENT LOGIN & RE-DIRECT SYSTEM ---
+        // --- SECURE SESSION CONTROLLER (Force Login on Re-open/App Exit) ---
         runSplashProgress(60, () => {
-            setPersistence(auth, browserLocalPersistence).then(() => {
+            // Changed to browserSessionPersistence so closing the app completely clears the login token
+            setPersistence(auth, browserSessionPersistence).then(() => {
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        runSplashProgress(100, () => {
-                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
-                        });
+                        // Check time elapsed since last activity to lock out inactive users (10-15 Mins Rule)
+                        const lastActive = localStorage.getItem('last_active_session');
+                        const now = Date.now();
+                        
+                        // If user is returning after 12 minutes (720,000 ms), force logout to prompt login screen
+                        if (lastActive && (now - parseInt(lastActive) > 720000)) {
+                            localStorage.removeItem('last_active_session');
+                            signOut(auth).then(() => {
+                                showAuthForm();
+                            });
+                        } else {
+                            // Active session is fresh, update timestamp and move to dashboard
+                            localStorage.setItem('last_active_session', now);
+                            runSplashProgress(100, () => {
+                                setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
+                            });
+                        }
                     } else {
-                        runSplashProgress(100, () => {
-                            setTimeout(() => {
-                                document.getElementById('splashScreen').style.opacity = '0';
-                                setTimeout(() => {
-                                    document.getElementById('splashScreen').style.display = 'none';
-                                    document.getElementById('mainAuthCard').style.display = 'block';
-                                    document.body.style.overflow = 'auto';
-                                    // If install trigger is available, show it now
-                                    if (deferredPrompt) installBanner.style.display = 'block';
-                                }, 500);
-                            }, 300);
-                        });
+                        showAuthForm();
                     }
                 });
             }).catch(() => {
-                runSplashProgress(100, () => { document.getElementById('splashScreen').style.display = 'none'; document.getElementById('mainAuthCard').style.display = 'block'; });
+                showAuthForm();
             });
         });
+
+        function showAuthForm() {
+            runSplashProgress(100, () => {
+                setTimeout(() => {
+                    document.getElementById('splashScreen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('splashScreen').style.display = 'none';
+                        document.getElementById('mainAuthCard').style.display = 'block';
+                        document.body.style.overflow = 'auto';
+                        if (deferredPrompt) installBanner.style.display = 'block';
+                    }, 500);
+                }, 300);
+            });
+        }
 
         // --- REFERRAL DETECTION LOGIC ---
         const urlParams = new URLSearchParams(window.location.search);
@@ -318,6 +326,7 @@
         rTab.onclick = () => { rTab.classList.add('active'); lTab.classList.remove('active'); rForm.style.display='block'; lForm.style.display='none'; };
         lTab.onclick = () => { lTab.classList.add('active'); rTab.classList.remove('active'); lForm.style.display='block'; rForm.style.display='none'; };
 
+        // --- ACCOUNT REGISTRATION (New User) ---
         document.getElementById('regBtn').onclick = async () => {
             const name = document.getElementById('regUser').value, 
                   email = document.getElementById('regEmail').value, 
@@ -347,15 +356,18 @@
                     timestamp: Date.now() 
                 });
                 
+                localStorage.setItem('last_active_session', Date.now());
                 Swal.fire('Success', 'Account Created!', 'success').then(() => { window.location.href = 'dashboard.html'; });
             } catch (err) { Swal.fire('Error', err.message, 'error'); }
         };
 
+        // --- ACCOUNT LOGIN ---
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value, pass = document.getElementById('loginPass').value;
             if(!email || !pass) return Swal.fire('Error', 'Please fill all fields.', 'error');
             try { 
                 await signInWithEmailAndPassword(auth, email, pass); 
+                localStorage.setItem('last_active_session', Date.now());
                 window.location.href = 'dashboard.html'; 
             } catch (err) { Swal.fire('Error', 'Invalid login credentials.', 'error'); }
         };
