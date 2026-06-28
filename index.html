@@ -24,10 +24,48 @@
             font-family: 'Segoe UI', sans-serif; 
             color: white; 
             touch-action: manipulation; 
+            overflow: hidden;
+        }
+
+        /* PREMIUM APP SPLASH LOADING SCREEN */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        .loading-container {
+            width: 70%;
+            max-width: 280px;
+            background: #1e293b;
+            height: 6px;
+            border-radius: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            border-radius: 10px;
+            transition: width 0.05s linear;
+        }
+        .loading-text {
+            font-size: 0.9rem;
+            color: #38bdf8;
+            margin-top: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
         }
         
         #installBanner {
-            display: none; 
+            display: none; /* Hidden by default, script will show it if app can be installed */
             width: 90%;
             max-width: 400px;
             background: linear-gradient(90deg, #fbbf24, #f59e0b); 
@@ -39,15 +77,11 @@
             margin-bottom: 20px;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
-            animation: slideDown 0.5s ease;
-        }
-
-        @keyframes slideDown { 
-            from { transform: translateY(-20px); opacity: 0; } 
-            to { transform: translateY(0); opacity: 1; } 
+            box-sizing: border-box;
         }
 
         .auth-container { 
+            display: none; /* Initially hidden until splash completes */
             width: 90%; 
             max-width: 400px; 
             background: #1e293b; 
@@ -55,7 +89,11 @@
             border-radius: 20px; 
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
             text-align: center; 
+            animation: fadeIn 0.4s ease forwards;
+            box-sizing: border-box;
         }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
         .welcome-note {
             background: rgba(56, 189, 248, 0.1);
@@ -94,11 +132,20 @@
 </head>
 <body>
 
+    <div id="splashScreen">
+        <img src="https://cdn-icons-png.flaticon.com/512/2535/2535077.png" alt="App Logo" style="width: 100px;">
+        <h2 style="margin: 15px 0 0 0; font-size: 1.8rem; font-weight: bold; letter-spacing: 1px;">Meta<span style="color: #38bdf8;">Mint Gold</span></h2>
+        <div class="loading-container">
+            <div class="loading-bar" id="loadBar"></div>
+        </div>
+        <div class="loading-text" id="loadText">0%</div>
+    </div>
+
     <div id="installBanner">
         <i class="fas fa-download"></i> INSTALL METAMINT GOLD APP
     </div>
 
-    <div class="auth-container">
+    <div class="auth-container" id="mainAuthCard">
         <img src="https://cdn-icons-png.flaticon.com/512/2535/2535077.png" alt="Logo" style="width: 70px; margin-bottom: 10px;">
         
         <div class="welcome-note">
@@ -158,7 +205,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
@@ -175,7 +222,88 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // --- NEW: REFERRAL DETECTION LOGIC ---
+        // --- AUTOMATIC LOADING BAR ANIMATION (Runs on Startup) ---
+        let currentProgress = 0;
+        const loadBar = document.getElementById('loadBar');
+        const loadText = document.getElementById('loadText');
+        
+        function runSplashProgress(target, callback) {
+            let interval = setInterval(() => {
+                if (currentProgress >= target) {
+                    clearInterval(interval);
+                    if (callback) callback();
+                } else {
+                    currentProgress++;
+                    loadBar.style.width = currentProgress + '%';
+                    loadText.innerText = currentProgress + '%';
+                }
+            }, 12);
+        }
+
+        // --- AUTOMATIC ONE-CLICK PWA APP DOWNLOAD SYSTEM ---
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI notify the user they can install the PWA
+            if(document.getElementById('splashScreen').style.display === 'none') {
+                installBanner.style.display = 'block';
+            }
+        });
+
+        installBanner.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+            }
+            // We've used the prompt, and can't use it again
+            deferredPrompt = null;
+            installBanner.style.display = 'none';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            // Hide the install button once installed successfully
+            installBanner.style.display = 'none';
+            deferredPrompt = null;
+        });
+
+        // --- CRITICAL: PERSISTENT LOGIN & RE-DIRECT SYSTEM ---
+        runSplashProgress(60, () => {
+            setPersistence(auth, browserLocalPersistence).then(() => {
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        runSplashProgress(100, () => {
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
+                        });
+                    } else {
+                        runSplashProgress(100, () => {
+                            setTimeout(() => {
+                                document.getElementById('splashScreen').style.opacity = '0';
+                                setTimeout(() => {
+                                    document.getElementById('splashScreen').style.display = 'none';
+                                    document.getElementById('mainAuthCard').style.display = 'block';
+                                    document.body.style.overflow = 'auto';
+                                    // If install trigger is available, show it now
+                                    if (deferredPrompt) installBanner.style.display = 'block';
+                                }, 500);
+                            }, 300);
+                        });
+                    }
+                });
+            }).catch(() => {
+                runSplashProgress(100, () => { document.getElementById('splashScreen').style.display = 'none'; document.getElementById('mainAuthCard').style.display = 'block'; });
+            });
+        });
+
+        // --- REFERRAL DETECTION LOGIC ---
         const urlParams = new URLSearchParams(window.location.search);
         const referredBy = urlParams.get('ref');
         if (referredBy) {
@@ -205,14 +333,13 @@
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
                 const uidNum = Math.floor(1000 + Math.random() * 9000);
                 
-                // --- MODIFIED: NOW SAVES referredBy ---
                 await set(ref(db, 'users/' + res.user.uid), { 
                     username: name, 
                     email: email, 
                     whatsapp: whatsapp, 
                     uid: uidNum, 
                     referralCode: uidNum.toString(), 
-                    referredBy: referredBy || "none", // Yahan referral ID save ho rahi hai
+                    referredBy: referredBy || "none",
                     totalBalance: 0, 
                     withdrawable: 0, 
                     referralWallet: 0, 
