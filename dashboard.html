@@ -444,7 +444,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -460,8 +460,16 @@
         const db = getDatabase(app);
 
         const PKR_RATE = 280;
-        let isLoggingOut = false;
-        let localUserData = null;
+
+        // Premium Loading Spinner overlay before data arrives
+        Swal.fire({
+            title: 'Loading Hub...',
+            html: 'Fetching live balance and account metrics.',
+            allowOutsideClick: false,
+            background: '#1e293b',
+            color: '#fff',
+            didOpen: () => { Swal.showLoading(); }
+        });
 
         window.openHelpline = () => {
             const num = "923222572670";
@@ -488,32 +496,23 @@
         }
         createDollarRain();
 
-        function updateBonusUI(data) {
-            const streak = data.streakCount || 0;
-            for (let i = 1; i <= 7; i++) {
-                const circle = document.getElementById('d' + i);
-                if(circle) {
-                    circle.style.background = (i <= streak) ? 'var(--primary)' : 'rgba(255,255,255,0.04)';
-                    circle.style.color = (i <= streak) ? '#000' : '#fff';
-                    circle.style.borderColor = (i === streak + 1) ? 'var(--accent)' : 'rgba(255,255,255,0.08)';
-                }
-            }
-        }
+        let isLoggingOut = false;
 
         onAuthStateChanged(auth, (user) => {
             if (isLoggingOut) return;
 
             if (user) {
-                if (user.email === "dreamsagweb@gmail.com") {
-                    document.getElementById('adminBox').style.display = 'block';
-                }
+                if (user.email === "dreamsagweb@gmail.com") document.getElementById('adminBox').style.display = 'block';
                 const userRef = ref(db, 'users/' + user.uid);
                 
                 onValue(userRef, (snapshot) => {
                     if (isLoggingOut) return;
                     const data = snapshot.val();
                     if (data) {
-                        localUserData = data;
+                        // Close initial loading spinner as soon as real data is verified and fetched
+                        if(Swal.isVisible() && Swal.getTitle().textContent === 'Loading Hub...') {
+                            Swal.close();
+                        }
 
                         if (data.isBlocked === true) {
                             document.body.innerHTML = `<div style='height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:#050a18; color:white; font-family:sans-serif;'>
@@ -529,7 +528,7 @@
                         const referralBal = parseFloat(data.referralWallet || 0);
 
                         document.getElementById('dashUsername').innerText = data.username || "User";
-                        document.getElementById('dashUID').innerText = data.uid || user.uid.substring(0, 6).toUpperCase();
+                        document.getElementById('dashUID').innerText = data.uid || "####";
                         
                         document.getElementById('totalBalance').innerText = "$" + totalBal.toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + withdrawableBal.toFixed(2);
@@ -558,13 +557,13 @@
 
                         updateBonusUI(data);
                     } else {
-                        document.getElementById('dashUsername').innerText = user.email.split('@')[0];
-                        document.getElementById('dashUID').innerText = user.uid.substring(0, 6).toUpperCase();
+                        if(Swal.isVisible()) Swal.close();
                     }
+                }, (error) => {
+                    if(Swal.isVisible()) Swal.close();
                 });
 
                 document.getElementById('btnWtoM').onclick = async () => {
-                    if (!localUserData) return;
                     const { value: amount } = await Swal.fire({
                         title: 'Transfer to Mining',
                         input: 'number',
@@ -575,10 +574,12 @@
                         confirmButtonColor: '#38bdf8', cancelButtonColor: '#475569'
                     });
                     if (amount && amount > 0) {
-                        if (parseFloat(localUserData.withdrawable) >= parseFloat(amount)) {
+                        const snap = await get(userRef);
+                        const userData = snap.val();
+                        if (parseFloat(userData.withdrawable) >= parseFloat(amount)) {
                             await update(userRef, {
-                                withdrawable: (parseFloat(localUserData.withdrawable) - parseFloat(amount)).toFixed(2),
-                                totalBalance: (parseFloat(localUserData.totalBalance) + parseFloat(amount)).toFixed(2)
+                                withdrawable: (parseFloat(userData.withdrawable) - parseFloat(amount)).toFixed(2),
+                                totalBalance: (parseFloat(userData.totalBalance) + parseFloat(amount)).toFixed(2)
                             });
                             Swal.fire({ title: 'Success!', text: 'Balance moved to Mining Wallet successfully!', icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                         } else {
@@ -588,7 +589,6 @@
                 };
 
                 document.getElementById('btnMtoW').onclick = async () => {
-                    if (!localUserData) return;
                     const { value: amount } = await Swal.fire({
                         title: 'Transfer to Withdrawable',
                         html: '<p style="font-size:0.85rem; color:#94a3b8; margin:0;">Note: 10% premium handling fee will be deducted</p>',
@@ -600,11 +600,13 @@
                         confirmButtonColor: '#38bdf8', cancelButtonColor: '#475569'
                     });
                     if (amount && amount > 0) {
-                        if (parseFloat(localUserData.totalBalance) >= parseFloat(amount)) {
+                        const snap = await get(userRef);
+                        const userData = snap.val();
+                        if (parseFloat(userData.totalBalance) >= parseFloat(amount)) {
                             const netAmount = (parseFloat(amount) * 0.9).toFixed(2); 
                             await update(userRef, {
-                                totalBalance: (parseFloat(localUserData.totalBalance) - parseFloat(amount)).toFixed(2),
-                                withdrawable: (parseFloat(localUserData.withdrawable) + parseFloat(netAmount)).toFixed(2)
+                                totalBalance: (parseFloat(userData.totalBalance) - parseFloat(amount)).toFixed(2),
+                                withdrawable: (parseFloat(userData.withdrawable) + parseFloat(netAmount)).toFixed(2)
                             });
                             Swal.fire({ title: 'Success!', text: `$${netAmount} added to your withdrawable balance after 10% fee.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                         } else {
@@ -614,18 +616,19 @@
                 };
 
                 document.getElementById('checkinBtn').onclick = async () => {
-                    if (!localUserData) return;
+                    const snap = await get(userRef);
+                    const userData = snap.val();
                     const today = new Date().toISOString().split('T')[0];
-                    if (localUserData.lastCheckinDate === today) {
+                    if (userData.lastCheckinDate === today) {
                         return Swal.fire({ title: 'Already Claimed!', text: 'Your streak is safe. Come back tomorrow!', icon: 'warning', background: '#1e293b', color: '#fff', confirmButtonColor: '#fbbf24' });
                     }
                     
-                    let streak = (parseInt(localUserData.streakCount || 0) % 7) + 1;
+                    let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
                     const bonus = (streak === 7) ? 0.40 : 0.10;
                     const nextStreak = (streak === 7) ? 0 : streak;
 
                     await update(userRef, { 
-                        withdrawable: (parseFloat(localUserData.withdrawable || 0) + bonus).toFixed(2), 
+                        withdrawable: (parseFloat(userData.withdrawable || 0) + bonus).toFixed(2), 
                         streakCount: nextStreak, 
                         lastCheckinDate: today 
                     });
@@ -634,10 +637,11 @@
                 };
 
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
-                    if (!localUserData) return;
-                    const reward = parseFloat(localUserData.referralWallet || 0);
+                    const snap = await get(userRef);
+                    const userData = snap.val();
+                    const reward = parseFloat(userData.referralWallet || 0);
                     if (reward > 0) {
-                        await update(userRef, { withdrawable: (parseFloat(localUserData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
+                        await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
                         Swal.fire({ title: 'Claimed Successfully!', text: `$${reward.toFixed(2)} commission moved to Withdrawable wallet!`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                     } else {
                         Swal.fire({ title: 'Wallet Empty', text: 'No multi-tier team commission available to claim right now.', icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
@@ -645,8 +649,8 @@
                 };
 
                 document.getElementById('notifBtn').onclick = async () => {
-                    if (!localUserData) return;
-                    const notifText = localUserData.notification;
+                    const snap = await get(userRef);
+                    const notifText = snap.val().notification;
                     if(notifText) {
                         Swal.fire({ title: 'System Message', text: notifText, icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                         await update(userRef, { lastNotifSeen: true });
@@ -655,9 +659,22 @@
                     }
                 };
             } else {
+                if(Swal.isVisible()) Swal.close();
                 window.location.replace('index.html');
             }
         });
+
+        function updateBonusUI(data) {
+            const streak = data.streakCount || 0;
+            for (let i = 1; i <= 7; i++) {
+                const circle = document.getElementById('d' + i);
+                if(circle) {
+                    circle.style.background = (i <= streak) ? 'var(--primary)' : 'rgba(255,255,255,0.04)';
+                    circle.style.color = (i <= streak) ? '#000' : '#fff';
+                    circle.style.borderColor = (i === streak + 1) ? 'var(--accent)' : 'rgba(255,255,255,0.08)';
+                }
+            }
+        }
         
         document.getElementById('logoutBtn').onclick = () => {
             Swal.fire({

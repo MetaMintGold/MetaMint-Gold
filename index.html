@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MetaMint Gold | Login & Register</title>
     
-    <link class="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#38bdf8">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2535/2535077.png">
 
@@ -237,7 +237,7 @@
                     loadBar.style.width = currentProgress + '%';
                     loadText.innerText = currentProgress + '%';
                 }
-            }, 10);
+            }, 12);
         }
 
         // --- PWA INSTALLATION SYSTEM ---
@@ -265,6 +265,32 @@
             deferredPrompt = null;
         });
 
+        // --- SECURE SESSION CONTROLLER ---
+        runSplashProgress(60, () => {
+            // Re-auth system check
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const lastActive = localStorage.getItem('last_active_session');
+                    const now = Date.now();
+                    
+                    // Fixed timing logic conflict to prevent instant redirection loop
+                    if (lastActive && (now - parseInt(lastActive) > 86400000)) { 
+                        localStorage.removeItem('last_active_session');
+                        signOut(auth).then(() => {
+                            showAuthForm();
+                        });
+                    } else {
+                        localStorage.setItem('last_active_session', now);
+                        runSplashProgress(100, () => {
+                            setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
+                        });
+                    }
+                } else {
+                    showAuthForm();
+                }
+            });
+        });
+
         function showAuthForm() {
             runSplashProgress(100, () => {
                 setTimeout(() => {
@@ -278,35 +304,6 @@
                 }, 300);
             });
         }
-
-        // --- SECURE SESSION CONTROLLER ---
-        runSplashProgress(60, () => {
-            setPersistence(auth, browserSessionPersistence).then(() => {
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        const lastActive = localStorage.getItem('last_active_session');
-                        const now = Date.now();
-                        
-                        // 12 minutes Inactivity Rule
-                        if (lastActive && (now - parseInt(lastActive) > 720000)) {
-                            localStorage.removeItem('last_active_session');
-                            signOut(auth).then(() => {
-                                showAuthForm();
-                            });
-                        } else {
-                            localStorage.setItem('last_active_session', now);
-                            runSplashProgress(100, () => {
-                                setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
-                            });
-                        }
-                    } else {
-                        showAuthForm();
-                    }
-                });
-            }).catch(() => {
-                showAuthForm();
-            });
-        });
 
         // --- REFERRAL DETECTION LOGIC ---
         const urlParams = new URLSearchParams(window.location.search);
@@ -328,13 +325,20 @@
             const name = document.getElementById('regUser').value, 
                   email = document.getElementById('regEmail').value, 
                   whatsapp = document.getElementById('regWhatsapp').value,
-                  city = document.getElementById('regCity').value,
                   pass = document.getElementById('regPass').value, 
                   cPass = document.getElementById('regConfirmPass').value;
             
             if(!name || !email || !whatsapp || !pass) return Swal.fire('Error', 'Please fill all fields.', 'error');
             if(whatsapp.length !== 11) return Swal.fire('Error', 'WhatsApp number must be exactly 11 digits.', 'error');
             if(pass !== cPass) return Swal.fire('Error', 'Passwords do not match.', 'error');
+            
+            // Premium Processing Spinner Loader
+            Swal.fire({
+                title: 'Creating Account...',
+                html: 'Please wait while we secure your profile.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
             
             try {
                 const res = await createUserWithEmailAndPassword(auth, email, pass);
@@ -344,7 +348,6 @@
                     username: name, 
                     email: email, 
                     whatsapp: whatsapp, 
-                    city: city || "none",
                     uid: uidNum, 
                     referralCode: uidNum.toString(), 
                     referredBy: referredBy || "none",
@@ -356,7 +359,7 @@
                 });
                 
                 localStorage.setItem('last_active_session', Date.now());
-                Swal.fire('Success', 'Account Created!', 'success').then(() => { window.location.href = 'dashboard.html'; });
+                Swal.fire('Success', 'Account Created Successfully!', 'success').then(() => { window.location.href = 'dashboard.html'; });
             } catch (err) { Swal.fire('Error', err.message, 'error'); }
         };
 
@@ -364,6 +367,15 @@
         document.getElementById('loginBtn').onclick = async () => {
             const email = document.getElementById('loginEmail').value, pass = document.getElementById('loginPass').value;
             if(!email || !pass) return Swal.fire('Error', 'Please fill all fields.', 'error');
+            
+            // Premium Processing Spinner Loader
+            Swal.fire({
+                title: 'Logging In...',
+                html: 'Connecting securely to your dashboard.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
             try { 
                 await signInWithEmailAndPassword(auth, email, pass); 
                 localStorage.setItem('last_active_session', Date.now());
