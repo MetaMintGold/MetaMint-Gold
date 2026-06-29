@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MetaMint Gold | Login & Register</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#38bdf8">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2535/2535077.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #0f172a; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            color: white; 
+            touch-action: manipulation; 
+            overflow: hidden;
+        }
+
+        /* PREMIUM APP SPLASH LOADING SCREEN */
+        #splashScreen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0f172a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        .loading-container {
+            width: 70%;
+            max-width: 280px;
+            background: #1e293b;
+            height: 6px;
+            border-radius: 10px;
+            margin-top: 25px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            border-radius: 10px;
+            transition: width 0.05s linear;
+        }
+        .loading-text {
+            font-size: 0.9rem;
+            color: #38bdf8;
+            margin-top: 10px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        #installBanner {
+            display: none; 
+            width: 90%;
+            max-width: 400px;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b); 
+            color: #0f172a;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+            box-sizing: border-box;
+        }
+
+        .auth-container { 
+            display: none; 
+            width: 90%; 
+            max-width: 400px; 
+            background: #1e293b; 
+            padding: 30px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            text-align: center; 
+            animation: fadeIn 0.4s ease forwards;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .welcome-note {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px dashed #38bdf8;
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .welcome-note h2 { margin: 0; font-size: 1.2rem; color: #38bdf8; }
+        .welcome-note p { margin: 5px 0 0 0; font-size: 0.8rem; opacity: 0.8; }
+
+        .tab-group { margin-bottom: 25px; border-bottom: 1px solid #334155; }
+        .tab-btn { 
+            background: none; border: none; color: #64748b; font-size: 1rem; 
+            cursor: pointer; padding: 10px 20px; transition: 0.3s; font-weight: bold; 
+        }
+        .tab-btn.active { color: #38bdf8; border-bottom: 3px solid #38bdf8; }
+        
+        input { 
+            width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; 
+            border: 1px solid #334155; background: #0f172a; color: white; 
+            outline: none; box-sizing: border-box; font-size: 16px;
+        }
+        
+        .input-group { position: relative; width: 100%; }
+        .toggle-pass { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #64748b; }
+
+        .main-btn { 
+            width: 100%; padding: 15px; background: #38bdf8; border: none; 
+            border-radius: 10px; color: #0f172a; font-weight: bold; 
+            cursor: pointer; margin-top: 15px; font-size: 1rem; 
+        }
+
+        .forgot-link { display: block; margin-top: 15px; color: #38bdf8; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="splashScreen">
+        <img src="https://cdn-icons-png.flaticon.com/512/2535/2535077.png" alt="App Logo" style="width: 100px;">
+        <h2 style="margin: 15px 0 0 0; font-size: 1.8rem; font-weight: bold; letter-spacing: 1px;">Meta<span style="color: #38bdf8;">Mint Gold</span></h2>
+        <div class="loading-container">
+            <div class="loading-bar" id="loadBar"></div>
+        </div>
+        <div class="loading-text" id="loadText">0%</div>
+    </div>
+
+    <div id="installBanner">
+        <i class="fas fa-download"></i> INSTALL METAMINT GOLD APP
+    </div>
+
+    <div class="auth-container" id="mainAuthCard">
+        <img src="https://cdn-icons-png.flaticon.com/512/2535/2535077.png" alt="Logo" style="width: 70px; margin-bottom: 10px;">
+        
+        <div class="welcome-note">
+            <h2>Welcome to MetaMint Gold</h2>
+            <p>Start your secure cloud mining journey with us today!</p>
+        </div>
+
+        <h1>Meta<span style="color: #38bdf8;">Mint</span></h1>
+        
+        <div class="tab-group">
+            <button class="tab-btn active" id="loginTab">Login</button>
+            <button class="tab-btn" id="registerTab">Register</button>
+        </div>
+
+        <div id="loginForm">
+            <input type="email" id="loginEmail" placeholder="Email Address">
+            <div class="input-group">
+                <input type="password" id="loginPass" placeholder="Password">
+                <i class="fas fa-eye toggle-pass" onclick="togglePassword('loginPass', this)"></i>
+            </div>
+            <button class="main-btn" id="loginBtn">Login</button>
+            <a class="forgot-link" id="forgotBtn">Forgot Password?</a>
+        </div>
+
+        <div id="registerForm" style="display: none;">
+            <input type="text" id="regUser" placeholder="Full Name">
+            <input type="email" id="regEmail" placeholder="Email Address">
+            <input type="tel" id="regWhatsapp" placeholder="WhatsApp Number (11 Digits)" required pattern="[0-9]{11}" maxlength="11">
+            <input type="text" id="regCity" placeholder="City">
+            
+            <div class="input-group">
+                <input type="password" id="regPass" placeholder="Create Password">
+                <i class="fas fa-eye toggle-pass" onclick="togglePassword('regPass', this)"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="regConfirmPass" placeholder="Confirm Password">
+                <i class="fas fa-eye toggle-pass" onclick="togglePassword('regConfirmPass', this)"></i>
+            </div>
+            
+            <p id="refDisplay" style="font-size: 0.8rem; color: #fbbf24; margin: 10px 0; font-weight: bold; display: none;"></p>
+            <button class="main-btn" id="regBtn">Create Account</button>
+        </div>
+    </div>
+
+    <script>
+        window.togglePassword = (id, icon) => {
+            const input = document.getElementById(id);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                input.type = "password";
+                icon.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        };
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserSessionPersistence, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
+            authDomain: "metamint-127ee.firebaseapp.com",
+            databaseURL: "https://metamint-127ee-default-rtdb.firebaseio.com",
+            projectId: "metamint-127ee",
+            storageBucket: "metamint-127ee.firebasestorage.app",
+            messagingSenderId: "756801996954",
+            appId: "1:756801996954:web:bcb7a18a57daacd3c6b723"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // --- AUTOMATIC LOADING BAR ANIMATION ---
+        let currentProgress = 0;
+        const loadBar = document.getElementById('loadBar');
+        const loadText = document.getElementById('loadText');
+        
+        function runSplashProgress(target, callback) {
+            let interval = setInterval(() => {
+                if (currentProgress >= target) {
+                    clearInterval(interval);
+                    if (callback) callback();
+                } else {
+                    currentProgress++;
+                    loadBar.style.width = currentProgress + '%';
+                    loadText.innerText = currentProgress + '%';
+                }
+            }, 12);
+        }
+
+        // --- PWA INSTALLATION SYSTEM ---
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if(document.getElementById('splashScreen').style.display === 'none') {
+                installBanner.style.display = 'block';
+            }
+        });
+
+        installBanner.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            installBanner.style.display = 'none';
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBanner.style.display = 'none';
+            deferredPrompt = null;
+        });
+
+        // --- SECURE SESSION CONTROLLER (Force Login on Re-open/App Exit) ---
+        runSplashProgress(60, () => {
+            // Changed to browserSessionPersistence so closing the app completely clears the login token
+            setPersistence(auth, browserSessionPersistence).then(() => {
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        // Check time elapsed since last activity to lock out inactive users (10-15 Mins Rule)
+                        const lastActive = localStorage.getItem('last_active_session');
+                        const now = Date.now();
+                        
+                        // If user is returning after 12 minutes (720,000 ms), force logout to prompt login screen
+                        if (lastActive && (now - parseInt(lastActive) > 720000)) {
+                            localStorage.removeItem('last_active_session');
+                            signOut(auth).then(() => {
+                                showAuthForm();
+                            });
+                        } else {
+                            // Active session is fresh, update timestamp and move to dashboard
+                            localStorage.setItem('last_active_session', now);
+                            runSplashProgress(100, () => {
+                                setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
+                            });
+                        }
+                    } else {
+                        showAuthForm();
+                    }
+                });
+            }).catch(() => {
+                showAuthForm();
+            });
+        });
+
+        function showAuthForm() {
+            runSplashProgress(100, () => {
+                setTimeout(() => {
+                    document.getElementById('splashScreen').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('splashScreen').style.display = 'none';
+                        document.getElementById('mainAuthCard').style.display = 'block';
+                        document.body.style.overflow = 'auto';
+                        if (deferredPrompt) installBanner.style.display = 'block';
+                    }, 500);
+                }, 300);
+            });
+        }
+
+        // --- REFERRAL DETECTION LOGIC ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const referredBy = urlParams.get('ref');
+        if (referredBy) {
+            const refDisp = document.getElementById('refDisplay');
+            refDisp.innerText = "Referrer ID: " + referredBy;
+            refDisp.style.display = "block";
+        }
+
+        const lTab = document.getElementById('loginTab'), rTab = document.getElementById('registerTab');
+        const lForm = document.getElementById('loginForm'), rForm = document.getElementById('registerForm');
+
+        rTab.onclick = () => { rTab.classList.add('active'); lTab.classList.remove('active'); rForm.style.display='block'; lForm.style.display='none'; };
+        lTab.onclick = () => { lTab.classList.add('active'); rTab.classList.remove('active'); lForm.style.display='block'; rForm.style.display='none'; };
+
+        // --- ACCOUNT REGISTRATION (New User) ---
+        document.getElementById('regBtn').onclick = async () => {
+            const name = document.getElementById('regUser').value, 
+                  email = document.getElementById('regEmail').value, 
+                  whatsapp = document.getElementById('regWhatsapp').value,
+                  pass = document.getElementById('regPass').value, 
+                  cPass = document.getElementById('regConfirmPass').value;
+            
+            if(!name || !email || !whatsapp || !pass) return Swal.fire('Error', 'Please fill all fields.', 'error');
+            if(whatsapp.length !== 11) return Swal.fire('Error', 'WhatsApp number must be exactly 11 digits.', 'error');
+            if(pass !== cPass) return Swal.fire('Error', 'Passwords do not match.', 'error');
+            
+            try {
+                const res = await createUserWithEmailAndPassword(auth, email, pass);
+                const uidNum = Math.floor(1000 + Math.random() * 9000);
+                
+                await set(ref(db, 'users/' + res.user.uid), { 
+                    username: name, 
+                    email: email, 
+                    whatsapp: whatsapp, 
+                    uid: uidNum, 
+                    referralCode: uidNum.toString(), 
+                    referredBy: referredBy || "none",
+                    totalBalance: 0, 
+                    withdrawable: 0, 
+                    referralWallet: 0, 
+                    role: 'user', 
+                    timestamp: Date.now() 
+                });
+                
+                localStorage.setItem('last_active_session', Date.now());
+                Swal.fire('Success', 'Account Created!', 'success').then(() => { window.location.href = 'dashboard.html'; });
+            } catch (err) { Swal.fire('Error', err.message, 'error'); }
+        };
+
+        // --- ACCOUNT LOGIN ---
+        document.getElementById('loginBtn').onclick = async () => {
+            const email = document.getElementById('loginEmail').value, pass = document.getElementById('loginPass').value;
+            if(!email || !pass) return Swal.fire('Error', 'Please fill all fields.', 'error');
+            try { 
+                await signInWithEmailAndPassword(auth, email, pass); 
+                localStorage.setItem('last_active_session', Date.now());
+                window.location.href = 'dashboard.html'; 
+            } catch (err) { Swal.fire('Error', 'Invalid login credentials.', 'error'); }
+        };
+    </script>
+</body>
+</html>

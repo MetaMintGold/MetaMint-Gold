@@ -11,10 +11,8 @@
             --primary: #00d2ff;
             --secondary: #3a7bd5;
             --accent: #fbbf24;
-            --eid-gold: #d4af37;
             --bg-dark: #050a18;
             --card-bg: rgba(255, 255, 255, 0.04);
-            --premium-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
         }
 
         body { 
@@ -29,13 +27,13 @@
             user-select: none; 
         }
 
-        /* --- MODERN HEADER --- */
+        /* --- MODERN HEADER & PERFECT ICON ALIGNMENT --- */
         .dash-header { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            padding: 15px 20px; 
-            background: rgba(5, 10, 24, 0.85); 
+            padding: 12px 15px; 
+            background: rgba(5, 10, 24, 0.9); 
             backdrop-filter: blur(15px);
             border-bottom: 1px solid rgba(255,255,255,0.08); 
             position: sticky; 
@@ -45,234 +43,329 @@
 
         .user-avatar { width: 42px; height: 42px; border-radius: 14px; border: 2px solid var(--primary); padding: 2px; box-shadow: 0 0 10px rgba(0, 210, 255, 0.3); }
 
-        /* --- ENHANCED BRANDING --- */
         .brand-text {
             color: var(--primary); 
-            font-size: 1.1rem; 
+            font-size: 1.05rem; 
             font-weight: 900; 
-            letter-spacing: 2px; 
-            margin-bottom: -2px;
-            text-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+            letter-spacing: 1.5px; 
+            text-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
             white-space: nowrap;
         }
 
-        /* --- PREMIUM MOTIVATIONAL BANNER WITH DOLLAR ANIMATION --- */
+        /* Unified Premium Action Icons Tray */
+        .header-actions-tray {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+            transition: 0.2s;
+        }
+        .header-icon-btn.gift-reward {
+            color: var(--accent);
+        }
+        .header-icon-btn.logout-action {
+            color: #ffffff;
+            background: #dc2626;
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+        }
+        .header-icon-btn:active { transform: scale(0.9); }
+
+        .dot-badge { position: absolute; top: 2px; right: 2px; background: #ff4757; width: 8px; height: 8px; border-radius: 50%; display: none; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+        /* --- PREMIUM MOTIVATIONAL BANNER --- */
         .premium-motivation-box {
-            margin: 20px;
-            padding: 22px 20px;
+            margin: 15px;
+            padding: 20px;
             background: linear-gradient(135deg, #1e1b4b 0%, #030712 100%);
-            border: 1px solid rgba(0, 210, 255, 0.25);
-            border-radius: 24px;
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            border-radius: 20px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 210, 255, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
-        .premium-motivation-box::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(0,210,255,0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        /* Floating Dollar Particles */
-        .dollar-particle {
-            position: absolute;
-            color: rgba(34, 197, 94, 0.4);
-            font-weight: bold;
-            font-size: 1.2rem;
-            animation: floatUp 4s infinite linear;
-            pointer-events: none;
-        }
-        .dp1 { left: 15%; animation-delay: 0s; }
-        .dp2 { left: 45%; animation-delay: 1.5s; font-size: 1rem; }
-        .dp3 { left: 75%; animation-delay: 0.8s; font-size: 1.4rem; }
-
-        @keyframes floatUp {
-            0% { transform: translateY(80px) rotate(0deg); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-60px) rotate(360deg); opacity: 0; }
-        }
-
-        .banner-content { width: 75%; text-align: left; position: relative; z-index: 2; }
-        .banner-content h3 { color: var(--primary); margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
-        .banner-content p { color: #cbd5e1; font-size: 0.78rem; margin: 8px 0 0 0; line-height: 1.4; font-weight: 400; }
+        .banner-content { width: 72%; text-align: left; position: relative; z-index: 2; }
+        .banner-content h3 { color: var(--primary); margin: 0; font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+        .banner-content p { color: #cbd5e1; font-size: 0.75rem; margin: 6px 0 0 0; line-height: 1.4; }
         
-        /* Animated Robot Icon Throwing Money */
         .animated-robot-holder {
             position: absolute;
-            right: 12px;
-            bottom: 10px;
+            right: 10px;
+            bottom: 8px;
             font-size: 3.5rem;
             color: var(--primary);
             filter: drop-shadow(0 0 10px rgba(0,210,255,0.4));
             animation: robotDance 2.5s infinite ease-in-out;
             z-index: 1;
         }
-
         @keyframes robotDance {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-4px) rotate(-3deg); color: var(--accent); }
-            50% { transform: translateY(0) rotate(3deg); }
-            75% { transform: translateY(-2px) rotate(-1deg); }
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); color: var(--accent); }
         }
 
-        /* --- BALANCE CARDS (PREMIUM GLASS) --- */
-        .balance-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px; }
+        /* --- BALANCE CARDS --- */
+        .balance-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 15px; }
         .card { 
-            padding: 18px 15px; 
-            border-radius: 24px; 
+            padding: 15px; 
+            border-radius: 20px; 
             background: rgba(30, 41, 59, 0.4); 
             border: 1px solid rgba(255,255,255,0.06);
             backdrop-filter: blur(10px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         .main-card { 
-            background: linear-gradient(135deg, rgba(0, 210, 255, 0.15), rgba(58, 123, 213, 0.15)); 
-            border: 1px solid rgba(0, 210, 255, 0.3); 
-            box-shadow: 0 8px 25px rgba(0, 210, 255, 0.1);
+            background: linear-gradient(135deg, rgba(0, 210, 255, 0.12), rgba(58, 123, 213, 0.12)); 
+            border: 1px solid rgba(0, 210, 255, 0.25); 
         }
-        
-        .pkr-subtext {
-            font-size: 0.75rem;
-            color: #94a3b8;
-            margin-top: 4px;
-            font-weight: 500;
-            display: block;
-        }
-        .main-card .pkr-subtext { color: #cbd5e1; }
+        .pkr-subtext { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; display: block; }
 
-        .dot-badge { position: absolute; top: -2px; right: -2px; background: #ff4757; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #0a1428; display: none; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
-
-        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
-        .btn { padding: 16px; border-radius: 18px; border: none; font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.3s; cursor: pointer; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
-        .btn-deposit { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
-        .btn-withdraw { background: linear-gradient(135deg, #e11d48, #f43f5e); color: white; box-shadow: 0 8px 20px rgba(244, 63, 94, 0.25); }
+        .action-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+        .btn { padding: 14px; border-radius: 16px; border: none; font-weight: 800; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: 0.2s; cursor: pointer; font-size: 0.8rem; text-transform: uppercase; }
+        .btn-deposit { background: linear-gradient(135deg, #059669, #10b981); color: white; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
+        .btn-withdraw { background: linear-gradient(135deg, #e11d48, #f43f5e); color: white; box-shadow: 0 5px 15px rgba(244, 63, 94, 0.2); }
         .btn:active { transform: scale(0.96); }
 
-        /* --- PARTNERS BOX --- */
-        .partners-box {
-            margin: 20px;
-            background: rgba(255,255,255,0.02);
-            padding: 20px;
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.05);
-            text-align: center;
+        /* --- PREMIUM INSTRUCTION BOX --- */
+        .instruction-box {
+            margin: 15px;
+            padding: 15px;
+            background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+            border-radius: 20px;
+            border: 1px solid rgba(251, 191, 36, 0.2);
         }
-        .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
-        .partner-item img { width: 35px; height: 35px; object-fit: contain; }
-        .partner-item p { font-size: 0.6rem; color: #94a3b8; margin: 5px 0 0 0; }
+        .instruction-title { color: var(--accent); font-size: 0.85rem; font-weight: bold; margin: 0 0 12px 0; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
+        .instruction-list { list-style: none; padding: 0; margin: 0; }
+        .instruction-list li { font-size: 0.75rem; color: #e2e8f0; margin-bottom: 10px; line-height: 1.4; display: flex; align-items: flex-start; gap: 8px; }
+        .instruction-list li:last-child { margin-bottom: 0; }
+        .instruction-list li i { color: var(--primary); margin-top: 2px; }
 
         /* --- TRANSFER SECTION --- */
-        .transfer-section { background: rgba(255,255,255,0.02); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); }
-        .transfer-btn { width: 100%; padding: 14px; border-radius: 14px; border: none; font-weight: bold; margin-top: 10px; cursor: pointer; transition: 0.3s; font-size: 0.8rem; }
-        .t-to-m { background: var(--secondary); color: white; box-shadow: 0 4px 15px rgba(58, 123, 213, 0.2); }
+        .transfer-section { background: rgba(255,255,255,0.02); margin: 15px; padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); }
+        .transfer-btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; margin-top: 8px; cursor: pointer; font-size: 0.75rem; }
+        .t-to-m { background: var(--secondary); color: white; }
         .m-to-t { background: transparent; border: 1px solid var(--secondary); color: white; }
 
-        /* --- FOOTER --- */
-        .main-footer { background: #030712; padding: 40px 20px 120px 20px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 40px; }
-        .footer-badge { background: rgba(0, 210, 255, 0.08); color: var(--primary); padding: 6px 14px; border-radius: 50px; font-size: 0.65rem; font-weight: bold; border: 1px solid rgba(0, 210, 255, 0.15); }
+        /* --- REFERRAL BOX --- */
+        .referral-container {
+            background: rgba(30, 41, 59, 0.4); margin: 15px; padding: 20px; border-radius: 20px; border: 1px solid rgba(251, 191, 36, 0.15); text-align: center;
+        }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(10, 20, 40, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.08); z-index: 1000; }
-        .nav-item { color: #94a3b8; text-decoration: none; text-align: center; font-size: 0.7rem; }
-        .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 5px; }
+        /* --- STREAK BOX & FIXED DOLLAR RAIN ANIMATION --- */
+        .streak-outer-box {
+            background: var(--card-bg); margin: 15px; padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.06); position: relative;
+        }
+        .day-circle { width:32px; height:32px; border-radius:8px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.08); font-size:0.75rem; }
+        
+        /* Fixed Animation Wrapper Container */
+        .animation-scene-wrapper {
+            position: relative;
+            width: 100%;
+            height: 130px;
+            background: cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: rgba(5, 10, 24, 0.6);
+            margin-top: 15px;
+            border-radius: 14px;
+            border: 1px dashed rgba(0, 210, 255, 0.2);
+            overflow: hidden;
+        }
+        
+        /* Collector Character Setup */
+        .money-collector-character {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.6rem;
+            color: #fbbf24;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: shuffleCollector 4s infinite ease-in-out;
+            z-index: 10;
+        }
+        .collector-bag { font-size: 1.2rem; color: #10b981; margin-top: -10px; }
+
+        @keyframes shuffleCollector {
+            0%, 100% { left: 50%; transform: translateX(-50%) scaleX(1); }
+            25% { left: 25%; transform: translateX(-50%) scaleX(1); }
+            30% { transform: translateX(-50%) scaleX(-1); }
+            75% { left: 75%; transform: translateX(-50%) scaleX(-1); }
+            80% { transform: translateX(-50%) scaleX(1); }
+        }
+
+        /* Dynamic Rain Particle Style */
+        .rain-dollar-js {
+            position: absolute;
+            color: #22c55e;
+            font-weight: bold;
+            font-size: 1.2rem;
+            pointer-events: none;
+            z-index: 2;
+            animation: fallAnimation linear forwards;
+        }
+        @keyframes fallAnimation {
+            0% { transform: translateY(-20px) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(140px) rotate(360deg); opacity: 0; }
+        }
+
+        /* --- PARTNERS BOX --- */
+        .partners-box { margin: 15px; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); text-align: center; }
+        .partner-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+        .partner-item img { width: 32px; height: 32px; object-fit: contain; }
+        .partner-item p { font-size: 0.58rem; color: #94a3b8; margin: 4px 0 0 0; }
+
+        /* --- FOOTER --- */
+        .main-footer { background: #030712; padding: 30px 15px 100px 15px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 30px; }
+        .footer-badge { background: rgba(0, 210, 255, 0.08); color: var(--primary); padding: 5px 12px; border-radius: 50px; font-size: 0.6rem; font-weight: bold; border: 1px solid rgba(0, 210, 255, 0.15); }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: rgba(10, 20, 40, 0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.08); z-index: 1000; }
+        .nav-item { color: #94a3b8; text-decoration: none; text-align: center; font-size: 0.65rem; }
+        .nav-item i { display: block; font-size: 1.25rem; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
 
-        .day-circle { width:35px; height:35px; border-radius:10px; background:rgba(255,255,255,0.04); display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.08); font-size:0.8rem; }
-        #adminBox { display: none; margin: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; border-radius: 15px; }
+        #adminBox { display: none; margin: 15px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444; border-radius: 12px; }
+        
+        /* Footer WhatsApp Button Styling */
+        .footer-wa-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #25D366;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 8px;
+            border: none;
+            cursor: pointer;
+            width: fit-content;
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+        }
     </style>
 </head>
 <body oncontextmenu="return false;">
 
     <header class="dash-header">
-        <div style="display:flex; align-items:center; gap:12px;">
+        <div style="display:flex; align-items:center; gap:10px;">
             <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar" alt="Avatar">
             <div>
                 <div class="brand-text">METAMINT GOLD</div>
-                <h4 id="dashUsername" style="margin:0; font-size:1rem;">Loading...</h4>
-                <small style="opacity: 0.6;">UID: <span id="dashUID">####</span></small>
+                <h4 id="dashUsername" style="margin:0; font-size:0.9rem;">Loading...</h4>
+                <small style="opacity: 0.6; font-size: 0.75rem;">UID: <span id="dashUID">####</span></small>
             </div>
         </div>
-        <div style="display:flex; gap:18px;">
-            <div style="position:relative; cursor:pointer;" onclick="window.location.href='reward.html'">
-                <i class="fas fa-gift" style="font-size: 1.4rem; color: var(--accent);"></i>
+        
+        <div class="header-actions-tray">
+            <div class="header-icon-btn gift-reward" onclick="window.location.href='reward.html'">
+                <i class="fas fa-gift"></i>
                 <span id="rewardDot" class="dot-badge"></span>
             </div>
-            <div style="position:relative; cursor:pointer;" id="notifBtn">
-                <i class="fas fa-bell" style="font-size: 1.4rem; color: #fff;"></i>
+            <div class="header-icon-btn" id="notifBtn">
+                <i class="fas fa-bell"></i>
                 <span id="notifBadge" class="dot-badge"></span>
             </div>
-            <i class="fas fa-power-off" id="logoutBtn" style="font-size: 1.4rem; color: #f43f5e; cursor:pointer;"></i>
+            <div class="header-icon-btn logout-action" id="logoutBtn">
+                <i class="fas fa-power-off"></i>
+            </div>
         </div>
     </header>
 
     <div class="premium-motivation-box">
-        <div class="dollar-particle dp1">$</div>
-        <div class="dollar-particle dp2">$</div>
-        <div class="dollar-particle dp3">$</div>
-        
         <div class="banner-content">
             <h3><i class="fas fa-crown" style="color:var(--accent);"></i> VIP MINING HUB</h3>
             <p>Welcome to peak financial freedom! Activate ultra-fast miners daily, expand your professional power team, and unlock maximum cloud mining yields every 24 hours.</p>
         </div>
-        
         <div class="animated-robot-holder">
             <i class="fas fa-robot"></i>
         </div>
     </div>
 
     <div id="adminBox">
-        <button onclick="window.location.href='admin.html'" style="background:#ef4444; color:white; border:none; padding:12px; border-radius:12px; font-weight:bold; width:100%; cursor:pointer;"><i class="fas fa-user-shield"></i> OPEN ADMIN PANEL</button>
+        <button onclick="window.location.href='admin.html'" style="background:#ef4444; color:white; border:none; padding:10px; border-radius:10px; font-weight:bold; width:100%; cursor:pointer;"><i class="fas fa-user-shield"></i> OPEN ADMIN PANEL</button>
     </div>
 
     <section class="balance-cards">
         <div class="card main-card">
             <div>
-                <span style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; opacity: 0.9; letter-spacing: 0.5px;">Mining Balance</span>
-                <h2 id="totalBalance" style="margin:5px 0 0 0; font-size: 1.6rem; font-weight:800;">$0.00</h2>
+                <span style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; opacity: 0.9;">Mining Balance</span>
+                <h2 id="totalBalance" style="margin:3px 0 0 0; font-size: 1.4rem; font-weight:800;">$0.00</h2>
             </div>
             <span id="pkrTotalBalance" class="pkr-subtext">Rs. 0</span>
         </div>
         <div class="card">
             <div>
-                <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Withdrawable</span>
-                <h2 id="withdrawableBalance" style="margin:5px 0 0 0; font-size: 1.6rem; color: var(--accent); font-weight:800;">$0.00</h2>
+                <span style="font-size: 0.65rem; color: #94a3b8; font-weight: 700; text-transform: uppercase;">Withdrawable</span>
+                <h2 id="withdrawableBalance" style="margin:3px 0 0 0; font-size: 1.4rem; color: var(--accent); font-weight:800;">$0.00</h2>
             </div>
             <span id="pkrWithdrawableBalance" class="pkr-subtext">Rs. 0</span>
         </div>
     </section>
 
     <div class="action-btns">
-        <button onclick="window.location.href='deposit.html'" class="btn btn-deposit"><i class="fas fa-wallet" style="font-size:1.2rem;"></i> Deposit</button>
-        <button onclick="window.location.href='withdraw.html'" class="btn btn-withdraw"><i class="fas fa-hand-holding-usd" style="font-size:1.2rem;"></i> Withdraw</button>
+        <button onclick="window.location.href='deposit.html'" class="btn btn-deposit"><i class="fas fa-wallet" style="font-size:1.1rem;"></i> Deposit</button>
+        <button onclick="window.location.href='withdraw.html'" class="btn btn-withdraw"><i class="fas fa-hand-holding-usd" style="font-size:1.1rem;"></i> Withdraw</button>
+    </div>
+
+    <div class="instruction-box">
+        <div class="instruction-title">
+            <i class="fas fa-info-circle"></i> Important Platform Instructions
+        </div>
+        <ul class="instruction-list">
+            <li>
+                <i class="fas fa-clock"></i>
+                <div><strong>Deposit Time:</strong> It takes 10 to 15 minutes to clear manually. If it's delayed beyond that, immediately tap the helpline button to contact support.</div>
+            </li>
+            <li>
+                <i class="fas fa-calendar-alt"></i>
+                <div><strong>Withdrawal Policy:</strong> Users are fully allowed to process a maximum of 3 withdrawals per week, either in a single day or spread out as preferred.</div>
+            </li>
+            <li>
+                <i class="fas fa-users"></i>
+                <div><strong>Team Promotion Reward:</strong> Grow your network actively! On successfully inviting 10 active partners to join, you will unlock a Big Special Reward directly from the company.</div>
+            </li>
+        </ul>
     </div>
 
     <div class="transfer-section">
-        <h4 style="margin:0 0 10px 0; color: var(--primary); font-size: 0.85rem; text-transform: uppercase;"><i class="fas fa-exchange-alt"></i> Internal Transfer</h4>
+        <h4 style="margin:0 0 8px 0; color: var(--primary); font-size: 0.8rem; text-transform: uppercase;"><i class="fas fa-exchange-alt"></i> Internal Transfer</h4>
         <button class="transfer-btn t-to-m" id="btnWtoM">Withdrawable to Mining (0% Fee)</button>
         <button class="transfer-btn m-to-t" id="btnMtoW">Mining to Withdrawable (10% Fee)</button>
     </div>
 
-    <div style="background: rgba(30, 41, 59, 0.4); backdrop-filter: blur(10px); margin: 20px; padding: 25px; border-radius: 24px; border: 1px solid rgba(251, 191, 36, 0.2); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-        <p style="margin:0; font-size: 0.75rem; color: var(--accent); font-weight: 700; letter-spacing: 1px;">REFERRAL COMMISSION WALLET</p>
-        <h2 id="teamRewardDisplay" style="font-size: 2rem; margin: 8px 0 4px 0; color: #fff; font-weight: 800;">$0.00</h2>
-        <span id="pkrTeamRewardDisplay" style="font-size: 0.8rem; color: #a1a1aa; display:block; margin-bottom: 15px;">Rs. 0</span>
-        <button id="claimTeamRewardBtn" style="background: linear-gradient(135deg, #d4af37, #fbbf24); color: #000; border:none; padding:14px; border-radius:14px; font-weight:900; width:100%; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 10px; text-transform: uppercase; font-size: 0.8rem;">
+    <div class="referral-container">
+        <p style="margin:0; font-size: 0.7rem; color: var(--accent); font-weight: 700; letter-spacing: 1px;">REFERRAL COMMISSION WALLET</p>
+        <h2 id="teamRewardDisplay" style="font-size: 1.8rem; margin: 6px 0 2px 0; color: #fff; font-weight: 800;">$0.00</h2>
+        <span id="pkrTeamRewardDisplay" style="font-size: 0.75rem; color: #a1a1aa; display:block; margin-bottom: 12px;">Rs. 0</span>
+        <button id="claimTeamRewardBtn" style="background: linear-gradient(135deg, #d4af37, #fbbf24); color: #000; border:none; padding:12px; border-radius:12px; font-weight:900; width:100%; cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-transform: uppercase; font-size: 0.75rem;">
             <i class="fas fa-coins"></i> Claim To Withdrawable
         </button>
     </div>
 
     <div class="partners-box">
-        <h4 style="color: var(--primary); font-size: 0.75rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 15px;">Verified Global Partners</h4>
+        <h4 style="color: var(--primary); font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;">Verified Global Partners</h4>
         <div class="partner-grid">
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/bnb.svg" alt="Binance"><p>Binance</p></div>
             <div class="partner-item"><img src="https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/svg/color/usdt.svg" alt="Tether"><p>USDT (TRC20)</p></div>
@@ -283,9 +376,9 @@
         </div>
     </div>
 
-    <div style="background: var(--card-bg); margin: 20px; padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.06);">
-        <h4 style="margin:0 0 15px 0; color: var(--primary); font-size: 0.9rem;"><i class="fas fa-calendar-check"></i> DAILY LOGIN STREAK</h4>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;" id="streakContainer">
+    <div class="streak-outer-box">
+        <h4 style="margin:0 0 12px 0; color: var(--primary); font-size: 0.85rem;"><i class="fas fa-calendar-check"></i> DAILY LOGIN STREAK</h4>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;" id="streakContainer">
             <div id="d1" class="day-circle">1</div>
             <div id="d2" class="day-circle">2</div>
             <div id="d3" class="day-circle">3</div>
@@ -294,36 +387,46 @@
             <div id="d6" class="day-circle">6</div>
             <div id="d7" class="day-circle">7</div>
         </div>
-        <button id="checkinBtn" style="background: rgba(0, 210, 255, 0.08); color: var(--primary); border: 1px solid var(--primary); padding: 14px; border-radius: 14px; font-weight: bold; width: 100%; cursor: pointer;">Collect Reward</button>
+        <button id="checkinBtn" style="background: rgba(0, 210, 255, 0.08); color: var(--primary); border: 1px solid var(--primary); padding: 12px; border-radius: 12px; font-weight: bold; width: 100%; cursor: pointer;">Collect Reward</button>
+        
+        <div class="animation-scene-wrapper" id="rainContainer">
+            <div class="money-collector-character">
+                <i class="fas fa-user-ninja"></i>
+                <i class="fas fa-shopping-bag collector-bag"></i>
+            </div>
+        </div>
     </div>
 
     <footer class="main-footer">
-        <h2 style="color: var(--primary); font-size: 1.4rem; margin: 0; letter-spacing: 1px;">METAMINT GOLD</h2>
-        <p style="color: #64748b; font-size: 0.8rem; line-height: 1.6; margin-top: 10px;">
+        <h2 style="color: var(--primary); font-size: 1.3rem; margin: 0; letter-spacing: 1px;">METAMINT GOLD</h2>
+        <p style="color: #64748b; font-size: 0.75rem; line-height: 1.5; margin-top: 8px;">
             MetaMint Gold is a premier cloud mining platform providing secure and high-yield USDT mining. We utilize advanced TRC20 protocols to ensure maximum security for your assets.
         </p>
         
-        <div style="margin: 25px 0; display: flex; gap: 10px;">
-            <span class="footer-badge"><i class="fas fa-shield-check"></i> SSL SECURED</span>
-            <span class="footer-badge" style="color:#fbbf24; border-color:rgba(251,191,36,0.2);"><i class="fas fa-lock"></i> AES-256 BIT</span>
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display:flex; gap:8px;">
+                <span class="footer-badge"><i class="fas fa-shield-check"></i> SSL SECURED</span>
+                <span class="footer-badge" style="color:#fbbf24; border-color:rgba(251,191,36,0.15);"><i class="fas fa-lock"></i> AES-256 BIT</span>
+            </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px;">
             <div>
-                <h4 style="color: #fff; font-size: 0.85rem; margin-bottom: 12px; text-transform: uppercase;">Legal</h4>
-                <ul style="list-style: none; padding: 0; font-size: 0.75rem; color: #64748b; line-height: 2;">
+                <h4 style="color: #fff; font-size: 0.8rem; margin-bottom: 10px; text-transform: uppercase;">Legal</h4>
+                <ul style="list-style: none; padding: 0; font-size: 0.7rem; color: #64748b; line-height: 2;">
                     <li>Privacy Policy</li>
                     <li>Terms & Conditions</li>
                     <li>Mining License</li>
                 </ul>
             </div>
             <div>
-                <h4 style="color: #fff; font-size: 0.85rem; margin-bottom: 12px; text-transform: uppercase;">Support</h4>
-                <p style="color: #64748b; font-size: 0.75rem; line-height: 1.6;">24/7 technical support is available via our official Telegram channel.</p>
+                <h4 style="color: #fff; font-size: 0.8rem; margin-bottom: 10px; text-transform: uppercase;">Support</h4>
+                <p style="color: #64748b; font-size: 0.7rem; line-height: 1.5; margin-bottom: 4px;">24/7 technical support is available via our official WhatsApp channel.</p>
+                <button class="footer-wa-btn" onclick="openHelpline()"><i class="fab fa-whatsapp" style="font-size:1rem;"></i> Contact Helpline</button>
             </div>
         </div>
 
-        <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 30px 0;"></div>
+        <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 25px 0;"></div>
         <div style="text-align: center; color: #475569; font-size: 0.65rem;">
             © 2024-2026 MetaMint Gold Group Ltd.<br>
             Reg No: #MMG-7721-UK | HQ: Singapore
@@ -341,7 +444,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -356,18 +459,52 @@
         const auth = getAuth(app);
         const db = getDatabase(app);
 
-        // Fixed PKR exchange rate
         const PKR_RATE = 280;
 
+        window.openHelpline = () => {
+            const num = "923222572670";
+            const text = "Hello MetaMint Support, I need assistance regarding my platform account.";
+            window.location.href = `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+        };
+
+        function createDollarRain() {
+            const container = document.getElementById('rainContainer');
+            if(!container) return;
+            
+            setInterval(() => {
+                const dollar = document.createElement('div');
+                dollar.classList.add('rain-dollar-js');
+                dollar.innerText = '$';
+                
+                dollar.style.left = Math.random() * 90 + 5 + '%';
+                dollar.style.animationDuration = Math.random() * 1.5 + 1.5 + 's';
+                
+                container.appendChild(dollar);
+                
+                setTimeout(() => { dollar.remove(); }, 3000);
+            }, 350);
+        }
+        createDollarRain();
+
+        let isLoggingOut = false;
+
         onAuthStateChanged(auth, (user) => {
+            if (isLoggingOut) return;
+
             if (user) {
                 if (user.email === "dreamsagweb@gmail.com") document.getElementById('adminBox').style.display = 'block';
                 const userRef = ref(db, 'users/' + user.uid);
+                
                 onValue(userRef, (snapshot) => {
+                    if (isLoggingOut) return;
                     const data = snapshot.val();
                     if (data) {
                         if (data.isBlocked === true) {
-                            document.body.innerHTML = `<div style="height:100vh; display:flex; align-items:center; justify-content:center; text-align:center; padding:30px; background:#050a18; color:white;"><h1>ACCOUNT SUSPENDED</h1><p>Contact support for details.</p></div>`;
+                            document.body.innerHTML = `<div style='height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:#050a18; color:white; font-family:sans-serif;'>
+                                <i class="fas fa-ban" style="font-size:4rem; color:#f43f5e; margin-bottom:15px;"></i>
+                                <h1 style="margin:0; font-size:1.8rem; letter-spacing:1px;">ACCOUNT SUSPENDED</h1>
+                                <p style="color:#64748b; margin-top:10px; font-size:0.9rem;">Your account has been blocked due to policy violations.<br>Please contact the support team for clarification.</p>
+                            </div>`;
                             return; 
                         }
                         
@@ -378,18 +515,31 @@
                         document.getElementById('dashUsername').innerText = data.username || "User";
                         document.getElementById('dashUID').innerText = data.uid || "####";
                         
-                        // USD Values
                         document.getElementById('totalBalance').innerText = "$" + totalBal.toFixed(2);
                         document.getElementById('withdrawableBalance').innerText = "$" + withdrawableBal.toFixed(2);
                         document.getElementById('teamRewardDisplay').innerText = "$" + referralBal.toFixed(2);
                         
-                        // PKR Values Display (Fixed 280 Rate)
                         document.getElementById('pkrTotalBalance').innerText = "Rs. " + Math.round(totalBal * PKR_RATE).toLocaleString();
                         document.getElementById('pkrWithdrawableBalance').innerText = "Rs. " + Math.round(withdrawableBal * PKR_RATE).toLocaleString();
                         document.getElementById('pkrTeamRewardDisplay').innerText = "Rs. " + Math.round(referralBal * PKR_RATE).toLocaleString();
 
                         document.getElementById('notifBadge').style.display = (data.notification && !data.lastNotifSeen) ? 'block' : 'none';
                         document.getElementById('rewardDot').style.display = data.hasNewReward ? 'block' : 'none';
+                        
+                        if (data.notification && !data.lastNotifSeen) {
+                            Swal.fire({
+                                title: '🔔 System Notification',
+                                text: data.notification,
+                                icon: 'info',
+                                background: '#1e293b',
+                                color: '#fff',
+                                confirmButtonColor: '#38bdf8',
+                                confirmButtonText: 'Mark as Read'
+                            }).then(() => {
+                                update(userRef, { lastNotifSeen: true });
+                            });
+                        }
+
                         updateBonusUI(data);
                     }
                 });
@@ -401,7 +551,8 @@
                         inputLabel: 'Amount to Transfer (0% Fee)',
                         inputPlaceholder: 'Enter amount...',
                         showCancelButton: true,
-                        background: '#112240', color: '#fff'
+                        background: '#1e293b', color: '#fff',
+                        confirmButtonColor: '#38bdf8', cancelButtonColor: '#475569'
                     });
                     if (amount && amount > 0) {
                         const snap = await get(userRef);
@@ -411,9 +562,9 @@
                                 withdrawable: (parseFloat(userData.withdrawable) - parseFloat(amount)).toFixed(2),
                                 totalBalance: (parseFloat(userData.totalBalance) + parseFloat(amount)).toFixed(2)
                             });
-                            Swal.fire({ title: 'Success!', text: 'Balance moved to Mining!', icon: 'success', background: '#112240', color: '#fff' });
+                            Swal.fire({ title: 'Success!', text: 'Balance moved to Mining Wallet successfully!', icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                         } else {
-                            Swal.fire({ title: 'Error', text: 'Insufficient Withdrawable balance!', icon: 'error', background: '#112240', color: '#fff' });
+                            Swal.fire({ title: 'Error', text: 'Insufficient Withdrawable balance!', icon: 'error', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' });
                         }
                     }
                 };
@@ -421,12 +572,13 @@
                 document.getElementById('btnMtoW').onclick = async () => {
                     const { value: amount } = await Swal.fire({
                         title: 'Transfer to Withdrawable',
-                        html: '<p style="font-size:0.8rem; color:#aaa;">Note: 10% fee will be deducted</p>',
+                        html: '<p style="font-size:0.85rem; color:#94a3b8; margin:0;">Note: 10% premium handling fee will be deducted</p>',
                         input: 'number',
                         inputLabel: 'Amount from Mining',
                         inputPlaceholder: 'Enter amount...',
                         showCancelButton: true,
-                        background: '#112240', color: '#fff'
+                        background: '#1e293b', color: '#fff',
+                        confirmButtonColor: '#38bdf8', cancelButtonColor: '#475569'
                     });
                     if (amount && amount > 0) {
                         const snap = await get(userRef);
@@ -437,9 +589,9 @@
                                 totalBalance: (parseFloat(userData.totalBalance) - parseFloat(amount)).toFixed(2),
                                 withdrawable: (parseFloat(userData.withdrawable) + parseFloat(netAmount)).toFixed(2)
                             });
-                            Swal.fire({ title: 'Success!', text: `$${netAmount} added after 10% fee.`, icon: 'success', background: '#112240', color: '#fff' });
+                            Swal.fire({ title: 'Success!', text: `$${netAmount} added to your withdrawable balance after 10% fee.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                         } else {
-                            Swal.fire({ title: 'Error', text: 'Insufficient Mining balance!', icon: 'error', background: '#112240', color: '#fff' });
+                            Swal.fire({ title: 'Error', text: 'Insufficient Mining balance!', icon: 'error', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' });
                         }
                     }
                 };
@@ -448,7 +600,9 @@
                     const snap = await get(userRef);
                     const userData = snap.val();
                     const today = new Date().toISOString().split('T')[0];
-                    if (userData.lastCheckinDate === today) return Swal.fire({ title: 'Already Claimed!', text: 'Come back tomorrow!', icon: 'warning', background: '#112240', color: '#fff' });
+                    if (userData.lastCheckinDate === today) {
+                        return Swal.fire({ title: 'Already Claimed!', text: 'Your streak is safe. Come back tomorrow!', icon: 'warning', background: '#1e293b', color: '#fff', confirmButtonColor: '#fbbf24' });
+                    }
                     
                     let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
                     const bonus = (streak === 7) ? 0.40 : 0.10;
@@ -460,7 +614,7 @@
                         lastCheckinDate: today 
                     });
                     
-                    Swal.fire({ title: 'Reward Collected!', text: `$${bonus} added to withdrawable balance.`, icon: 'success', background: '#112240', color: '#fff' });
+                    Swal.fire({ title: 'Streak Updated!', text: `$${bonus} added to your withdrawable wallet.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                 };
 
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
@@ -469,18 +623,25 @@
                     const reward = parseFloat(userData.referralWallet || 0);
                     if (reward > 0) {
                         await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
-                        Swal.fire({ title: 'Claimed!', text: `$${reward.toFixed(2)} moved to Withdrawable!`, icon: 'success', background: '#112240', color: '#fff' });
-                    } else Swal.fire({ title: 'Empty Wallet', text: 'No commission available to claim.', icon: 'info', background: '#112240', color: '#fff' });
+                        Swal.fire({ title: 'Claimed Successfully!', text: `$${reward.toFixed(2)} commission moved to Withdrawable wallet!`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                    } else {
+                        Swal.fire({ title: 'Wallet Empty', text: 'No multi-tier team commission available to claim right now.', icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                    }
                 };
 
                 document.getElementById('notifBtn').onclick = async () => {
                     const snap = await get(userRef);
-                    if(snap.val().notification) {
-                        Swal.fire({ title: 'System Message', text: snap.val().notification, icon: 'info', background: '#112240', color: '#fff' });
+                    const notifText = snap.val().notification;
+                    if(notifText) {
+                        Swal.fire({ title: 'System Message', text: notifText, icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                         await update(userRef, { lastNotifSeen: true });
+                    } else {
+                        Swal.fire({ title: 'No Messages', text: 'Your notification center is completely clear.', icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
                     }
                 };
-            } else window.location.href = 'index.html';
+            } else {
+                window.location.replace('index.html');
+            }
         });
 
         function updateBonusUI(data) {
@@ -494,7 +655,30 @@
                 }
             }
         }
-        document.getElementById('logoutBtn').onclick = () => signOut(auth).then(() => window.location.href='index.html');
+        
+        document.getElementById('logoutBtn').onclick = () => {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You will be securely logged out of your session!",
+                icon: 'warning',
+                showCancelButton: true,
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#475569',
+                confirmButtonText: 'Yes, Logout!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isLoggingOut = true;
+                    signOut(auth).then(() => {
+                        window.location.replace('index.html');
+                    }).catch(() => {
+                        isLoggingOut = false;
+                        Swal.fire('Error', 'Logout failed. Please retry.', 'error');
+                    });
+                }
+            });
+        };
     </script>
 </body>
 </html>
