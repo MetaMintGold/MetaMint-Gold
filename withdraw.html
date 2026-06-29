@@ -11,15 +11,11 @@
         .dash-header { display: flex; align-items: center; gap: 15px; padding: 20px; background: #1e293b; border-bottom: 1px solid #334155; position: sticky; top: 0; z-index: 100; }
         .back-btn { font-size: 1.2rem; cursor: pointer; color: #f59e0b; }
         .withdraw-container { padding: 20px; margin-bottom: 100px; }
-        
         .balance-card { background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 20px; padding: 25px 20px; text-align: center; box-shadow: 0 10px 20px rgba(217, 119, 6, 0.2); margin-bottom: 25px; }
         .balance-card p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
         .balance-card h2 { margin: 5px 0 0 0; font-size: 2.3rem; font-weight: 800; }
         
         .pkr-card-subtext { font-size: 0.95rem; color: #fff; font-weight: 600; display: block; margin-top: 4px; opacity: 0.95; }
-        
-        /* Premium Remaining Limit Tracker Badge */
-        .limit-tracker-badge { display: inline-block; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; margin-top: 10px; color: #fff; }
 
         .input-group { margin-bottom: 20px; text-align: left; }
         .input-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #94a3b8; }
@@ -35,7 +31,7 @@
         .instruction-box { background: rgba(34, 197, 94, 0.05); border: 1px solid #22c55e; border-radius: 15px; padding: 18px; margin-top: 25px; }
         .instruction-box h4 { color: #22c55e; margin: 0 0 12px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px; text-transform: uppercase; }
         .instruction-box ul { margin: 0; padding: 0 0 0 15px; color: #cbd5e1; font-size: 0.85rem; line-height: 1.7; list-style-type: none; }
-        .instruction-box ul li { position: relative; margin-bottom: 12px; text-align: left; direction: ltr; }
+        .instruction-box ul li { position: relative; margin-bottom: 8px; text-align: left; direction: ltr; }
         .instruction-box ul li::before { content: "✓"; color: #22c55e; font-weight: bold; position: absolute; left: -15px; top: 0; }
 
         .whatsapp-float { position: fixed; width: 60px; height: 60px; bottom: 80px; right: 20px; background-color: #25d366; color: #FFF; border-radius: 50px; text-align: center; font-size: 30px; box-shadow: 0px 4px 10px rgba(0,0,0,0.3); z-index: 1000; display: flex; align-items: center; justify-content: center; text-decoration: none; animation: pulse 2s infinite; }
@@ -63,9 +59,6 @@
             <p>Withdrawable Balance</p>
             <h2 id="drawBal">$0.00</h2>
             <span id="pkrDrawBal" class="pkr-card-subtext">Rs. 0</span>
-            <div class="limit-tracker-badge">
-                <i class="fas fa-calendar-alt"></i> Remaining Weekly Withdraws: <span id="remLimits">3 / 3</span>
-            </div>
         </div>
 
         <div class="input-group">
@@ -122,10 +115,10 @@
         <div class="instruction-box">
             <h4><i class="fas fa-check-circle"></i> Important Notice / ضروری معلومات</h4>
             <ul>
-                <li>آپ ہفتے میں زیادہ سے زیادہ <b>3 ودڈرا (3 Withdrawals per week)</b> حاصل کر سکتے ہیں۔ (Users are allowed 3 withdrawals maximum every single rolling week).</li>
-                <li>ودڈرا کی درخواست جمع ہونے کے بعد <b>کم از کم 2 گھنٹے سے لے کر 8 گھنٹے (2 to 8 Hours)</b> کے اندر اندر رقم آپ کے اکاؤنٹ میں منتقل کر دی جائے گی۔</li>
-                <li>برائے مہربانی اپنا وہ اکاؤنٹ نمبر درج کریں جس کی ڈیلی ریسیونگ لِمٹ فل نہ ہو تاکہ ٹرانزیکشن کامیابی سے ہو سکے۔ (Provide an account with active daily receiving limits so that payment does not fail).</li>
-                <li>ودڈرا کی رقم آپ اپنے <b>JazzCash, EasyPaisa</b> یا کسی بھی پاکستانی بینک اکاؤنٹ اور کرپٹو والٹ میں حاصل کر سکتے ہیں۔</li>
+                <li>آپ روزانہ جتنا چاہیں ودڈرا حاصل کر سکتے ہیں، کوئی بھی ٹیم یا ریفرل کی شرط موجود نہیں ہے۔ (You can withdraw daily without any team or referral conditions).</li>
+                <li>ودڈرا کی رقم آپ اپنے <b>JazzCash, EasyPaisa</b> یا کسی بھی پاکستانی بینک اکاؤنٹ میں حاصل کر سکتے ہیں۔</li>
+                <li>برائے مہربانی اپنا وہ اکاؤنٹ نمبر درج کریں جس کی ڈیلی ریسیونگ لِمٹ فل نہ ہو تاکہ ٹرانزیکشن کامیابی سے ہو سکے۔ (Provide an account with active daily receiving limits).</li>
+                <li>ودڈرا کی درخواست جمع ہونے کے بعد <b>صرف 2 گھنٹے (2 Hours)</b> کے اندر اندر رقم آپ کے اکاؤنٹ میں منتقل کر دی جائے گی۔</li>
             </ul>
         </div>
     </div>
@@ -141,7 +134,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, onValue, push, set, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDea-7DWbKSc7QCbp2aP4OJuMiMvqnJxRA",
@@ -159,9 +152,7 @@
 
         let withdrawableBalance = 0;
         let username = "";
-        let totalWithdrawsThisWeek = 0;
         const PKR_RATE = 280;
-        const MAX_WEEKLY_LIMIT = 3;
 
         window.toggleFields = () => {
             const method = document.getElementById('methodSelect').value;
@@ -174,10 +165,8 @@
             document.getElementById('pkrWithdrawPreview').innerText = "Rs. " + Math.round(val * PKR_RATE).toLocaleString() + " PKR";
         });
 
-        // Main Live Sync Function
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // 1. Sync Balances
                 onValue(ref(db, 'users/' + user.uid), (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
@@ -188,28 +177,6 @@
                         document.getElementById('pkrDrawBal').innerText = "Rs. " + Math.round(withdrawableBalance * PKR_RATE).toLocaleString();
                     }
                 });
-
-                // 2. Fetch Transactions to live calculate rolling 7-days limit counts
-                onValue(ref(db, 'transactions/' + user.uid), (snapshot) => {
-                    let count = 0;
-                    const now = Date.now();
-                    const sevenDaysAgo = now - (7 * 24 * 60 * 60 * 1000); // Past 7 days milliseconds
-
-                    if (snapshot.exists()) {
-                        const txnData = snapshot.val();
-                        for (let key in txnData) {
-                            const txn = txnData[key];
-                            if (txn.type === 'WITHDRAW' && txn.timestamp >= sevenDaysAgo) {
-                                count++;
-                            }
-                        }
-                    }
-                    totalWithdrawsThisWeek = count;
-                    let remaining = MAX_WEEKLY_LIMIT - totalWithdrawsThisWeek;
-                    if(remaining < 0) remaining = 0;
-                    document.getElementById('remLimits').innerText = `${remaining} / ${MAX_WEEKLY_LIMIT}`;
-                });
-
             } else { window.location.href = 'index.html'; }
         });
 
@@ -218,33 +185,28 @@
             const method = document.getElementById('methodSelect').value;
             const user = auth.currentUser;
 
-            // Check hard limit cap
-            if (totalWithdrawsThisWeek >= MAX_WEEKLY_LIMIT) {
-                return Swal.fire('Limit Reached!', 'You have already utilized your 3 premium withdrawals for this week.', 'error');
-            }
-
             if (!amount || amount <= 0) return Swal.fire('Error', 'Please enter a valid amount', 'warning');
             if (amount > withdrawableBalance) return Swal.fire('Error', 'Insufficient Balance!', 'error');
-
-            let finalAddress = "";
-            if(method === 'crypto') {
-                finalAddress = document.getElementById('drawAddress').value.trim();
-                if(!finalAddress) return Swal.fire('Error', 'Enter USDT Address', 'warning');
-            } else {
-                const bank = document.getElementById('bankName').value;
-                const holder = document.getElementById('accHolder').value.trim();
-                const num = document.getElementById('accNumber').value.trim();
-                if(!holder || !num) return Swal.fire('Error', 'Fill Wallet / Bank Details', 'warning');
-                finalAddress = `${bank} | ${holder} | ${num}`;
-            }
 
             Swal.fire({ title: 'Processing request...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
+                let finalAddress = "";
+                if(method === 'crypto') {
+                    finalAddress = document.getElementById('drawAddress').value.trim();
+                    if(!finalAddress) return Swal.fire('Error', 'Enter USDT Address', 'warning');
+                } else {
+                    const bank = document.getElementById('bankName').value;
+                    const holder = document.getElementById('accHolder').value.trim();
+                    const num = document.getElementById('accNumber').value.trim();
+                    if(!holder || !num) return Swal.fire('Error', 'Fill Wallet / Bank Details', 'warning');
+                    finalAddress = `${bank} | ${holder} | ${num}`;
+                }
+
                 const trxKey = push(ref(db, 'withdrawals')).key;
                 const now = Date.now();
 
-                // Deduct Balance
+                // Update user balance
                 await update(ref(db, `users/${user.uid}`), {
                     withdrawable: (withdrawableBalance - amount).toFixed(2)
                 });
@@ -254,13 +216,13 @@
                     uid: user.uid,
                     username: username,
                     amount: amount,
-                    address: finalAddress,
+                    address: finalAddress, // mapped to 'address' field for master admin dashboard compatibility
                     status: 'pending',
                     timestamp: now,
                     method: method.toUpperCase()
                 };
                 
-                // Write out into pending request tree and active user logs
+                // Save to admin side and transaction history
                 await set(ref(db, `withdrawRequests/${trxKey}`), requestData);
 
                 await set(ref(db, `transactions/${user.uid}/${trxKey}`), {
@@ -272,7 +234,7 @@
                     details: finalAddress
                 });
 
-                Swal.fire('Success', 'Withdrawal Requested successfully! Disbursed in 2 to 8 hours.', 'success').then(() => {
+                Swal.fire('Success', 'Withdrawal Requested successfully!', 'success').then(() => {
                     window.location.href = 'history.html';
                 });
 
