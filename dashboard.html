@@ -271,10 +271,10 @@
     <header class="dash-header">
         <div style="display:flex; align-items:center; gap:10px;">
             <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" class="user-avatar" alt="Avatar">
-            <div>
+            <div style="max-width: 180px; overflow: hidden;">
                 <div class="brand-text">METAMINT GOLD</div>
-                <h4 id="dashUsername" style="margin:0; font-size:0.9rem;">Loading...</h4>
-                <small style="opacity: 0.6; font-size: 0.75rem;">UID: <span id="dashUID">####</span></small>
+                <h4 id="dashUsername" style="margin:0; font-size:0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Loading...</h4>
+                <small style="opacity: 0.6; font-size: 0.75rem; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">UID: <span id="dashUID">####</span></small>
             </div>
         </div>
         
@@ -460,16 +460,7 @@
         const db = getDatabase(app);
 
         const PKR_RATE = 280;
-
-        // Premium Loading Spinner overlay before data arrives
-        Swal.fire({
-            title: 'Loading Hub...',
-            html: 'Fetching live balance and account metrics.',
-            allowOutsideClick: false,
-            background: '#1e293b',
-            color: '#fff',
-            didOpen: () => { Swal.showLoading(); }
-        });
+        let isLoggingOut = false;
 
         window.openHelpline = () => {
             const num = "923222572670";
@@ -496,24 +487,20 @@
         }
         createDollarRain();
 
-        let isLoggingOut = false;
-
         onAuthStateChanged(auth, (user) => {
             if (isLoggingOut) return;
 
             if (user) {
-                if (user.email === "dreamsagweb@gmail.com") document.getElementById('adminBox').style.display = 'block';
+                if (user.email === "dreamsagweb@gmail.com") {
+                    const adminBox = document.getElementById('adminBox');
+                    if(adminBox) adminBox.style.display = 'block';
+                }
                 const userRef = ref(db, 'users/' + user.uid);
                 
                 onValue(userRef, (snapshot) => {
                     if (isLoggingOut) return;
                     const data = snapshot.val();
                     if (data) {
-                        // Close initial loading spinner as soon as real data is verified and fetched
-                        if(Swal.isVisible() && Swal.getTitle().textContent === 'Loading Hub...') {
-                            Swal.close();
-                        }
-
                         if (data.isBlocked === true) {
                             document.body.innerHTML = `<div style='height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; background:#050a18; color:white; font-family:sans-serif;'>
                                 <i class="fas fa-ban" style="font-size:4rem; color:#f43f5e; margin-bottom:15px;"></i>
@@ -556,11 +543,7 @@
                         }
 
                         updateBonusUI(data);
-                    } else {
-                        if(Swal.isVisible()) Swal.close();
                     }
-                }, (error) => {
-                    if(Swal.isVisible()) Swal.close();
                 });
 
                 document.getElementById('btnWtoM').onclick = async () => {
@@ -574,16 +557,20 @@
                         confirmButtonColor: '#38bdf8', cancelButtonColor: '#475569'
                     });
                     if (amount && amount > 0) {
-                        const snap = await get(userRef);
-                        const userData = snap.val();
-                        if (parseFloat(userData.withdrawable) >= parseFloat(amount)) {
-                            await update(userRef, {
-                                withdrawable: (parseFloat(userData.withdrawable) - parseFloat(amount)).toFixed(2),
-                                totalBalance: (parseFloat(userData.totalBalance) + parseFloat(amount)).toFixed(2)
-                            });
-                            Swal.fire({ title: 'Success!', text: 'Balance moved to Mining Wallet successfully!', icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
-                        } else {
-                            Swal.fire({ title: 'Error', text: 'Insufficient Withdrawable balance!', icon: 'error', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' });
+                        try {
+                            const snap = await get(userRef);
+                            const userData = snap.val();
+                            if (parseFloat(userData.withdrawable || 0) >= parseFloat(amount)) {
+                                await update(userRef, {
+                                    withdrawable: (parseFloat(userData.withdrawable || 0) - parseFloat(amount)).toFixed(2),
+                                    totalBalance: (parseFloat(userData.totalBalance || 0) + parseFloat(amount)).toFixed(2)
+                                });
+                                Swal.fire({ title: 'Success!', text: 'Balance moved to Mining Wallet successfully!', icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                            } else {
+                                Swal.fire({ title: 'Error', text: 'Insufficient Withdrawable balance!', icon: 'error', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' });
+                            }
+                        } catch(e) {
+                            Swal.fire({ title: 'Error', text: 'Transaction failed. Try again.', icon: 'error', background: '#1e293b', color: '#fff' });
                         }
                     }
                 };
@@ -600,51 +587,63 @@
                         confirmButtonColor: '#38bdf8', cancelButtonColor: '#475569'
                     });
                     if (amount && amount > 0) {
-                        const snap = await get(userRef);
-                        const userData = snap.val();
-                        if (parseFloat(userData.totalBalance) >= parseFloat(amount)) {
-                            const netAmount = (parseFloat(amount) * 0.9).toFixed(2); 
-                            await update(userRef, {
-                                totalBalance: (parseFloat(userData.totalBalance) - parseFloat(amount)).toFixed(2),
-                                withdrawable: (parseFloat(userData.withdrawable) + parseFloat(netAmount)).toFixed(2)
-                            });
-                            Swal.fire({ title: 'Success!', text: `$${netAmount} added to your withdrawable balance after 10% fee.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
-                        } else {
-                            Swal.fire({ title: 'Error', text: 'Insufficient Mining balance!', icon: 'error', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' });
+                        try {
+                            const snap = await get(userRef);
+                            const userData = snap.val();
+                            if (parseFloat(userData.totalBalance || 0) >= parseFloat(amount)) {
+                                const netAmount = (parseFloat(amount) * 0.9).toFixed(2); 
+                                await update(userRef, {
+                                    totalBalance: (parseFloat(userData.totalBalance || 0) - parseFloat(amount)).toFixed(2),
+                                    withdrawable: (parseFloat(userData.withdrawable || 0) + parseFloat(netAmount)).toFixed(2)
+                                });
+                                Swal.fire({ title: 'Success!', text: `$${netAmount} added to your withdrawable balance after 10% fee.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                            } else {
+                                Swal.fire({ title: 'Error', text: 'Insufficient Mining balance!', icon: 'error', background: '#1e293b', color: '#fff', confirmButtonColor: '#ef4444' });
+                            }
+                        } catch(e) {
+                            Swal.fire({ title: 'Error', text: 'Transaction failed. Try again.', icon: 'error', background: '#1e293b', color: '#fff' });
                         }
                     }
                 };
 
                 document.getElementById('checkinBtn').onclick = async () => {
-                    const snap = await get(userRef);
-                    const userData = snap.val();
-                    const today = new Date().toISOString().split('T')[0];
-                    if (userData.lastCheckinDate === today) {
-                        return Swal.fire({ title: 'Already Claimed!', text: 'Your streak is safe. Come back tomorrow!', icon: 'warning', background: '#1e293b', color: '#fff', confirmButtonColor: '#fbbf24' });
-                    }
-                    
-                    let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
-                    const bonus = (streak === 7) ? 0.40 : 0.10;
-                    const nextStreak = (streak === 7) ? 0 : streak;
+                    try {
+                        const snap = await get(userRef);
+                        const userData = snap.val();
+                        const today = new Date().toISOString().split('T')[0];
+                        if (userData.lastCheckinDate === today) {
+                            return Swal.fire({ title: 'Already Claimed!', text: 'Your streak is safe. Come back tomorrow!', icon: 'warning', background: '#1e293b', color: '#fff', confirmButtonColor: '#fbbf24' });
+                        }
+                        
+                        let streak = (parseInt(userData.streakCount || 0) % 7) + 1;
+                        const bonus = (streak === 7) ? 0.40 : 0.10;
+                        const nextStreak = (streak === 7) ? 0 : streak;
 
-                    await update(userRef, { 
-                        withdrawable: (parseFloat(userData.withdrawable || 0) + bonus).toFixed(2), 
-                        streakCount: nextStreak, 
-                        lastCheckinDate: today 
-                    });
-                    
-                    Swal.fire({ title: 'Streak Updated!', text: `$${bonus} added to your withdrawable wallet.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                        await update(userRef, { 
+                            withdrawable: (parseFloat(userData.withdrawable || 0) + bonus).toFixed(2), 
+                            streakCount: nextStreak, 
+                            lastCheckinDate: today 
+                        });
+                        
+                        Swal.fire({ title: 'Streak Updated!', text: `$${bonus} added to your withdrawable wallet.`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                    } catch(e) {
+                        Swal.fire({ title: 'Error', text: 'Failed to collect reward. Try again.', icon: 'error', background: '#1e293b', color: '#fff' });
+                    }
                 };
 
                 document.getElementById('claimTeamRewardBtn').onclick = async () => {
-                    const snap = await get(userRef);
-                    const userData = snap.val();
-                    const reward = parseFloat(userData.referralWallet || 0);
-                    if (reward > 0) {
-                        await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
-                        Swal.fire({ title: 'Claimed Successfully!', text: `$${reward.toFixed(2)} commission moved to Withdrawable wallet!`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
-                    } else {
-                        Swal.fire({ title: 'Wallet Empty', text: 'No multi-tier team commission available to claim right now.', icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                    try {
+                        const snap = await get(userRef);
+                        const userData = snap.val();
+                        const reward = parseFloat(userData.referralWallet || 0);
+                        if (reward > 0) {
+                            await update(userRef, { withdrawable: (parseFloat(userData.withdrawable || 0) + reward).toFixed(2), referralWallet: 0 });
+                            Swal.fire({ title: 'Claimed Successfully!', text: `$${reward.toFixed(2)} commission moved to Withdrawable wallet!`, icon: 'success', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                        } else {
+                            Swal.fire({ title: 'Wallet Empty', text: 'No multi-tier team commission available to claim right now.', icon: 'info', background: '#1e293b', color: '#fff', confirmButtonColor: '#38bdf8' });
+                        }
+                    } catch(e) {
+                        Swal.fire({ title: 'Error', text: 'Failed to claim reward.', icon: 'error', background: '#1e293b', color: '#fff' });
                     }
                 };
 
@@ -659,8 +658,7 @@
                     }
                 };
             } else {
-                if(Swal.isVisible()) Swal.close();
-                window.location.replace('index.html');
+                if (!isLoggingOut) window.location.replace('index.html');
             }
         });
 

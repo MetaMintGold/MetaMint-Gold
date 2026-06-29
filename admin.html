@@ -19,6 +19,11 @@
         .btn-manage { background: #38bdf8; color: #0f172a; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .wa-link { color: #22c55e; text-decoration: none; font-size: 0.8rem; font-weight: bold; display: flex; align-items: center; gap: 5px; margin-top: 4px; }
         
+        /* Loading Spinner */
+        .loading-text { color: #64748b; font-size: 0.85rem; padding: 15px; display: flex; align-items: center; gap: 10px; }
+        .spinner { animation: spin 1s linear infinite; color: var(--primary); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         /* Modals and History List Expansion */
         .swal-label { display: block; text-align: left; color: #fbbf24; font-size: 0.75rem; margin-top: 14px; margin-left: 5%; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
         .swal-input-custom { background: #0f172a !important; color: white !important; width: 90% !important; padding: 12px !important; border-radius: 10px !important; border: 1px solid #334155 !important; margin-bottom: 4px !important; font-size: 0.95rem !important; }
@@ -38,7 +43,7 @@
 <body>
     <header class="header">
         <div><h2 style="margin:0;"><i class="fas fa-user-shield"></i> MASTER CONTROL</h2></div>
-        <div id="adminMail" style="font-size: 0.7rem; color: #94a3b8;"></div>
+        <div id="adminMail" style="font-size: 0.7rem; color: #94a3b8;">Loading Admin Node...</div>
     </header>
 
     <div class="search-box">
@@ -47,13 +52,13 @@
     </div>
 
     <div class="section-title"><i class="fas fa-wallet"></i> Pending Deposits</div>
-    <div id="depositList"></div>
+    <div id="depositList"><div class="loading-text"><i class="fas fa-spinner spinner"></i> Connecting deposit stream...</div></div>
 
     <div class="section-title"><i class="fas fa-hand-holding-usd"></i> Pending Withdrawals</div>
-    <div id="withdrawList"></div>
+    <div id="withdrawList"><div class="loading-text"><i class="fas fa-spinner spinner"></i> Connecting withdrawal stream...</div></div>
 
     <div class="section-title"><i class="fas fa-users"></i> All Users</div>
-    <div id="userList"></div>
+    <div id="userList"><div class="loading-text"><i class="fas fa-spinner spinner"></i> Fetching active nodes...</div></div>
 
     <div class="section-title"><i class="fas fa-history"></i> Global Administrative Records (All History)</div>
     <div id="globalHistoryLog" style="background: var(--card); border: 1px solid #334155; border-radius: 12px; padding: 10px; max-height: 350px; overflow-y: auto;">
@@ -82,44 +87,39 @@
         let usersCache = {};
         let firstLoadComplete = false;
 
-        // ADVANCED TIMESTAMP CONVERTER: Converts milliseconds numbers into readable date-time format
+        // ADVANCED TIMESTAMP CONVERTER
         function parseAndFormatTime(rawInput) {
             if (!rawInput) {
                 const current = new Date();
                 return current.toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
             }
-            
-            // Check if input is a pure numeric string/number timestamp from firebase
             if (!isNaN(rawInput)) {
                 const parsedNum = parseInt(rawInput);
                 const dateObj = new Date(parsedNum);
-                // Validation fallback if timestamp is corrupted
                 if (dateObj.getTime() > 0) {
                     return dateObj.toLocaleString('en-US', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
                 }
             }
-            return rawInput; // Return as is if already a readable string
+            return rawInput;
         }
 
-        // Global Copy Function for Admin Dashboard Convenience
+        // Copy Clipboard Control
         window.copyAddressToClipboard = (textToCopy) => {
             navigator.clipboard.writeText(textToCopy).then(() => {
-                const Toast = Swal.mixin({
+                Swal.mixin({
                     toast: true,
                     position: 'top-end',
                     showConfirmButton: false,
                     timer: 1500,
-                    timerProgressBar: false,
                     background: '#1e293b',
                     color: '#fff'
-                });
-                Toast.fire({ icon: 'success', title: 'Address Copied!' });
+                }).fire({ icon: 'success', title: 'Address Copied!' });
             }).catch(() => {
                 Swal.fire('Error', 'Clipboard copy failed', 'error');
             });
         };
 
-        // Safe push notification subsystem check
+        // Local Push Notification permission request
         if (typeof window !== "undefined" && "Notification" in window) {
             if (Notification.permission !== "granted" && Notification.permission !== "denied") {
                 Notification.requestPermission();
@@ -132,11 +132,13 @@
             }
         }
 
+        // Strong Dynamic Verification Check
         onAuthStateChanged(auth, (user) => {
             if (user && user.email === "dreamsagweb@gmail.com") {
                 document.body.style.display = "block";
                 document.getElementById('adminMail').innerText = user.email;
                 
+                // CRITICAL FIX: Direct Dynamic listener so new users appear instantly!
                 onValue(ref(db, 'users'), usersSnap => {
                     usersCache = {};
                     usersSnap.forEach(child => {
@@ -146,15 +148,16 @@
                     loadGlobalHistory();
                 });
 
+                // Listeners for pending alerts
                 onValue(ref(db, 'depositRequests'), snap => {
                     if (firstLoadComplete && snap.exists()) {
-                        triggerLocalPushNotification("MetaMint Alert", "New Pending Deposit Request Received!");
+                        triggerLocalPushNotification("DreamSag Alert", "New Pending Deposit Request Received!");
                     }
                 });
 
                 onValue(ref(db, 'withdrawRequests'), snap => {
                     if (firstLoadComplete && snap.exists()) {
-                        triggerLocalPushNotification("MetaMint Alert", "New Pending Withdrawal Request Received!");
+                        triggerLocalPushNotification("DreamSag Alert", "New Pending Withdrawal Request Received!");
                     }
                     firstLoadComplete = true;
                 });
@@ -162,24 +165,36 @@
             } else { window.location.href = 'dashboard.html'; }
         });
 
+        // REVOLUTIONARY FIX: Resolved Long UID parsing to match internal short UIDs accurately
         function getUserDisplayInfo(rawUID) {
+            if (!rawUID) return { name: "Blank Node", shortUID: "####" };
+            
+            // Check direct match
             if (usersCache[rawUID]) {
                 return { name: usersCache[rawUID].username || "User", shortUID: usersCache[rawUID].uid || "####" };
             }
+            
+            // Loop internal keys to match if rawUID is long firebase Auth key
             for (let k in usersCache) {
-                if (String(usersCache[k].uid) === String(rawUID)) {
+                if (String(usersCache[k].uid) === String(rawUID) || k === String(rawUID)) {
                     return { name: usersCache[k].username || "User", shortUID: usersCache[k].uid || "####" };
                 }
             }
-            return { name: "Unknown User", shortUID: rawUID };
+            
+            // If cache isn't fully loaded yet prevent "Unknown User"
+            if (Object.keys(usersCache).length === 0) {
+                return { name: "Loading Profile...", shortUID: "..." };
+            }
+            
+            return { name: "User (Not Found)", shortUID: String(rawUID).substring(0, 6) + "..." };
         }
 
         function loadLists() {
-            // 1. Pending Deposits with Perfect Human-Readable Time Display
+            // 1. Pending Deposits Monitor Loop
             get(ref(db, 'depositRequests')).then(snap => {
                 const div = document.getElementById('depositList');
                 div.innerHTML = '';
-                if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending deposits</p>'; return; }
+                if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b; font-size:0.85rem;">No pending deposits found.</p>'; return; }
                 snap.forEach(child => {
                     const d = child.val();
                     const trxKey = d.id || child.key; 
@@ -188,17 +203,17 @@
 
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${d.amount}</b><br><small>${userInfo.name} (UID: ${userInfo.shortUID})</small><span class="timestamp-text"><i class="far fa-clock"></i> ${timeStamp}</span><span class="txid-text">TXID: ${d.txid}</span></div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="window.approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${trxKey}', '${timeStamp}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="window.rejectDeposit('${child.key}', '${d.uid}', '${trxKey}', '${timeStamp}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="window.approveDeposit('${child.key}', '${d.uid}', ${d.amount}, '${trxKey}', '${timeStamp}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white; cursor:pointer;"><i class="fas fa-check"></i></button>
+                        <button onclick="window.rejectDeposit('${child.key}', '${d.uid}', '${trxKey}', '${timeStamp}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white; cursor:pointer;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // 2. Pending Withdrawals with Clipboard Copy Button and Perfect Time Display
+            // 2. Pending Withdrawals Monitor Loop
             get(ref(db, 'withdrawRequests')).then(snap => {
                 const div = document.getElementById('withdrawList');
                 div.innerHTML = '';
-                if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b;">No pending withdrawals</p>'; return; }
+                if(!snap.exists()) { div.innerHTML = '<p style="padding:10px; color:#64748b; font-size:0.85rem;">No pending withdrawals found.</p>'; return; }
                 snap.forEach(child => {
                     const w = child.val();
                     const userInfo = getUserDisplayInfo(w.uid);
@@ -206,27 +221,35 @@
                     const rawAddress = w.address || "No Address Provided";
 
                     div.innerHTML += `<div class="data-card"><div style="width:70%;"><b>$${w.amount}</b><br><small>${userInfo.name} (UID: ${userInfo.shortUID})</small><span class="timestamp-text"><i class="far fa-clock"></i> ${timeStamp}</span><span class="txid-text">Addr: ${rawAddress}</span>
-                    <button class="btn-copy-addr" onclick="window.copyAddressToClipboard(\`${rawAddress.replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)"><i class="far fa-copy"></i> Copy Details</button>
+                    <button class="btn-copy-addr" onclick="window.copyAddressToClipboard(\`${rawAddress.replace(/`/g, '\\`').replace(/\n/g, ' ')}\`)" type="button"><i class="far fa-copy"></i> Copy Details</button>
                     </div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${child.key}', '${timeStamp}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-check"></i></button>
-                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${child.key}', '${timeStamp}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white;"><i class="fas fa-times"></i></button>
+                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'approved', '${child.key}', '${timeStamp}')" style="background:#22c55e; border:none; padding:10px; border-radius:5px; color:white; cursor:pointer;"><i class="fas fa-check"></i></button>
+                        <button onclick="window.processWithdraw('${child.key}', '${w.uid}', ${w.amount}, 'rejected', '${child.key}', '${timeStamp}')" style="background:#ef4444; border:none; padding:10px; border-radius:5px; color:white; cursor:pointer;"><i class="fas fa-times"></i></button>
                     </div></div>`;
                 });
             });
 
-            // 3. All Users Node Rendering Layout
+            // 3. Render All Users Layout Core
             const list = document.getElementById('userList');
             list.innerHTML = '';
-            for (let key in usersCache) {
+            
+            const usersKeys = Object.keys(usersCache);
+            if(usersKeys.length === 0) {
+                list.innerHTML = '<p style="padding:10px; color:#64748b; font-size:0.85rem;">No active user records registered.</p>';
+                return;
+            }
+
+            usersKeys.forEach(key => {
                 const u = usersCache[key];
+                if(!u.username) return; // Skip broken schemas
                 const blockIcon = u.isBlocked ? '<i class="fas fa-user-slash" style="color:#ef4444; margin-right:5px;"></i>' : '';
                 const statusIcon = u.miningStatus === 'active' ? '<i class="fas fa-circle" style="color:#22c55e; font-size:0.6rem; margin-right:5px;"></i>' : '<i class="fas fa-circle" style="color:#64748b; font-size:0.6rem; margin-right:5px;"></i>';
                 const userWA = u.whatsapp || "No Number";
                 const waLink = u.whatsapp ? `https://wa.me/${u.whatsapp}` : "#";
                 
-                list.innerHTML += `<div class="data-card"><div style="width:65%;"><b>${statusIcon}${blockIcon}${u.username}</b><br><small>UID: ${u.uid}</small><br><a href="${waLink}" target="_blank" class="wa-link"><i class="fab fa-whatsapp"></i> ${userWA}</a></div><button onclick="window.openManager('${key}')" class="btn-manage">Manage</button></div>`;
-            }
+                list.innerHTML += `<div class="data-card"><div style="width:65%;"><b>${statusIcon}${blockIcon}${u.username}</b><br><small>UID: ${u.uid || '####'}</small><br><a href="${waLink}" target="_blank" class="wa-link"><i class="fab fa-whatsapp"></i> ${userWA}</a></div><button onclick="window.openManager('${key}')" class="btn-manage" type="button">Manage</button></div>`;
+            });
         }
 
         function loadGlobalHistory() {
@@ -244,8 +267,8 @@
                     htmlContent = `
                         <div style="font-size:0.75rem; padding:10px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
                             <div>
-                                <b style="color:${color};">[${log.type}]</b> <b>${log.username} (UID: ${log.shortUID})</b> - <b>$${log.amount}</b>
-                                <br><small style="color:#94a3b8;">Status: ${log.status.toUpperCase()}</small>
+                                <b style="color:${color};">[${log.type}]</b> <b>${log.username || 'User'} (UID: ${log.shortUID || '####'})</b> - <b>$${log.amount}</b>
+                                <br><small style="color:#94a3b8;">Status: ${String(log.status).toUpperCase()}</small>
                             </div>
                             <div style="text-align:right; color:#a855f7; font-weight:bold;">${parseAndFormatTime(log.time)}</div>
                         </div>
@@ -285,19 +308,19 @@
                     await remove(ref(db, `depositRequests/${key}`));
                     Swal.fire({ title: 'Approved!', text: 'Deposit verified successfully.', icon: 'success', background: '#1e293b', color: '#fff' });
                 } else { Swal.fire('Error', 'User record lookup failed!', 'error'); }
-            } catch (error) { Swal.fire('Error', 'Technical fault', 'error'); }
+            } catch (error) { Swal.fire('Error', 'Technical fault operational crash', 'error'); }
         };
 
         window.rejectDeposit = async (key, uid, trxKey, timestamp) => {
             let userKey = uid; let userData = { username: "User", uid: "####" };
-            for(let k in usersCache){ if(String(usersCache[k].uid) === String(uid)) { userKey = k; userData = usersCache[k]; } }
-            if(trxKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'REJECTED' }); }
+            for(let k in usersCache){ if(String(usersCache[k].uid) === String(uid) || k === uid) { userKey = k; userData = usersCache[k]; } }
+            if(trxKey && userKey) { await update(ref(db, `transactions/${userKey}/${trxKey}`), { status: 'REJECTED' }); }
             
             const logRef = push(ref(db, 'globalAdminLogs'));
             await set(logRef, { type: 'DEPOSIT', username: userData.username, shortUID: userData.uid, amount: '0', status: 'rejected', time: timestamp });
 
             await remove(ref(db, `depositRequests/${key}`));
-            Swal.fire('Rejected', 'History node updated.', 'error');
+            Swal.fire('Rejected', 'History log saved as negative.', 'error');
         };
 
         window.processWithdraw = async (key, userUID, amount, status, trxKey, timestamp) => {
@@ -325,7 +348,6 @@
             }
         };
 
-        // Permanent Account Removal Function From Firebase Nodes Wiping Structure
         window.deleteUserAccount = async (userKey, username, shortUID) => {
             const confirm = await Swal.fire({
                 title: 'Are you absolutely sure?',
@@ -343,9 +365,8 @@
                 try {
                     await remove(ref(db, `users/${userKey}`));
                     await remove(ref(db, `transactions/${userKey}`));
-                    
-                    Swal.fire({ title: 'Deleted!', text: 'User account completely wiped out from Firebase database nodes.', icon: 'success', background: '#1e293b', color: '#fff' });
-                    Swal.close();
+                    Swal.fire({ title: 'Deleted!', text: 'User accounts wiped.', icon: 'success', background: '#1e293b', color: '#fff' });
+                    setTimeout(() => { location.reload(); }, 1200);
                 } catch (err) {
                     Swal.fire('Error', 'Failed to delete data nodes.', 'error');
                 }
@@ -354,6 +375,7 @@
 
         window.openManager = async (userKey) => {
             const u = usersCache[userKey];
+            if(!u) return;
             
             let totalTeamCount = 0; let activeTeamCount = 0; let inactiveTeamCount = 0;
             const myReferralCode = String(u.referralCode || "").trim().toLowerCase();
@@ -370,7 +392,6 @@
                 }
             }
 
-            // CRITICAL FIX: Pull Live Real-Time Transaction Array with converted clean human-readable date strings
             let userHistoryHTML = "";
             const txSnap = await get(ref(db, `transactions/${userKey}`));
             if(txSnap.exists()) {
@@ -391,7 +412,6 @@
                 });
             }
 
-            // Fallback system logs lookup with automated parse filter
             if(userHistoryHTML === "") {
                 const logsSnap = await get(ref(db, 'globalAdminLogs'));
                 if(logsSnap.exists()) {
@@ -412,9 +432,8 @@
 
             if(userHistoryHTML === "") { userHistoryHTML = "<p style='color:#64748b; font-size:0.75rem; text-align:center; padding:10px;'>No verified deposit/withdrawal history on record.</p>"; }
 
-            // Extended Modal UI Interface Setup
             const { value: form } = await Swal.fire({
-                title: `Manage: ${u.username} (UID: ${u.uid})`,
+                title: `Manage: ${u.username} (UID: ${u.uid || '####'})`,
                 background: '#1e293b',
                 color: '#f8fafc',
                 width: '450px',
@@ -440,7 +459,7 @@
                             <input type="checkbox" id="m-block" style="width:22px; height:22px; cursor:pointer;" ${u.isBlocked ? 'checked' : ''}>
                         </div>
 
-                        <button type="button" onclick="window.deleteUserAccount('${userKey}', '${u.username}', '${u.uid}')" class="btn-delete-user"><i class="fas fa-trash-alt"></i> Delete Account Permanently</button>
+                        <button type="button" onclick="window.deleteUserAccount('${userKey}', '${u.username}', '${u.uid || '####'}')" class="btn-delete-user"><i class="fas fa-trash-alt"></i> Delete Account Permanently</button>
                         
                         <label class="swal-label">Push Notification Alert Box</label>
                         <input id="m-note" class="swal2-input swal-input-custom" value="${u.notification || ''}">
@@ -454,7 +473,7 @@
                             </div>
                         </div>
 
-                        <div class="swal-label" style="color:#38bdf8; margin-top:20px;"><i class="fas fa-history"></i> User Ledger History (Deposits & Withdrawals)</div>
+                        <div class="swal-label" style="color:#38bdf8; margin-top:20px;"><i class="fas fa-history"></i> User Ledger History</div>
                         <div class="history-embed-container">${userHistoryHTML}</div>
                     </div>
                 `,
@@ -463,9 +482,9 @@
                 cancelButtonText: 'Cancel',
                 customClass: { confirmButton: 'btn-manage' },
                 preConfirm: () => ({
-                    totalBalance: parseFloat(document.getElementById('m-dep').value),
-                    withdrawable: parseFloat(document.getElementById('m-with').value),
-                    referralWallet: parseFloat(document.getElementById('m-ref').value),
+                    totalBalance: parseFloat(document.getElementById('m-dep').value || 0),
+                    withdrawable: parseFloat(document.getElementById('m-with').value || 0),
+                    referralWallet: parseFloat(document.getElementById('m-ref').value || 0),
                     giftReward: parseFloat(document.getElementById('m-gift').value || 0),
                     miningStatus: document.getElementById('m-status').value.toLowerCase(),
                     isBlocked: document.getElementById('m-block').checked,
@@ -489,7 +508,7 @@
                     updateData.hasNewReward = true; 
                     
                     const giftLogRef = push(ref(db, 'globalAdminLogs'));
-                    await set(giftLogRef, { type: 'SPECIAL GIFT', username: u.username, shortUID: u.uid, amount: form.giftReward, status: 'success', time: parseAndFormatTime() });
+                    await set(giftLogRef, { type: 'SPECIAL GIFT', username: u.username, shortUID: u.uid || '####', amount: form.giftReward, status: 'success', time: parseAndFormatTime() });
                 }
 
                 await update(ref(db, `users/${userKey}`), updateData); 
