@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>MetaMint Gold | Login & Register</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link class="manifest" href="manifest.json">
     <meta name="theme-color" content="#38bdf8">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2535/2535077.png">
 
@@ -237,7 +237,7 @@
                     loadBar.style.width = currentProgress + '%';
                     loadText.innerText = currentProgress + '%';
                 }
-            }, 12);
+            }, 10);
         }
 
         // --- PWA INSTALLATION SYSTEM ---
@@ -265,38 +265,6 @@
             deferredPrompt = null;
         });
 
-        // --- SECURE SESSION CONTROLLER (Force Login on Re-open/App Exit) ---
-        runSplashProgress(60, () => {
-            // Changed to browserSessionPersistence so closing the app completely clears the login token
-            setPersistence(auth, browserSessionPersistence).then(() => {
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        // Check time elapsed since last activity to lock out inactive users (10-15 Mins Rule)
-                        const lastActive = localStorage.getItem('last_active_session');
-                        const now = Date.now();
-                        
-                        // If user is returning after 12 minutes (720,000 ms), force logout to prompt login screen
-                        if (lastActive && (now - parseInt(lastActive) > 720000)) {
-                            localStorage.removeItem('last_active_session');
-                            signOut(auth).then(() => {
-                                showAuthForm();
-                            });
-                        } else {
-                            // Active session is fresh, update timestamp and move to dashboard
-                            localStorage.setItem('last_active_session', now);
-                            runSplashProgress(100, () => {
-                                setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
-                            });
-                        }
-                    } else {
-                        showAuthForm();
-                    }
-                });
-            }).catch(() => {
-                showAuthForm();
-            });
-        });
-
         function showAuthForm() {
             runSplashProgress(100, () => {
                 setTimeout(() => {
@@ -310,6 +278,35 @@
                 }, 300);
             });
         }
+
+        // --- SECURE SESSION CONTROLLER ---
+        runSplashProgress(60, () => {
+            setPersistence(auth, browserSessionPersistence).then(() => {
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        const lastActive = localStorage.getItem('last_active_session');
+                        const now = Date.now();
+                        
+                        // 12 minutes Inactivity Rule
+                        if (lastActive && (now - parseInt(lastActive) > 720000)) {
+                            localStorage.removeItem('last_active_session');
+                            signOut(auth).then(() => {
+                                showAuthForm();
+                            });
+                        } else {
+                            localStorage.setItem('last_active_session', now);
+                            runSplashProgress(100, () => {
+                                setTimeout(() => { window.location.href = 'dashboard.html'; }, 200);
+                            });
+                        }
+                    } else {
+                        showAuthForm();
+                    }
+                });
+            }).catch(() => {
+                showAuthForm();
+            });
+        });
 
         // --- REFERRAL DETECTION LOGIC ---
         const urlParams = new URLSearchParams(window.location.search);
@@ -331,6 +328,7 @@
             const name = document.getElementById('regUser').value, 
                   email = document.getElementById('regEmail').value, 
                   whatsapp = document.getElementById('regWhatsapp').value,
+                  city = document.getElementById('regCity').value,
                   pass = document.getElementById('regPass').value, 
                   cPass = document.getElementById('regConfirmPass').value;
             
@@ -346,6 +344,7 @@
                     username: name, 
                     email: email, 
                     whatsapp: whatsapp, 
+                    city: city || "none",
                     uid: uidNum, 
                     referralCode: uidNum.toString(), 
                     referredBy: referredBy || "none",
